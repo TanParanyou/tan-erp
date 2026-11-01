@@ -1,7 +1,8 @@
 using TanErp.Application.Common.Abstractions;
-using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Models;
+using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
+using TanErp.Application.IdentityAccess.Authentication;
 using TanErp.Domain.IdentityAccess;
 
 namespace TanErp.Application.IdentityAccess.Administration.CreateUser;
@@ -10,11 +11,16 @@ public class CreateAdminUserHandler
 {
     private readonly IRequestAccessResolver _access;
     private readonly IIdentityAdministrationStore _store;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public CreateAdminUserHandler(IRequestAccessResolver access, IIdentityAdministrationStore store)
+    public CreateAdminUserHandler(
+        IRequestAccessResolver access,
+        IIdentityAdministrationStore store,
+        IPasswordHasher passwordHasher)
     {
         _access = access;
         _store = store;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<Result<AdminUser>> Handle(CreateAdminUserCommand command, CancellationToken cancellationToken = default)
@@ -60,8 +66,20 @@ public class CreateAdminUserHandler
         if (roles.Count == 0 || roles.Count > AdministrationPolicy.MaxRolesPerRequest || roles.Contains(Guid.Empty))
             return AdminHandlerSupport.Validation<AdminUser>("Between 1 and 20 roles are required.");
 
+        string? initialPasswordHash = null;
+        if (!string.IsNullOrEmpty(command.InitialPassword))
+        {
+            var passwordValidation = PasswordPolicy.Validate(command.InitialPassword);
+            if (passwordValidation.IsFailure)
+                return Result<AdminUser>.Failure(passwordValidation.Error);
+
+            initialPasswordHash = _passwordHasher.HashPassword(command.InitialPassword);
+        }
+
+        var passwordMarker = initialPasswordHash is not null ? "|pwd:1" : string.Empty;
+        var require2FaMarker = command.RequireTwoFactor ? "|req2fa:1" : string.Empty;
         var payloadHash = Sha256Hex.Compute(
-            $"{name}|{User.NormalizeEmail(email)}|{command.BranchId}|{command.DepartmentId}|{command.JobTitleId}|{string.Join(",", roles.OrderBy(id => id))}");
+            $"{name}|{User.NormalizeEmail(email)}|{command.BranchId}|{command.DepartmentId}|{command.JobTitleId}|{string.Join(",", roles.OrderBy(id => id))}{passwordMarker}{require2FaMarker}");
 
         var input = new CreateAdminUserInput(
             name,
@@ -75,7 +93,9 @@ public class CreateAdminUserHandler
             command.AvatarFileId,
             notes,
             command.StartsAtUtc,
-            command.ExpiresAtUtc);
+            command.ExpiresAtUtc,
+            initialPasswordHash,
+            command.RequireTwoFactor);
 
         return await _store.CreateUserAsync(
             access!.OrganizationId,

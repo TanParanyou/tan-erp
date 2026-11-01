@@ -40,8 +40,8 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
 
         query = status switch
         {
-            "pending" => query.Where(u => u.IsActive && u.FirebaseUid == null),
-            "active" => query.Where(u => u.IsActive && u.FirebaseUid != null),
+            "pending" => query.Where(u => u.IsActive && u.FirebaseUid == null && u.PasswordHash == null && u.GoogleSubjectId == null),
+            "active" => query.Where(u => u.IsActive && (u.FirebaseUid != null || u.PasswordHash != null || u.GoogleSubjectId != null)),
             "inactive" => query.Where(u => !u.IsActive),
             _ => query
         };
@@ -180,6 +180,16 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 input.AvatarFileId,
                 input.Notes);
 
+            if (!string.IsNullOrWhiteSpace(input.InitialPasswordHash))
+            {
+                user.SetPassword(input.InitialPasswordHash, now);
+            }
+
+            if (input.RequireTwoFactor)
+            {
+                user.SetRequireTwoFactor(true);
+            }
+
             var membership = new Membership(
                 Guid.NewGuid(),
                 organizationId,
@@ -217,7 +227,9 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                     membershipId = membership.Id,
                     branchId = input.BranchId,
                     assignedRoleIds = roles.Where(r => !r.RequiresApproval).Select(r => r.Id).ToArray(),
-                    requestedRoleIds
+                    requestedRoleIds,
+                    hasInitialPassword = !string.IsNullOrWhiteSpace(input.InitialPasswordHash),
+                    requireTwoFactor = input.RequireTwoFactor
                 });
 
             _db.IdempotencyRecords.Add(new IdempotencyRecord(
@@ -319,20 +331,87 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
             if (sharedAcrossOrganizations)
                 return Fail<AdminUser>("USER_SHARED_ACROSS_ORGANIZATIONS", "The user has memberships in other organizations.");
 
+            var now = _clock.UtcNow;
             var before = user.RowVersion;
             if (!active && user.IsActive)
             {
                 if (await WouldRemoveLastAdministratorAsync(organizationId, row => row.UserId == userId, cancellationToken))
                     return Fail<AdminUser>("LAST_ADMINISTRATOR_REQUIRED", "The organization must keep at least one active administrator.");
                 user.Deactivate();
+                await RevokeAllActiveSessionsForUserAsync(userId, "user_deactivated", now, cancellationToken);
             }
             else if (active && !user.IsActive)
             {
                 user.Activate();
             }
 
-            AddAudit(organizationId, actor, active ? "users.activated" : "users.deactivated", "User", user.Id.ToString(), traceId, _clock.UtcNow,
+            AddAudit(organizationId, actor, active ? "users.activated" : "users.deactivated", "User", user.Id.ToString(), traceId, now,
                 new { isActive = active }, before, user.RowVersion);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await ReloadUserAsync(organizationId, user.Id, cancellationToken);
+        }, cancellationToken);
+
+    public Task<Result<AdminUser>> SetUserPasswordAsync(
+        Guid organizationId, Guid userId, Guid expectedRowVersion, string passwordHash, AdminActor actor, string traceId, CancellationToken cancellationToken) =>
+        RunAsync(async () =>
+        {
+            var user = await FindUserInOrganizationAsync(organizationId, userId, cancellationToken);
+            if (user is null) return NotFound<AdminUser>("User");
+            if (user.RowVersion != expectedRowVersion) return VersionConflict<AdminUser>();
+
+            var now = _clock.UtcNow;
+            var before = user.RowVersion;
+            user.SetPassword(passwordHash, now);
+            var revokedSessions = await RevokeAllActiveSessionsForUserAsync(userId, "admin_password_reset", now, cancellationToken);
+
+            AddAudit(organizationId, actor, "users.password_reset", "User", user.Id.ToString(), traceId, now,
+                new { revokedSessions }, before, user.RowVersion);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await ReloadUserAsync(organizationId, user.Id, cancellationToken);
+        }, cancellationToken);
+
+    public Task<Result<AdminUser>> UpdateUserTwoFactorPolicyAsync(
+        Guid organizationId, Guid userId, Guid expectedRowVersion, bool requireTwoFactor, AdminActor actor, string traceId, CancellationToken cancellationToken) =>
+        RunAsync(async () =>
+        {
+            var user = await FindUserInOrganizationAsync(organizationId, userId, cancellationToken);
+            if (user is null) return NotFound<AdminUser>("User");
+            if (user.RowVersion != expectedRowVersion) return VersionConflict<AdminUser>();
+
+            var now = _clock.UtcNow;
+            var before = user.RowVersion;
+            user.SetRequireTwoFactor(requireTwoFactor);
+
+            AddAudit(organizationId, actor, "users.two_factor_policy_updated", "User", user.Id.ToString(), traceId, now,
+                new { requireTwoFactor }, before, user.RowVersion);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await ReloadUserAsync(organizationId, user.Id, cancellationToken);
+        }, cancellationToken);
+
+    public Task<Result<AdminUser>> ResetUserTwoFactorAsync(
+        Guid organizationId, Guid userId, Guid expectedRowVersion, AdminActor actor, string traceId, CancellationToken cancellationToken) =>
+        RunAsync(async () =>
+        {
+            var user = await FindUserInOrganizationAsync(organizationId, userId, cancellationToken);
+            if (user is null) return NotFound<AdminUser>("User");
+            if (user.RowVersion != expectedRowVersion) return VersionConflict<AdminUser>();
+
+            var now = _clock.UtcNow;
+            var before = user.RowVersion;
+            user.DisableTotp();
+
+            var backupCodes = await _db.UserBackupCodes
+                .Where(c => c.UserId == userId)
+                .ToListAsync(cancellationToken);
+            if (backupCodes.Count > 0)
+            {
+                _db.UserBackupCodes.RemoveRange(backupCodes);
+            }
+
+            var revokedSessions = await RevokeAllActiveSessionsForUserAsync(userId, "admin_2fa_reset", now, cancellationToken);
+
+            AddAudit(organizationId, actor, "users.two_factor_reset", "User", user.Id.ToString(), traceId, now,
+                new { revokedSessions, removedBackupCodes = backupCodes.Count }, before, user.RowVersion);
             await _db.SaveChangesAsync(cancellationToken);
             return await ReloadUserAsync(organizationId, user.Id, cancellationToken);
         }, cancellationToken);
@@ -632,6 +711,21 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
         await _db.Users.FirstOrDefaultAsync(
             u => u.Id == userId && u.Memberships.Any(m => m.OrganizationId == organizationId), cancellationToken);
 
+    private async Task<int> RevokeAllActiveSessionsForUserAsync(
+        Guid userId, string reason, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var activeSessions = await _db.UserSessions
+            .Where(s => s.UserId == userId && s.RevokedAtUtc == null && s.ExpiresAtUtc > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var session in activeSessions)
+        {
+            session.Revoke(reason, now);
+        }
+
+        return activeSessions.Count;
+    }
+
     private async Task<Result<AdminUser>> ReloadUserAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken)
     {
         _db.ChangeTracker.Clear();
@@ -663,7 +757,11 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 JobTitleName = u.JobTitle != null ? u.JobTitle.Name : null,
                 u.AvatarFileId,
                 u.Notes,
-                u.CreatedAtUtc
+                u.CreatedAtUtc,
+                HasPassword = u.PasswordHash != null,
+                HasGoogleLinked = u.GoogleSubjectId != null,
+                u.IsTotpEnabled,
+                u.RequireTwoFactor
             })
             .ToListAsync(cancellationToken);
 
@@ -710,7 +808,9 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                     new AdminRef(x.Request.RequestedByUserId, x.RequestedByName),
                     x.Request.RequestedAtUtc)).ToList())).ToList();
 
-            var status = !u.IsActive ? "inactive" : u.FirebaseUid is null ? "pending" : "active";
+            var status = !u.IsActive
+                ? "inactive"
+                : (u.FirebaseUid is null && !u.HasPassword && !u.HasGoogleLinked) ? "pending" : "active";
 
             var department = u.DepartmentId.HasValue && u.DepartmentCode != null && u.DepartmentName != null
                 ? new AdminDepartmentRef(u.DepartmentId.Value, u.DepartmentCode, u.DepartmentName)
@@ -735,7 +835,11 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 jobTitle,
                 avatar,
                 u.Notes,
-                u.CreatedAtUtc));
+                u.CreatedAtUtc,
+                u.HasPassword,
+                u.HasGoogleLinked,
+                u.IsTotpEnabled,
+                u.RequireTwoFactor));
         }
 
         return result;

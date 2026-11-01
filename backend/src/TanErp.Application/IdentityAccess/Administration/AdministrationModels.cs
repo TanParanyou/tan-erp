@@ -105,7 +105,11 @@ public sealed record AdminUser(
     AdminJobTitleRef? JobTitle = null,
     AdminAvatarRef? Avatar = null,
     string? Notes = null,
-    DateTimeOffset? CreatedAtUtc = null);
+    DateTimeOffset? CreatedAtUtc = null,
+    bool HasPassword = false,
+    bool HasGoogleLinked = false,
+    bool IsTotpEnabled = false,
+    bool RequireTwoFactor = false);
 
 public sealed record AdminUserPage(IReadOnlyList<AdminUser> Items, int TotalCount, int Page, int PageSize);
 
@@ -132,7 +136,9 @@ public sealed record CreateAdminUserInput(
     Guid? AvatarFileId = null,
     string? Notes = null,
     DateTimeOffset? StartsAtUtc = null,
-    DateTimeOffset? ExpiresAtUtc = null);
+    DateTimeOffset? ExpiresAtUtc = null,
+    string? InitialPasswordHash = null,
+    bool RequireTwoFactor = false);
 
 public sealed record UpdateAdminUserProfileInput(
     string DisplayName,

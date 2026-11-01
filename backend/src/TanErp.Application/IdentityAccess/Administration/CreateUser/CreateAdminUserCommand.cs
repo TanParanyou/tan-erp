@@ -15,4 +15,6 @@ public sealed record CreateAdminUserCommand(
     Guid? AvatarFileId = null,
     string? Notes = null,
     DateTimeOffset? StartsAtUtc = null,
-    DateTimeOffset? ExpiresAtUtc = null);
+    DateTimeOffset? ExpiresAtUtc = null,
+    string? InitialPassword = null,
+    bool RequireTwoFactor = false);

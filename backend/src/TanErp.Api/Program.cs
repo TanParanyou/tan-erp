@@ -86,10 +86,18 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddSingleton<IClock, TanErp.Infrastructure.Common.SystemClock>();
-builder.Services.AddSingleton<IFirebaseTokenVerifier, FirebaseTokenVerifier>();
+
+builder.Services.AddSingleton(sp =>
+    SelfHostedAuthOptions.FromConfiguration(sp.GetRequiredService<IConfiguration>(), builder.Environment.EnvironmentName));
+builder.Services.AddSingleton<TanErp.Application.IdentityAccess.Authentication.IPasswordHasher, Pbkdf2PasswordHasher>();
+builder.Services.AddSingleton<TanErp.Application.IdentityAccess.Authentication.ISecretProtector, AesGcmSecretProtector>();
+builder.Services.AddSingleton<TanErp.Application.IdentityAccess.Authentication.ITotpService, Rfc6238TotpService>();
+builder.Services.AddSingleton<TanErp.Application.IdentityAccess.Authentication.ISelfHostedJwtService, SelfHostedJwtService>();
+builder.Services.AddSingleton<SelfHostedTokenVerifier>();
+builder.Services.AddSingleton<IFirebaseTokenVerifier>(sp => sp.GetRequiredService<SelfHostedTokenVerifier>());
 if (builder.Configuration.GetValue<bool>("Authentication:DevelopmentTokens:Enabled"))
 {
-    // Fail closed: mock "dev-uid:" tokens bypass Firebase, so they may exist only in Development.
+    // Fail closed: mock "dev-uid:" tokens bypass JWT verification, so they may exist only in Development.
     if (!builder.Environment.IsDevelopment())
     {
         throw new InvalidOperationException(
@@ -97,9 +105,23 @@ if (builder.Configuration.GetValue<bool>("Authentication:DevelopmentTokens:Enabl
     }
 
     builder.Services.AddSingleton<IFirebaseTokenVerifier>(sp =>
-        new DevelopmentTokenVerifier(ActivatorUtilities.CreateInstance<FirebaseTokenVerifier>(sp)));
-    Console.Error.WriteLine("WARNING: Authentication:DevelopmentTokens is ENABLED; 'dev-uid:<uid>' tokens bypass Firebase. Development only.");
+        new DevelopmentTokenVerifier(sp.GetRequiredService<SelfHostedTokenVerifier>()));
+    Console.Error.WriteLine("WARNING: Authentication:DevelopmentTokens is ENABLED; 'dev-uid:<uid>' tokens bypass JWT verification. Development only.");
 }
+builder.Services.AddHttpClient("GoogleOidc");
+builder.Services.AddSingleton<TanErp.Application.IdentityAccess.Authentication.IGoogleTokenVerifier>(sp =>
+{
+    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
+    return new GoogleOidcTokenVerifier(
+        () => httpFactory.CreateClient("GoogleOidc"),
+        sp.GetRequiredService<SelfHostedAuthOptions>(),
+        sp.GetRequiredService<IClock>());
+});
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Authentication.IAuthenticationStore, TanErp.Infrastructure.Persistence.IdentityAccess.AuthenticationStore>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Authentication.ISessionAccessValidator, TanErp.Infrastructure.Persistence.IdentityAccess.SessionAccessValidator>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Authentication.AuthenticationHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Authentication.CurrentUserSecurityHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.UserSecurity.AdminUserSecurityHandler>();
 builder.Services.AddScoped<ICurrentUserReader, CurrentUserReader>();
 builder.Services.AddSingleton(builder.Configuration.GetSection("AppVersionPolicy").Get<TanErp.Application.AppVersion.AppVersionPolicyOptions>() ?? new());
 builder.Services.AddScoped<TanErp.Application.AppVersion.GetAppVersionPolicyHandler>();
@@ -340,8 +362,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 var app = builder.Build();
-// Fail fast: resolving the renderer registers the QuestPDF license and the embedded fonts at startup, so a bad configuration
-// surfaces here instead of at the first quotation issue (ADR 0023).
+// Fail fast: validate self-hosted authentication keys in Production and QuestPDF embedded fonts at startup.
+_ = app.Services.GetRequiredService<SelfHostedAuthOptions>();
 _ = app.Services.GetRequiredService<TanErp.Application.Commercial.Documents.IQuotationDocumentRenderer>();
 
 // Localization Middleware

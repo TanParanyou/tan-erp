@@ -1741,4 +1741,94 @@
   <data name="MRP_UNIT_CONVERSION_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>ไม่พบอัตราแปลงหน่วยที่เปิดใช้งานสำหรับแปลงหน่วยความต้องการไปยังหน่วยฐานของสินค้านี้</value>
   </data>
+  <data name="INVALID_CREDENTIALS_TITLE" xml:space="preserve">
+    <value>อีเมลหรือรหัสผ่านไม่ถูกต้อง</value>
+  </data>
+  <data name="INVALID_CREDENTIALS_DETAIL" xml:space="preserve">
+    <value>อีเมลหรือรหัสผ่านที่ระบุไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง</value>
+  </data>
+  <data name="ACCOUNT_LOCKED_OUT_TITLE" xml:space="preserve">
+    <value>บัญชีถูกล็อกชั่วคราว</value>
+  </data>
+  <data name="ACCOUNT_LOCKED_OUT_DETAIL" xml:space="preserve">
+    <value>บัญชีนี้ถูกล็อกชั่วคราวเนื่องจากใส่รหัสผ่านผิดหลายครั้ง กรุณารอสักครู่แล้วลองใหม่อีกครั้ง</value>
+  </data>
+  <data name="USER_NOT_INVITED_TITLE" xml:space="preserve">
+    <value>ยังไม่ได้รับเชิญเข้าใช้งานระบบ</value>
+  </data>
+  <data name="USER_NOT_INVITED_DETAIL" xml:space="preserve">
+    <value>ไม่พบบัญชีอีเมลนี้ในระบบ กรุณาติดต่อผู้ดูแลระบบเพื่อขอรับสิทธิ์เข้าใช้งาน</value>
+  </data>
+  <data name="GOOGLE_AUTH_NOT_CONFIGURED_TITLE" xml:space="preserve">
+    <value>ยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วย Google</value>
+  </data>
+  <data name="GOOGLE_AUTH_NOT_CONFIGURED_DETAIL" xml:space="preserve">
+    <value>ระบบยังไม่ได้ตั้งค่าการเข้าสู่ระบบด้วยบัญชี Google กรุณาเข้าสู่ระบบด้วยอีเมลและรหัสผ่าน</value>
+  </data>
+  <data name="GOOGLE_TOKEN_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลยืนยันตัวตนจาก Google ไม่ถูกต้อง</value>
+  </data>
+  <data name="GOOGLE_TOKEN_INVALID_DETAIL" xml:space="preserve">
+    <value>โทเค็นยืนยันตัวตนจาก Google ไม่ถูกต้องหรือหมดอายุ กรุณาลองเข้าสู่ระบบอีกครั้ง</value>
+  </data>
+  <data name="GOOGLE_ACCOUNT_MISMATCH_TITLE" xml:space="preserve">
+    <value>บัญชี Google ไม่ตรงกับที่ผูกไว้</value>
+  </data>
+  <data name="GOOGLE_ACCOUNT_MISMATCH_DETAIL" xml:space="preserve">
+    <value>ผู้ใช้งานรายนี้ได้ผูกกับบัญชี Google อื่นไว้แล้ว</value>
+  </data>
+  <data name="TWO_FACTOR_CHALLENGE_INVALID_TITLE" xml:space="preserve">
+    <value>เซสชันการยืนยันตัวตนสองชั้นหมดอายุหรือไม่ถูกต้อง</value>
+  </data>
+  <data name="TWO_FACTOR_CHALLENGE_INVALID_DETAIL" xml:space="preserve">
+    <value>โทเค็นสำหรับยืนยันตัวตนสองชั้นไม่ถูกต้องหรือหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง</value>
+  </data>
+  <data name="TWO_FACTOR_CODE_INVALID_TITLE" xml:space="preserve">
+    <value>รหัสยืนยันตัวตนสองชั้นไม่ถูกต้อง</value>
+  </data>
+  <data name="TWO_FACTOR_CODE_INVALID_DETAIL" xml:space="preserve">
+    <value>รหัสจากแอปยืนยันตัวตนหรือรหัสสำรองไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง</value>
+  </data>
+  <data name="TWO_FACTOR_SETUP_REQUIRED_TITLE" xml:space="preserve">
+    <value>ยังไม่ได้เริ่มต้นตั้งค่าการยืนยันตัวตนสองชั้น</value>
+  </data>
+  <data name="TWO_FACTOR_SETUP_REQUIRED_DETAIL" xml:space="preserve">
+    <value>กรุณาเริ่มต้นขั้นตอนสร้างรหัสลับ 2FA ก่อนเปิดใช้งาน</value>
+  </data>
+  <data name="TWO_FACTOR_NOT_ENABLED_TITLE" xml:space="preserve">
+    <value>ยังไม่ได้เปิดใช้งานการยืนยันตัวตนสองชั้น</value>
+  </data>
+  <data name="TWO_FACTOR_NOT_ENABLED_DETAIL" xml:space="preserve">
+    <value>บัญชีนี้ยังไม่ได้เปิดใช้งานการยืนยันตัวตนสองชั้น (2FA)</value>
+  </data>
+  <data name="TWO_FACTOR_REQUIRED_BY_ADMIN_TITLE" xml:space="preserve">
+    <value>นโยบายผู้ดูแลระบบบังคับใช้การยืนยันตัวตนสองชั้น</value>
+  </data>
+  <data name="TWO_FACTOR_REQUIRED_BY_ADMIN_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถปิดการยืนยันตัวตนสองชั้นได้ เนื่องจากผู้ดูแลระบบกำหนดให้บัญชีนี้ต้องเปิดใช้งาน 2FA เสมอ</value>
+  </data>
+  <data name="CURRENT_PASSWORD_INVALID_TITLE" xml:space="preserve">
+    <value>รหัสผ่านปัจจุบันไม่ถูกต้อง</value>
+  </data>
+  <data name="CURRENT_PASSWORD_INVALID_DETAIL" xml:space="preserve">
+    <value>รหัสผ่านปัจจุบันที่ระบุไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง</value>
+  </data>
+  <data name="PASSWORD_TOO_SHORT_TITLE" xml:space="preserve">
+    <value>รหัสผ่านสั้นเกินไป</value>
+  </data>
+  <data name="PASSWORD_TOO_SHORT_DETAIL" xml:space="preserve">
+    <value>รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร</value>
+  </data>
+  <data name="PASSWORD_SAME_AS_CURRENT_TITLE" xml:space="preserve">
+    <value>รหัสผ่านใหม่ซ้ำกับรหัสผ่านเดิม</value>
+  </data>
+  <data name="PASSWORD_SAME_AS_CURRENT_DETAIL" xml:space="preserve">
+    <value>กรุณากำหนดรหัสผ่านใหม่ที่แตกต่างจากรหัสผ่านปัจจุบัน</value>
+  </data>
+  <data name="SESSION_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบเซสชันการเข้าใช้งาน</value>
+  </data>
+  <data name="SESSION_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบเซสชันที่ระบุ หรือเซสชันนี้ถูกยกเลิกไปแล้ว</value>
+  </data>
 </root>

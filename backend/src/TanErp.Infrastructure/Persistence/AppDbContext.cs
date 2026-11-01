@@ -19,6 +19,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<JobTitle> JobTitles => Set<JobTitle>();
     public DbSet<Membership> Memberships => Set<Membership>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserBackupCode> UserBackupCodes => Set<UserBackupCode>();
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<MembershipRole> MembershipRoles => Set<MembershipRole>();

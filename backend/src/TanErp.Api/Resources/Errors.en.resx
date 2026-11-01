@@ -1579,4 +1579,94 @@
   <data name="MRP_UNIT_CONVERSION_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>No active unit conversion to the item's base unit was found for the specified demand unit.</value>
   </data>
+  <data name="INVALID_CREDENTIALS_TITLE" xml:space="preserve">
+    <value>Invalid email or password</value>
+  </data>
+  <data name="INVALID_CREDENTIALS_DETAIL" xml:space="preserve">
+    <value>The email or password you entered is incorrect. Please check and try again.</value>
+  </data>
+  <data name="ACCOUNT_LOCKED_OUT_TITLE" xml:space="preserve">
+    <value>Account temporarily locked</value>
+  </data>
+  <data name="ACCOUNT_LOCKED_OUT_DETAIL" xml:space="preserve">
+    <value>This account is temporarily locked due to repeated failed sign-in attempts. Please wait and try again later.</value>
+  </data>
+  <data name="USER_NOT_INVITED_TITLE" xml:space="preserve">
+    <value>User not invited</value>
+  </data>
+  <data name="USER_NOT_INVITED_DETAIL" xml:space="preserve">
+    <value>This email address has not been invited to the workspace. Please contact an administrator.</value>
+  </data>
+  <data name="GOOGLE_AUTH_NOT_CONFIGURED_TITLE" xml:space="preserve">
+    <value>Google Sign-In is not configured</value>
+  </data>
+  <data name="GOOGLE_AUTH_NOT_CONFIGURED_DETAIL" xml:space="preserve">
+    <value>Google Sign-In is not configured on this server. Please sign in with your email and password.</value>
+  </data>
+  <data name="GOOGLE_TOKEN_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Google sign-in token</value>
+  </data>
+  <data name="GOOGLE_TOKEN_INVALID_DETAIL" xml:space="preserve">
+    <value>The Google identity token is invalid or has expired. Please try signing in again.</value>
+  </data>
+  <data name="GOOGLE_ACCOUNT_MISMATCH_TITLE" xml:space="preserve">
+    <value>Google account mismatch</value>
+  </data>
+  <data name="GOOGLE_ACCOUNT_MISMATCH_DETAIL" xml:space="preserve">
+    <value>This user profile is already linked to a different Google account.</value>
+  </data>
+  <data name="TWO_FACTOR_CHALLENGE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid or expired two-factor challenge</value>
+  </data>
+  <data name="TWO_FACTOR_CHALLENGE_INVALID_DETAIL" xml:space="preserve">
+    <value>Your two-factor verification challenge is invalid or has expired. Please sign in again.</value>
+  </data>
+  <data name="TWO_FACTOR_CODE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid verification code</value>
+  </data>
+  <data name="TWO_FACTOR_CODE_INVALID_DETAIL" xml:space="preserve">
+    <value>The authenticator code or backup recovery code is invalid. Please check and try again.</value>
+  </data>
+  <data name="TWO_FACTOR_SETUP_REQUIRED_TITLE" xml:space="preserve">
+    <value>Two-factor setup required</value>
+  </data>
+  <data name="TWO_FACTOR_SETUP_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Initiate two-factor authentication setup before enabling it.</value>
+  </data>
+  <data name="TWO_FACTOR_NOT_ENABLED_TITLE" xml:space="preserve">
+    <value>Two-factor authentication is not enabled</value>
+  </data>
+  <data name="TWO_FACTOR_NOT_ENABLED_DETAIL" xml:space="preserve">
+    <value>Two-factor authentication is not currently enabled on this account.</value>
+  </data>
+  <data name="TWO_FACTOR_REQUIRED_BY_ADMIN_TITLE" xml:space="preserve">
+    <value>Two-factor authentication required by administrator</value>
+  </data>
+  <data name="TWO_FACTOR_REQUIRED_BY_ADMIN_DETAIL" xml:space="preserve">
+    <value>Two-factor authentication cannot be disabled because your administrator requires it for this account.</value>
+  </data>
+  <data name="CURRENT_PASSWORD_INVALID_TITLE" xml:space="preserve">
+    <value>Incorrect current password</value>
+  </data>
+  <data name="CURRENT_PASSWORD_INVALID_DETAIL" xml:space="preserve">
+    <value>The current password you entered is incorrect.</value>
+  </data>
+  <data name="PASSWORD_TOO_SHORT_TITLE" xml:space="preserve">
+    <value>Password is too short</value>
+  </data>
+  <data name="PASSWORD_TOO_SHORT_DETAIL" xml:space="preserve">
+    <value>The password must be at least 8 characters long.</value>
+  </data>
+  <data name="PASSWORD_SAME_AS_CURRENT_TITLE" xml:space="preserve">
+    <value>New password matches current password</value>
+  </data>
+  <data name="PASSWORD_SAME_AS_CURRENT_DETAIL" xml:space="preserve">
+    <value>Choose a new password that differs from your current password.</value>
+  </data>
+  <data name="SESSION_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Session not found</value>
+  </data>
+  <data name="SESSION_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>The requested active session was not found or has already been revoked.</value>
+  </data>
 </root>

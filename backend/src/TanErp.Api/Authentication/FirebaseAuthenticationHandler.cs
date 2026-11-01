@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using TanErp.Api.ErrorHandling;
+using TanErp.Application.IdentityAccess.Authentication;
 using TanErp.Infrastructure.Identity;
 
 namespace TanErp.Api.Authentication;
@@ -50,11 +51,29 @@ public class FirebaseAuthenticationHandler : AuthenticationHandler<Authenticatio
         }
 
         var uid = identityResult.Uid;
+        if (identityResult.SessionId.HasValue)
+        {
+            var sessionValidator = Context.RequestServices.GetRequiredService<ISessionAccessValidator>();
+            var isActiveSession = await sessionValidator.IsSessionActiveAsync(
+                identityResult.SessionId.Value,
+                uid,
+                Context.RequestAborted);
+            if (!isActiveSession)
+            {
+                return AuthenticateResult.Fail("AUTHENTICATION_INVALID");
+            }
+        }
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, uid),
             new("firebase_uid", uid)
         };
+
+        if (identityResult.SessionId.HasValue)
+        {
+            claims.Add(new Claim("session_id", identityResult.SessionId.Value.ToString()));
+        }
 
         // Only a verified email can ever be used to link an invited user.
         if (identityResult.EmailVerified && !string.IsNullOrWhiteSpace(identityResult.Email))

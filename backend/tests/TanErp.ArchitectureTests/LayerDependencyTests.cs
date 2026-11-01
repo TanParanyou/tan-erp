@@ -68,4 +68,24 @@ public class LayerDependencyTests
 
         rule.Check(Architecture);
     }
+
+    [Fact]
+    public void AuthController_ShouldStayThin()
+    {
+        var rule = Classes().That().HaveFullName("TanErp.Api.Controllers.AuthController")
+            .Should().NotDependOnAny(Types().That().ResideInAssembly(InfrastructureAssembly))
+            .AndShould().NotDependOnAny(Types().That().HaveFullName("TanErp.Application.IdentityAccess.Authentication.IAuthenticationStore"));
+
+        rule.Check(Architecture);
+    }
+
+    [Fact]
+    public void CurrentUserSecurityController_ShouldStayThin()
+    {
+        var rule = Classes().That().HaveFullName("TanErp.Api.Controllers.CurrentUserSecurityController")
+            .Should().NotDependOnAny(Types().That().ResideInAssembly(InfrastructureAssembly))
+            .AndShould().NotDependOnAny(Types().That().HaveFullName("TanErp.Application.IdentityAccess.Authentication.IAuthenticationStore"));
+
+        rule.Check(Architecture);
+    }
 }

@@ -18,6 +18,7 @@ using TanErp.Application.IdentityAccess.Administration.SetMembershipActive;
 using TanErp.Application.IdentityAccess.Administration.SetUserActive;
 using TanErp.Application.IdentityAccess.Administration.UpdateMembership;
 using TanErp.Application.IdentityAccess.Administration.UpdateUserProfile;
+using TanErp.Application.IdentityAccess.Administration.UserSecurity;
 
 namespace TanErp.Api.Controllers;
 
@@ -40,6 +41,7 @@ public class AdminUsersController : ControllerBase
     private readonly RevokeAdminRoleHandler _revokeRole;
     private readonly ListAdminRoleRequestsHandler _listRoleRequests;
     private readonly DecideAdminRoleRequestHandler _decideRoleRequest;
+    private readonly AdminUserSecurityHandler _userSecurity;
 
     public AdminUsersController(
         ListAdminUsersHandler listUsers,
@@ -54,7 +56,8 @@ public class AdminUsersController : ControllerBase
         AssignAdminRoleHandler assignRole,
         RevokeAdminRoleHandler revokeRole,
         ListAdminRoleRequestsHandler listRoleRequests,
-        DecideAdminRoleRequestHandler decideRoleRequest)
+        DecideAdminRoleRequestHandler decideRoleRequest,
+        AdminUserSecurityHandler userSecurity)
     {
         _listUsers = listUsers;
         _getUser = getUser;
@@ -69,6 +72,7 @@ public class AdminUsersController : ControllerBase
         _revokeRole = revokeRole;
         _listRoleRequests = listRoleRequests;
         _decideRoleRequest = decideRoleRequest;
+        _userSecurity = userSecurity;
     }
 
     [HttpGet("users")]
@@ -132,7 +136,9 @@ public class AdminUsersController : ControllerBase
                 request.AvatarFileId,
                 request.Notes,
                 request.StartsAtUtc,
-                request.ExpiresAtUtc),
+                request.ExpiresAtUtc,
+                request.InitialPassword,
+                request.RequireTwoFactor),
             cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
@@ -187,6 +193,74 @@ public class AdminUsersController : ControllerBase
     [ProducesResponseType<AdminUserResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> ActivateUser([FromRoute] Guid userId, CancellationToken cancellationToken) =>
         SetUserActive(userId, active: true, cancellationToken);
+
+    [HttpPut("users/{userId:guid}/password")]
+    [ProducesResponseType<AdminUserResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SetUserPassword(
+        [FromRoute] Guid userId,
+        [FromBody] SetAdminUserPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var conditional = ReadConditional(out var failure);
+        if (failure is not null) return failure;
+
+        var result = await _userSecurity.SetPasswordAsync(
+            new SetAdminUserPasswordCommand(
+                conditional!.Caller,
+                userId,
+                conditional.RowVersion,
+                request.NewPassword,
+                HttpContext.TraceIdentifier),
+            cancellationToken);
+        return UserResult(result);
+    }
+
+    [HttpPut("users/{userId:guid}/two-factor-policy")]
+    [ProducesResponseType<AdminUserResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateUserTwoFactorPolicy(
+        [FromRoute] Guid userId,
+        [FromBody] UpdateAdminUserTwoFactorPolicyRequest request,
+        CancellationToken cancellationToken)
+    {
+        var conditional = ReadConditional(out var failure);
+        if (failure is not null) return failure;
+
+        var result = await _userSecurity.UpdateTwoFactorPolicyAsync(
+            new UpdateAdminUserTwoFactorPolicyCommand(
+                conditional!.Caller,
+                userId,
+                conditional.RowVersion,
+                request.RequireTwoFactor,
+                HttpContext.TraceIdentifier),
+            cancellationToken);
+        return UserResult(result);
+    }
+
+    [HttpPost("users/{userId:guid}/two-factor-reset")]
+    [ProducesResponseType<AdminUserResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ResetUserTwoFactor(
+        [FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var conditional = ReadConditional(out var failure);
+        if (failure is not null) return failure;
+
+        var result = await _userSecurity.ResetTwoFactorAsync(
+            new ResetAdminUserTwoFactorCommand(
+                conditional!.Caller,
+                userId,
+                conditional.RowVersion,
+                HttpContext.TraceIdentifier),
+            cancellationToken);
+        return UserResult(result);
+    }
 
     [HttpPatch("memberships/{membershipId:guid}")]
     [ProducesResponseType<AdminUserResponse>(StatusCodes.Status200OK)]

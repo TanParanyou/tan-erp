@@ -36,11 +36,26 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.PasswordHash).HasColumnName("password_hash").HasMaxLength(512);
+        builder.Property(x => x.PasswordChangedAtUtc).HasColumnName("password_changed_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.GoogleSubjectId).HasColumnName("google_subject_id").HasMaxLength(128);
+        builder.Property(x => x.TotpSecretEncrypted).HasColumnName("totp_secret_encrypted").HasMaxLength(512);
+        builder.Property(x => x.PendingTotpSecretEncrypted).HasColumnName("pending_totp_secret_encrypted").HasMaxLength(512);
+        builder.Property(x => x.IsTotpEnabled).HasColumnName("is_totp_enabled").IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.TotpEnabledAtUtc).HasColumnName("totp_enabled_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.RequireTwoFactor).HasColumnName("require_two_factor").IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.FailedLoginCount).HasColumnName("failed_login_count").IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.LockoutEndUtc).HasColumnName("lockout_end_utc").HasColumnType("timestamptz");
 
         builder.HasIndex(x => x.FirebaseUid)
             .IsUnique()
             .HasFilter("firebase_uid IS NOT NULL")
             .HasDatabaseName("ix_users_firebase_uid");
+
+        builder.HasIndex(x => x.GoogleSubjectId)
+            .IsUnique()
+            .HasFilter("google_subject_id IS NOT NULL")
+            .HasDatabaseName("ix_users_google_subject_id");
 
         // One user per email: administrators invite by email and the first verified login links the identity.
         builder.HasIndex(x => x.NormalizedEmail)

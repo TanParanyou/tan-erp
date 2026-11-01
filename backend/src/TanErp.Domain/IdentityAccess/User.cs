@@ -44,7 +44,21 @@ public class User : Entity
     /// <summary>Self-selected text size as a percentage, 90-130.</summary>
     public int TextScale { get; private set; } = 100;
 
-    public bool IsPending => FirebaseUid is null;
+    public const int MaxFailedLoginAttempts = 5;
+    public static readonly TimeSpan DefaultLockoutDuration = TimeSpan.FromMinutes(15);
+
+    public string? PasswordHash { get; private set; }
+    public DateTimeOffset? PasswordChangedAtUtc { get; private set; }
+    public string? GoogleSubjectId { get; private set; }
+    public string? TotpSecretEncrypted { get; private set; }
+    public string? PendingTotpSecretEncrypted { get; private set; }
+    public bool IsTotpEnabled { get; private set; }
+    public DateTimeOffset? TotpEnabledAtUtc { get; private set; }
+    public bool RequireTwoFactor { get; private set; }
+    public int FailedLoginCount { get; private set; }
+    public DateTimeOffset? LockoutEndUtc { get; private set; }
+
+    public bool IsPending => FirebaseUid is null && PasswordHash is null && GoogleSubjectId is null;
 
     private readonly List<Membership> _memberships = new();
     public IReadOnlyCollection<Membership> Memberships => _memberships.AsReadOnly();
@@ -211,4 +225,102 @@ public class User : Entity
 
     public void Deactivate() { IsActive = false; RowVersion = Guid.NewGuid(); }
     public void Activate() { IsActive = true; RowVersion = Guid.NewGuid(); }
+
+    public string EnsureSubjectUid()
+    {
+        if (string.IsNullOrWhiteSpace(FirebaseUid))
+        {
+            FirebaseUid = $"usr_{Id:N}";
+            RowVersion = Guid.NewGuid();
+        }
+
+        return FirebaseUid;
+    }
+
+    public void SetPassword(string passwordHash, DateTimeOffset changedAtUtc)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new ArgumentException("Password hash cannot be empty.", nameof(passwordHash));
+
+        PasswordHash = passwordHash;
+        PasswordChangedAtUtc = changedAtUtc;
+        FailedLoginCount = 0;
+        LockoutEndUtc = null;
+        EnsureSubjectUid();
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void LinkGoogleAccount(string googleSubjectId)
+    {
+        if (string.IsNullOrWhiteSpace(googleSubjectId))
+            throw new ArgumentException("Google subject ID cannot be empty.", nameof(googleSubjectId));
+
+        var trimmed = googleSubjectId.Trim();
+        if (!string.IsNullOrWhiteSpace(GoogleSubjectId) && !string.Equals(GoogleSubjectId, trimmed, StringComparison.Ordinal))
+            throw new InvalidOperationException("User is already linked to a different Google account.");
+
+        GoogleSubjectId = trimmed;
+        EnsureSubjectUid();
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void SetRequireTwoFactor(bool requireTwoFactor)
+    {
+        RequireTwoFactor = requireTwoFactor;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void BeginTotpSetup(string pendingTotpSecretEncrypted)
+    {
+        if (string.IsNullOrWhiteSpace(pendingTotpSecretEncrypted))
+            throw new ArgumentException("Encrypted pending TOTP secret cannot be empty.", nameof(pendingTotpSecretEncrypted));
+
+        PendingTotpSecretEncrypted = pendingTotpSecretEncrypted;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void EnableTotp(DateTimeOffset enabledAtUtc)
+    {
+        if (string.IsNullOrWhiteSpace(PendingTotpSecretEncrypted))
+            throw new InvalidOperationException("Pending TOTP setup secret is required before enabling 2FA.");
+
+        TotpSecretEncrypted = PendingTotpSecretEncrypted;
+        PendingTotpSecretEncrypted = null;
+        IsTotpEnabled = true;
+        TotpEnabledAtUtc = enabledAtUtc;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void DisableTotp()
+    {
+        TotpSecretEncrypted = null;
+        PendingTotpSecretEncrypted = null;
+        IsTotpEnabled = false;
+        TotpEnabledAtUtc = null;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public bool IsLockedOut(DateTimeOffset now) =>
+        LockoutEndUtc.HasValue && LockoutEndUtc.Value > now;
+
+    public void RecordFailedLogin(DateTimeOffset now)
+    {
+        if (LockoutEndUtc.HasValue && LockoutEndUtc.Value <= now)
+        {
+            FailedLoginCount = 0;
+            LockoutEndUtc = null;
+        }
+
+        FailedLoginCount++;
+        if (FailedLoginCount >= MaxFailedLoginAttempts)
+        {
+            LockoutEndUtc = now.Add(DefaultLockoutDuration);
+        }
+    }
+
+    public void ResetLoginLockout()
+    {
+        FailedLoginCount = 0;
+        LockoutEndUtc = null;
+    }
 }

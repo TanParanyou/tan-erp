@@ -2,6 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TanErp.Application\TanErp.Application.csproj" />
     <ProjectReference Include="..\..\src\TanErp.Domain\TanErp.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TanErp.Infrastructure\TanErp.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />

@@ -440,40 +440,28 @@ public class CurrentUserEndpointTests : IAsyncLifetime
     }
 
     [Fact]
-    public void FirebaseTokenVerifier_MissingProjectId_ThrowsInvalidOperationException()
+    public void SelfHostedAuthOptions_ProductionMissingKeys_ThrowsInvalidOperationException()
     {
         var config = new ConfigurationBuilder().Build();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => new FirebaseTokenVerifier(config));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            SelfHostedAuthOptions.FromConfiguration(config, "Production"));
 
-        Assert.Contains("Firebase:ProjectId", ex.Message);
+        Assert.Contains("Authentication:JwtSigningKey", ex.Message);
     }
 
     [Fact]
-    public async Task FirebaseTokenVerifier_Cancellation_ThrowsOperationCanceledException()
+    public async Task SelfHostedTokenVerifier_Cancellation_ThrowsOperationCanceledException()
     {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Firebase:ProjectId"] = "tan-erp-test"
-            })
-            .Build();
+        var config = new ConfigurationBuilder().Build();
+        var options = SelfHostedAuthOptions.FromConfiguration(config, "Test");
+        var jwtService = new SelfHostedJwtService(options);
+        var verifier = new SelfHostedTokenVerifier(jwtService, new TanErp.Infrastructure.Common.SystemClock());
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
 
-        var previousEmulatorHost = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
-        Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", "127.0.0.1:9099");
-        try
-        {
-            var verifier = new FirebaseTokenVerifier(config);
-            using var cancellation = new CancellationTokenSource();
-            cancellation.Cancel();
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-                verifier.VerifyTokenAsync("test-token", cancellation.Token));
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", previousEmulatorHost);
-        }
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            verifier.VerifyTokenAsync("test-token", cancellation.Token));
     }
 
     [Fact]

@@ -8,6 +8,7 @@ using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
 using TanErp.Domain.Surveys;
 using TanErp.Domain.QuickEstimates;
+using TanErp.Infrastructure.Identity;
 
 namespace TanErp.Infrastructure.Persistence;
 
@@ -21,6 +22,12 @@ public static class TestOnlyDataSeeder
     public const string TestFirebaseUid = "foundation-user-test-only";
     public const string TestUserEmail = "foundation-user@example.test";
     public const string TestUserDisplayName = "ผู้ใช้ TEST_ONLY";
+    public const string TestUserPassword = "TestPassword123!";
+
+    public static readonly Guid TestNoMemberUserId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b29");
+    public const string TestNoMemberFirebaseUid = "nomember-user-test-only";
+    public const string TestNoMemberUserEmail = "nomember-user@example.test";
+    public const string TestNoMemberUserDisplayName = "ผู้ใช้ไม่มีสังกัด TEST_ONLY";
 
     public static readonly Guid TestUserIdB = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b20");
     public static readonly Guid TestMembershipBId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b21");
@@ -95,12 +102,32 @@ public static class TestOnlyDataSeeder
             db.Branches.Add(branch);
         }
 
+        var passwordHasher = new Pbkdf2PasswordHasher();
+        string? defaultPasswordHash = null;
+        string GetDefaultPasswordHash() => defaultPasswordHash ??= passwordHasher.HashPassword(TestUserPassword);
+
         // Seed User
         var user = await db.Users.FirstOrDefaultAsync(u => u.FirebaseUid == TestFirebaseUid);
         if (user == null)
         {
             user = new User(TestUserId, TestFirebaseUid, TestUserDisplayName, TestUserEmail, isActive: true);
             db.Users.Add(user);
+        }
+        if (user.PasswordHash is null)
+        {
+            user.SetPassword(GetDefaultPasswordHash(), DateTimeOffset.UtcNow);
+        }
+
+        // Seed No-Membership User (ADR 0032 onboarding / empty-membership verification)
+        var noMemberUser = await db.Users.FirstOrDefaultAsync(u => u.FirebaseUid == TestNoMemberFirebaseUid);
+        if (noMemberUser == null)
+        {
+            noMemberUser = new User(TestNoMemberUserId, TestNoMemberFirebaseUid, TestNoMemberUserDisplayName, TestNoMemberUserEmail, isActive: true);
+            db.Users.Add(noMemberUser);
+        }
+        if (noMemberUser.PasswordHash is null)
+        {
+            noMemberUser.SetPassword(GetDefaultPasswordHash(), DateTimeOffset.UtcNow);
         }
 
         // Seed Membership
@@ -317,6 +344,10 @@ public static class TestOnlyDataSeeder
             userB = new User(TestUserIdB, TestFirebaseUidB, "ผู้ใช้ TEST_ONLY B", TestUserEmailB, isActive: true);
             db.Users.Add(userB);
         }
+        if (userB.PasswordHash is null)
+        {
+            userB.SetPassword(GetDefaultPasswordHash(), DateTimeOffset.UtcNow);
+        }
 
         var membershipB = await db.Memberships.FindAsync(TestMembershipBId);
         if (membershipB == null)
@@ -398,6 +429,10 @@ public static class TestOnlyDataSeeder
                 estimateReviewerUser = new User(TestEstimateReviewerUserId, TestEstimateReviewerFirebaseUid,
                     "ผู้ตรวจประเมิน TEST_ONLY", TestEstimateReviewerEmail, isActive: true);
                 db.Users.Add(estimateReviewerUser);
+            }
+            if (estimateReviewerUser.PasswordHash is null)
+            {
+                estimateReviewerUser.SetPassword(GetDefaultPasswordHash(), DateTimeOffset.UtcNow);
             }
 
             var estimateReviewerMembership = await db.Memberships.FindAsync(TestEstimateReviewerMembershipId);

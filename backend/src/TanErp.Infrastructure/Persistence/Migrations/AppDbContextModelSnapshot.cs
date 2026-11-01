@@ -4391,18 +4391,39 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("employee_code");
 
+                    b.Property<int>("FailedLoginCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("failed_login_count");
+
                     b.Property<string>("FirebaseUid")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("firebase_uid");
 
+                    b.Property<string>("GoogleSubjectId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("google_subject_id");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("IsTotpEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_totp_enabled");
+
                     b.Property<Guid?>("JobTitleId")
                         .HasColumnType("uuid")
                         .HasColumnName("job_title_id");
+
+                    b.Property<DateTimeOffset?>("LockoutEndUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("lockout_end_utc");
 
                     b.Property<string>("NormalizedEmail")
                         .IsRequired()
@@ -4415,6 +4436,20 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("notes");
 
+                    b.Property<DateTimeOffset?>("PasswordChangedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("password_changed_at_utc");
+
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("password_hash");
+
+                    b.Property<string>("PendingTotpSecretEncrypted")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("pending_totp_secret_encrypted");
+
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -4424,6 +4459,12 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(5)
                         .HasColumnType("character varying(5)")
                         .HasColumnName("preferred_locale");
+
+                    b.Property<bool>("RequireTwoFactor")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("require_two_factor");
 
                     b.Property<Guid>("RowVersion")
                         .IsConcurrencyToken()
@@ -4444,6 +4485,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasDefaultValue("system")
                         .HasColumnName("theme_mode");
 
+                    b.Property<DateTimeOffset?>("TotpEnabledAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("totp_enabled_at_utc");
+
+                    b.Property<string>("TotpSecretEncrypted")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("totp_secret_encrypted");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AvatarFileId");
@@ -4459,6 +4509,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_users_firebase_uid")
                         .HasFilter("firebase_uid IS NOT NULL");
 
+                    b.HasIndex("GoogleSubjectId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_google_subject_id")
+                        .HasFilter("google_subject_id IS NOT NULL");
+
                     b.HasIndex("JobTitleId");
 
                     b.HasIndex("NormalizedEmail")
@@ -4473,6 +4528,125 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_users_text_scale", "text_scale BETWEEN 90 AND 130");
 
                             t.HasCheckConstraint("ck_users_theme_mode", "theme_mode IN ('light', 'dark', 'system')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.IdentityAccess.UserBackupCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code_hash");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateTimeOffset?>("UsedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("used_at_utc");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "UsedAtUtc")
+                        .HasDatabaseName("ix_user_backup_codes_user_id");
+
+                    b.ToTable("user_backup_codes", "identity_access");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.IdentityAccess.UserSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ClientPlatform")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("client_platform");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CurrentRefreshTokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("current_refresh_token_hash");
+
+                    b.Property<string>("DeviceLabel")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("device_label");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("expires_at_utc");
+
+                    b.Property<DateTimeOffset?>("GracePeriodUntilUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("grace_period_until_utc");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("ip_address");
+
+                    b.Property<DateTimeOffset>("LastRotatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("last_rotated_at_utc");
+
+                    b.Property<DateTimeOffset>("LastUsedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("last_used_at_utc");
+
+                    b.Property<string>("PreviousRefreshTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("previous_refresh_token_hash");
+
+                    b.Property<string>("RevokeReason")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("revoke_reason");
+
+                    b.Property<DateTimeOffset?>("RevokedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("revoked_at_utc");
+
+                    b.Property<string>("UserAgent")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("user_agent");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "RevokedAtUtc", "ExpiresAtUtc")
+                        .HasDatabaseName("ix_user_sessions_user_active");
+
+                    b.ToTable("user_sessions", "identity_access", t =>
+                        {
+                            t.HasCheckConstraint("ck_user_sessions_client_platform", "client_platform IN ('web', 'mobile')");
                         });
                 });
 
@@ -11943,6 +12117,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("description");
 
+                    b.Property<Guid?>("ImageFileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("image_file_id");
+
+                    b.Property<string>("ImageFileIds")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("image_file_ids");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -11966,6 +12149,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnName("sort_order");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ImageFileId");
 
                     b.HasIndex("OrganizationId", "Code")
                         .IsUnique()
@@ -13027,6 +13212,28 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Navigation("Department");
 
                     b.Navigation("JobTitle");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.IdentityAccess.UserBackupCode", b =>
+                {
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.IdentityAccess.UserSession", b =>
+                {
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TanErp.Domain.Inventory.InventoryPeriodClose", b =>
@@ -15034,6 +15241,14 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("Id", "OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Surveys.SurveyDesignStyle", b =>
+                {
+                    b.HasOne("TanErp.Domain.Files.UploadedFile", null)
+                        .WithMany()
+                        .HasForeignKey("ImageFileId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("TanErp.Domain.Crm.Customers.Customer", b =>

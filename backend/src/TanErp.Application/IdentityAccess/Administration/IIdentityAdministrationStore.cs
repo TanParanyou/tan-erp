@@ -21,6 +21,12 @@ public interface IIdentityAdministrationStore
 
     Task<Result<AdminUser>> SetUserActiveAsync(Guid organizationId, Guid userId, Guid expectedRowVersion, bool active, AdminActor actor, string traceId, CancellationToken cancellationToken);
 
+    Task<Result<AdminUser>> SetUserPasswordAsync(Guid organizationId, Guid userId, Guid expectedRowVersion, string passwordHash, AdminActor actor, string traceId, CancellationToken cancellationToken);
+
+    Task<Result<AdminUser>> UpdateUserTwoFactorPolicyAsync(Guid organizationId, Guid userId, Guid expectedRowVersion, bool requireTwoFactor, AdminActor actor, string traceId, CancellationToken cancellationToken);
+
+    Task<Result<AdminUser>> ResetUserTwoFactorAsync(Guid organizationId, Guid userId, Guid expectedRowVersion, AdminActor actor, string traceId, CancellationToken cancellationToken);
+
     Task<Result<AdminUser>> UpdateMembershipAsync(Guid organizationId, Guid membershipId, Guid expectedRowVersion, Guid? branchId, DateTimeOffset? startsAtUtc, DateTimeOffset? expiresAtUtc, AdminActor actor, string traceId, CancellationToken cancellationToken);
 
     Task<Result<AdminUser>> SetMembershipActiveAsync(Guid organizationId, Guid membershipId, Guid expectedRowVersion, bool active, AdminActor actor, string traceId, CancellationToken cancellationToken);

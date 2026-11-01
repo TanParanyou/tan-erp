@@ -1,19 +1,21 @@
-using FirebaseAdmin;
-using FirebaseAdmin.Auth;
-using Google.Apis.Auth.OAuth2;
-using Microsoft.Extensions.Configuration;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.IdentityAccess.Authentication;
 
 namespace TanErp.Infrastructure.Identity;
 
-public sealed record FirebaseIdentity(string Uid, string? Email, bool EmailVerified);
+public sealed record FirebaseIdentity(
+    string Uid,
+    string? Email,
+    bool EmailVerified,
+    Guid? SessionId = null);
 
 public interface IFirebaseTokenVerifier
 {
     Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Verifies the token and returns the identity claims needed to link an invited user.
-    /// Verifiers that only know the UID return no email, so no invited user can be linked through them.
+    /// Verifies the bearer token and returns the identity claims (including optional active session ID).
+    /// Verifiers that only know the UID return no email and a null SessionId.
     /// </summary>
     async Task<FirebaseIdentity?> VerifyIdentityAsync(string idToken, CancellationToken cancellationToken = default)
     {
@@ -22,52 +24,15 @@ public interface IFirebaseTokenVerifier
     }
 }
 
-public class FirebaseTokenVerifier : IFirebaseTokenVerifier
+public sealed class SelfHostedTokenVerifier : IFirebaseTokenVerifier
 {
-    private readonly FirebaseAuth _auth;
+    private readonly ISelfHostedJwtService _jwtService;
+    private readonly IClock _clock;
 
-    public FirebaseTokenVerifier(IConfiguration configuration)
+    public SelfHostedTokenVerifier(ISelfHostedJwtService jwtService, IClock clock)
     {
-        var projectId = configuration["Firebase:ProjectId"]
-            ?? throw new InvalidOperationException(
-                "Required configuration 'Firebase:ProjectId' is missing.");
-        var envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-            ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-        var isProduction = string.Equals(envName, "Production", StringComparison.OrdinalIgnoreCase);
-
-        if (FirebaseApp.DefaultInstance == null)
-        {
-            var emulatorHost = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST")
-                ?? configuration["Firebase:AuthEmulatorHost"]
-                ?? (!isProduction ? "localhost:9099" : null);
-
-            if (!string.IsNullOrEmpty(emulatorHost))
-            {
-                if (isProduction)
-                {
-                    throw new InvalidOperationException(
-                        "FIREBASE_AUTH_EMULATOR_HOST must not be set in production.");
-                }
-
-                Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", emulatorHost);
-
-                FirebaseApp.Create(new AppOptions
-                {
-                    Credential = GoogleCredential.FromAccessToken("owner"),
-                    ProjectId = projectId
-                });
-            }
-            else
-            {
-                FirebaseApp.Create(new AppOptions
-                {
-                    Credential = GoogleCredential.GetApplicationDefault(),
-                    ProjectId = projectId
-                });
-            }
-        }
-
-        _auth = FirebaseAuth.DefaultInstance;
+        _jwtService = jwtService;
+        _clock = clock;
     }
 
     public async Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default)
@@ -76,25 +41,20 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
         return identity?.Uid;
     }
 
-    public async Task<FirebaseIdentity?> VerifyIdentityAsync(string idToken, CancellationToken cancellationToken = default)
+    public Task<FirebaseIdentity?> VerifyIdentityAsync(string idToken, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            var decoded = await _auth.VerifyIdTokenAsync(idToken, cancellationToken);
-            if (decoded is null) return null;
 
-            decoded.Claims.TryGetValue("email", out var email);
-            decoded.Claims.TryGetValue("email_verified", out var emailVerified);
-            return new FirebaseIdentity(decoded.Uid, email as string, emailVerified is true);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        var claims = _jwtService.VerifyAccessToken(idToken, _clock.UtcNow);
+        if (claims is null)
         {
-            throw;
+            return Task.FromResult<FirebaseIdentity?>(null);
         }
-        catch (FirebaseAuthException)
-        {
-            return null;
-        }
+
+        return Task.FromResult<FirebaseIdentity?>(new FirebaseIdentity(
+            claims.SubjectUid,
+            claims.Email,
+            claims.EmailVerified,
+            claims.SessionId));
     }
 }

@@ -35,7 +35,11 @@ public record AdminUserResponse(
     AdminJobTitleResponse? JobTitle = null,
     AdminAvatarResponse? Avatar = null,
     string? Notes = null,
-    DateTimeOffset? CreatedAtUtc = null)
+    DateTimeOffset? CreatedAtUtc = null,
+    bool HasPassword = false,
+    bool HasGoogleLinked = false,
+    bool IsTotpEnabled = false,
+    bool RequireTwoFactor = false)
 {
     public static AdminUserResponse From(AdminUser user) => new(
         user.Id,
@@ -63,7 +67,11 @@ public record AdminUserResponse(
         user.JobTitle is null ? null : new AdminJobTitleResponse(user.JobTitle.Id, user.JobTitle.Code, user.JobTitle.Name),
         user.Avatar is null ? null : new AdminAvatarResponse(user.Avatar.Id, user.Avatar.ServingUrl),
         user.Notes,
-        user.CreatedAtUtc);
+        user.CreatedAtUtc,
+        user.HasPassword,
+        user.HasGoogleLinked,
+        user.IsTotpEnabled,
+        user.RequireTwoFactor);
 }
 
 public record AdminPaginationResponse(int Page, int PageSize, int TotalCount, int TotalPages);
@@ -109,7 +117,13 @@ public record CreateAdminUserRequest(
     Guid? AvatarFileId = null,
     string? Notes = null,
     DateTimeOffset? StartsAtUtc = null,
-    DateTimeOffset? ExpiresAtUtc = null);
+    DateTimeOffset? ExpiresAtUtc = null,
+    string? InitialPassword = null,
+    bool RequireTwoFactor = false);
+
+public record SetAdminUserPasswordRequest(string? NewPassword);
+
+public record UpdateAdminUserTwoFactorPolicyRequest(bool RequireTwoFactor);
 
 public record RenameAdminUserRequest(string? DisplayName);
 
