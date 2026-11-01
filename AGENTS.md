@@ -135,7 +135,7 @@ This repository is in **Application Implementation**. ก่อนประเ�
 > - Data and Raw SQL: `docs/04-data/`
 > - Testing and completion gates: `docs/05-engineering/`
 
-### Backend (.NET 9 C# Clean Architecture)
+### Backend (.NET 10 C# Clean Architecture)
 - แบ่ง 4 โครงการ: `Domain`, `Application`, `Infrastructure`, `WebApi`
 - ห้ามใส่ Business Logic ใน Controllers หรือ Endpoints (ต้องอยู่ใน Application Use Cases/Services หรือ Domain Entities)
 - EF Core เป็นเจ้าของ Writes และ Transactions; Dapper / Parameterized Raw SQL ใช้เฉพาะ Complex Reads ใน Infrastructure
