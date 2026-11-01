@@ -17,16 +17,5 @@ services:
       timeout: 5s
       retries: 5
 
-  firebase-emulator:
-    image: spine3/firebase-emulator:latest
-    container_name: tan-erp-firebase-emulator
-    restart: unless-stopped
-    ports:
-      - "9099:9099"
-    volumes:
-      - ../firebase.json:/firebase/firebase.json
-    working_dir: /firebase
-    entrypoint: ["firebase", "emulators:start", "--only", "auth", "--project", "tan-erp-test-only"]
-
 volumes:
   postgres_data:

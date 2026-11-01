@@ -3,7 +3,6 @@
  * by calling the real API, so a customer-safe Quotation Document exists for local preview and UAT rehearsal.
  *
  * Prerequisites (local only):
- *   - Firebase Auth Emulator with users from scripts/seed-emulator-users.mjs
  *   - Backend running in Test mode with SeedTestData=true, SeedEstimateDemoData=true and the dedicated
  *     estimate reviewer seeded (see `make dev-backend-demo`)
  *
@@ -11,32 +10,28 @@
  * Safe to re-run: stops when the demo Estimate is already quoted.
  */
 
-const EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || "127.0.0.1:9099";
 const API_ORIGIN = process.env.API_ORIGIN || "http://localhost:5005";
 const DEMO_ESTIMATE_ID = "019a3cf8-96f0-7c9f-b207-93aa818f4c04";
 const PASSWORD = "TestPassword123!";
 const MAKER_EMAIL = "foundation-user@example.test";
 const REVIEWER_EMAIL = "foundation-estimate-reviewer@example.test";
 
-if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(EMULATOR_HOST) || !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(API_ORIGIN)) {
-  console.error("Refusing to run: this script only targets the local emulator and a local API.");
+if (!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(API_ORIGIN)) {
+  console.error("Refusing to run: this script only targets a local API.");
   process.exit(1);
 }
 
 async function signIn(email) {
-  const response = await fetch(
-    `http://${EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake-api-key`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: PASSWORD, returnSecureToken: true }),
-    },
-  );
+  const response = await fetch(`${API_ORIGIN}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password: PASSWORD, clientPlatform: "web" }),
+  });
   const body = await response.json();
-  if (!response.ok || !body.idToken) {
-    throw new Error(`Emulator sign-in failed for ${email}: run scripts/seed-emulator-users.mjs first.`);
+  if (!response.ok || !body.accessToken) {
+    throw new Error(`Self-hosted sign-in failed for ${email}: ensure Backend is running with SeedTestData=true.`);
   }
-  return body.idToken;
+  return body.accessToken;
 }
 
 async function api(session, method, path, { body, ifMatch, idempotent = false } = {}) {

@@ -15,7 +15,6 @@ DOTNET     := $(if $(wildcard $(HOME)/.dotnet/dotnet),$(DOTNET_ENV) $(HOME)/.dot
 # -----------------------------------------------------------------
 FE_PORT       ?= 3005
 BE_PORT       ?= 5005
-EMULATOR_PORT ?= 9099
 DB_PORT       ?= 5432
 DB_HOST       ?= localhost
 DB_NAME       ?= tan_erp
@@ -33,7 +32,7 @@ MOBILE_DIR    := mobile
 .PHONY: help \
         check-ports kill-ports \
         dev dev-setup dev-backend dev-backend-demo dev-frontend dev-env \
-        up down stop restart logs ps db-up db-stop emulator-up \
+        up down stop restart logs ps db-up db-stop \
         db-wait db-migrate db-rollback db-status db-seed seed seed-users seed-quotation-demo db-reset fresh \
         api-gen api-check \
         verify verify-backend verify-frontend \
@@ -50,7 +49,7 @@ help:
 	@echo "================================================================="
 	@echo "                   TAN-ERP MAKE COMMANDS                         "
 	@echo "================================================================="
-	@echo "พอร์ตมาตรฐาน: Frontend=$(FE_PORT) | Backend=$(BE_PORT) | Emulator=$(EMULATOR_PORT) | DB=$(DB_PORT)"
+	@echo "พอร์ตมาตรฐาน: Frontend=$(FE_PORT) | Backend=$(BE_PORT) | DB=$(DB_PORT)"
 	@echo ""
 	@echo "  🛠️  การรันและพัฒนาระบบ (Development):"
 	@echo "    make dev            - รันทั้ง Frontend (:$(FE_PORT)) และ Backend (:$(BE_PORT)) พร้อมกัน (เคลียร์พอร์ตค้าง + ดักจับ Ctrl+C เพื่อปิดทั้งคู่)"
@@ -68,11 +67,11 @@ help:
 	@echo "    make mobile-analyze - ตรวจสอบโค้ด Flutter (analyze + custom_lint)"
 	@echo ""
 	@echo "  🔌 การจัดการพอร์ต (Port Management):"
-	@echo "    make check-ports    - ตรวจสอบสถานะของพอร์ต $(FE_PORT), $(BE_PORT), $(EMULATOR_PORT), $(DB_PORT)"
+	@echo "    make check-ports    - ตรวจสอบสถานะของพอร์ต $(FE_PORT), $(BE_PORT), $(DB_PORT)"
 	@echo "    make kill-ports     - ปิด Process ที่ตกค้างบนพอร์ต $(FE_PORT) และ $(BE_PORT)"
 	@echo ""
 	@echo "  🐳 จัดการ Docker Containers (Infrastructure):"
-	@echo "    make up             - สตาร์ตคอนเทนเนอร์ PostgreSQL และ Firebase Emulator ในโหมด Background"
+	@echo "    make up             - สตาร์ตคอนเทนเนอร์ PostgreSQL ในโหมด Background"
 	@echo "    make down           - หยุดและลบคอนเทนเนอร์ Docker ทั้งหมด"
 	@echo "    make stop           - หยุดคอนเทนเนอร์ชั่วคราว (เก็บรักษาข้อมูลใน Volume ไว้)"
 	@echo "    make restart        - รีสตาร์ตคอนเทนเนอร์ Docker ทั้งหมด"
@@ -80,14 +79,13 @@ help:
 	@echo "    make ps             - แสดงสถานะการทำงานของคอนเทนเนอร์ทั้งหมด"
 	@echo "    make db-up          - สตาร์ตเฉพาะคอนเทนเนอร์ PostgreSQL (:$(DB_PORT))"
 	@echo "    make db-stop        - หยุดเฉพาะคอนเทนเนอร์ PostgreSQL"
-	@echo "    make emulator-up    - สตาร์ตเฉพาะคอนเทนเนอร์ Firebase Auth Emulator (:$(EMULATOR_PORT))"
 	@echo ""
 	@echo "  🗄️  ฐานข้อมูลและ Migration (Database & Migrations):"
 	@echo "    make db-migrate     - Apply EF Core Migration รุ่นล่าสุดเข้าสู่ฐานข้อมูล PostgreSQL"
 	@echo "    make db-rollback    - Rollback โครงสร้างตารางกลับสู่จุดเริ่มต้น (0)"
 	@echo "    make db-status      - แสดงรายการและประวัติสถานะของ EF Core Migration"
-	@echo "    make db-seed / seed - เพิ่มข้อมูลผู้ใช้ทดสอบเข้าสู่ Firebase Auth Emulator"
-	@echo "    make db-reset/fresh - รีเซ็ตฐานข้อมูลใหม่หมด (Rollback -> Migrate -> Seed)"
+	@echo "    make db-seed / seed - ยืนยันสถานะผู้ใช้ทดสอบเริ่มต้น (Seed อัตโนมัติผ่าน PostgreSQL TestOnlyDataSeeder)"
+	@echo "    make db-reset/fresh - รีเซ็ตฐานข้อมูลใหม่หมด (Rollback -> Migrate)"
 	@echo ""
 	@echo "  📜 สัญญาเชื่อมต่อ API (API Contracts):"
 	@echo "    make api-gen        - เจนเนอเรต TypeScript API Client จากสเปก OpenAPI ล่าสุด"
@@ -116,7 +114,7 @@ help:
 # ตรวจสอบว่าพอร์ตสำคัญของระบบถูกใช้งานอยู่หรือไม่
 check-ports:
 	@echo "กำลังตรวจสอบสถานะพอร์ตที่เกี่ยวข้องกับ tan-erp..."
-	@for port in $(FE_PORT) $(BE_PORT) $(EMULATOR_PORT) $(DB_PORT); do \
+	@for port in $(FE_PORT) $(BE_PORT) $(DB_PORT); do \
 		pid=$$(lsof -ti :$$port 2>/dev/null); \
 		if [ -n "$$pid" ]; then \
 			echo "  - พอร์ต $$port: ใช้งานอยู่ (PID: $$pid)"; \
@@ -141,9 +139,9 @@ kill-ports:
 # -----------------------------------------------------------------
 # 3. โครงสร้างพื้นฐาน Docker (Infrastructure)
 # -----------------------------------------------------------------
-# สตาร์ต PostgreSQL และ Firebase Emulator ใน Background
+# สตาร์ต PostgreSQL ใน Background
 up:
-	@echo "กำลังสตาร์ตคอนเทนเนอร์ PostgreSQL และ Firebase Emulator..."
+	@echo "กำลังสตาร์ตคอนเทนเนอร์ PostgreSQL..."
 	docker compose -f $(COMPOSE_FILE) up -d
 
 # หยุดและนำคอนเทนเนอร์ลง
@@ -179,11 +177,6 @@ db-stop:
 	@echo "กำลังหยุดคอนเทนเนอร์ PostgreSQL..."
 	docker compose -f $(COMPOSE_FILE) stop postgres
 
-# สตาร์ตเฉพาะ Firebase Auth Emulator Container
-emulator-up:
-	@echo "กำลังสตาร์ตคอนเทนเนอร์ Firebase Auth Emulator (พอร์ต $(EMULATOR_PORT))..."
-	docker compose -f $(COMPOSE_FILE) up -d firebase-emulator
-
 # -----------------------------------------------------------------
 # 4. ฐานข้อมูลและ Migration (Database & Migrations)
 # -----------------------------------------------------------------
@@ -210,10 +203,9 @@ db-status:
 	@echo "กำลังตรวจสอบประวัติและสถานะ EF Core Migrations..."
 	ConnectionStrings__Database=$(DB_CONN) $(DOTNET) ef migrations list --project $(BACKEND_INFRA) --startup-project $(BACKEND_API) --connection $(DB_CONN)
 
-# เพิ่มข้อมูลผู้ใช้ทดสอบเข้า Firebase Emulator
+# ข้อมูลผู้ใช้ทดสอบถูก Seed เข้า PostgreSQL โดยตรงผ่าน TestOnlyDataSeeder เมื่อรัน dev-backend
 db-seed:
-	@echo "กำลัง Seed ข้อมูลผู้ใช้ทดสอบเข้าสู่ Firebase Auth Emulator..."
-	FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:$(EMULATOR_PORT)" node scripts/seed-emulator-users.mjs
+	@echo "ระบบใช้ Self-Hosted Auth แล้ว: บัญชีทดสอบ (foundation-user@example.test / TestPassword123!) จะถูก Seed ลง PostgreSQL อัตโนมัติเมื่อรัน Backend"
 
 # Alias สำหรับ Seed ผู้ใช้ทดสอบ
 seed seed-users: db-seed
@@ -221,11 +213,11 @@ seed seed-users: db-seed
 # พา Estimate ตัวอย่าง (TEST_ONLY) ผ่าน API จนออกใบเสนอราคา เพื่อดูหน้า Preview เอกสาร
 # ต้องรัน Backend ด้วย: make dev-backend SEED_ESTIMATE_DEMO_DATA=true SEED_DEDICATED_ESTIMATE_REVIEWER=true
 seed-quotation-demo:
-	FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:$(EMULATOR_PORT)" API_ORIGIN="http://localhost:$(BE_PORT)" node scripts/seed-quotation-demo.mjs
+	API_ORIGIN="http://localhost:$(BE_PORT)" node scripts/seed-quotation-demo.mjs
 
-# ล้างและตั้งค่าฐานข้อมูลใหม่ทั้งหมด (Rollback -> Migrate -> Seed)
-db-reset fresh: db-rollback db-migrate db-seed
-	@echo "รีเซ็ตฐานข้อมูลและข้อมูลผู้ใช้ทดสอบเรียบร้อยแล้ว"
+# ล้างและตั้งค่าฐานข้อมูลใหม่ทั้งหมด (Rollback -> Migrate)
+db-reset fresh: db-rollback db-migrate
+	@echo "รีเซ็ตฐานข้อมูลเรียบร้อยแล้ว"
 
 # -----------------------------------------------------------------
 # 5. สภาพแวดล้อมและรันระบบพัฒนา (Development Runtime)
@@ -238,7 +230,7 @@ dev-env:
 	fi
 
 # เซ็ตอัปสภาพแวดล้อมทั้งหมดในคำสั่งเดียว
-dev-setup: up db-wait db-seed db-migrate dev-env
+dev-setup: up db-wait db-migrate dev-env
 	@echo ""
 	@echo "ติดตั้งสภาพแวดล้อมพร้อมพัฒนาเรียบร้อยแล้ว! สามารถรัน 'make dev' ได้ทันที"
 
@@ -250,8 +242,6 @@ dev-backend:
 	SeedDedicatedEstimateReviewer=$(if $(filter true,$(SEED_DEDICATED_ESTIMATE_REVIEWER)),true,false) \
 	SeedEstimateDemoData=$(if $(filter true,$(SEED_ESTIMATE_DEMO_DATA)),true,false) \
 	SeedItemCatalogDemoData=$(if $(filter true,$(SEED_ITEM_CATALOG_DEMO_DATA)),true,false) \
-	FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:$(EMULATOR_PORT) \
-	Firebase__ProjectId=tan-erp-test-only \
 	ConnectionStrings__Database=$(DB_CONN) \
 	$(DOTNET) run --no-launch-profile --project $(BACKEND_API) --urls http://localhost:$(BE_PORT)
 
