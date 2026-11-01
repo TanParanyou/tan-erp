@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. แผนนี้เป็นแผนระดับ slice; ก่อนเริ่มแต่ละ G-xx ให้เขียนแผน implementation ละเอียด (ไฟล์/โค้ด/คำสั่งทดสอบ) ที่ `docs/superpowers/plans/YYYY-MM-DD-<slice>.md` แล้วลิงก์กลับมาที่ตารางในหัวข้อ 3.
 
-**สถานะ:** Draft — รอผู้ใช้อนุมัติขอบเขตรายการ G-xx ก่อน implementation (ตาม AGENTS.md: Draft/Future ต้องมี task ที่อนุมัติก่อน)
+**สถานะ:** Completed — ทุกรายการ G-01 ถึง G-21 พัฒนาและผ่านการทดสอบครบถ้วน (Wave A–E) ณ 2026-10-31; รอยืนยัน Business Validation Questions และ UAT ก่อน Production Rollout
 
 **Goal:** ปิดข้อจำกัดเชิง feature ที่บันทึกไว้ใน [Implementation Roadmap](../../00-overview/implementation-roadmap.md) หลัง CP-01–16 และเพิ่ม capability ข้ามโมดูลที่ยังไม่มีในแผน (Notification, Reporting, ภาษีไทย, Labor)
 

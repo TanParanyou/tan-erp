@@ -1,6 +1,6 @@
 # Implementation Roadmap (แผนพัฒนา)
 
-**สถานะ:** Accepted เป็นลำดับการพัฒนา; สถานะ implementation และหลักฐาน verification ล่าสุด ณ 2026-09-30
+**สถานะ:** Accepted เป็นลำดับการพัฒนา; สถานะ implementation และหลักฐาน verification ครอบคลุม Gap Closure Plan (G-01 ถึง G-21) ล่าสุด ณ 2026-10-31
 
 เอกสารนี้เป็นแหล่งหลักสำหรับเจ้าของงานและทีมพัฒนาในการดูว่าอะไรมี implementation แล้ว อะไรยังค้าง และควรทำลำดับใด. รายละเอียดงานย่อยอยู่ในแผนของแต่ละ slice และ [ERP Completion Plan](../superpowers/plans/2026-09-29-erp-completion-master-plan.md); กฎธุรกิจและขอบเขตผลิตภัณฑ์อยู่ใน [Scope](scope-and-non-goals.md) และ [Requirements Catalog](requirements-catalog.md).
 
@@ -20,7 +20,7 @@
 
 ## สถานะ Implementation ปัจจุบัน
 
-คำว่า **มี implementation** หมายถึงพบโค้ดรองรับบน `main` ณ 2026-09-30; การแก้หลังหลักฐานที่อ้างต้องตรวจ diff และรัน gates ใหม่. ผลทดสอบด้านล่างเป็นหลักฐานที่บันทึกไว้ตามวันที่ของแต่ละเอกสาร ไม่ใช่การรันใหม่โดย Roadmap และไม่เท่ากับ Production sign-off.
+คำว่า **มี implementation** หมายถึงพบโค้ดรองรับบน `main` ณ 2026-10-31 (ครอบคลุม Gap Closure Plan G-01 ถึง G-21 ครบถ้วน); การแก้หลังหลักฐานที่อ้างต้องตรวจ diff และรัน gates ใหม่. ผลทดสอบด้านล่างเป็นหลักฐานที่บันทึกไว้ตามวันที่ของแต่ละเอกสาร ไม่ใช่การรันใหม่โดย Roadmap และไม่เท่ากับ Production sign-off.
 
 ผลตรวจรอบปรับเอกสาร 2026-09-29 อยู่ใน [ERP Completion Plan — ผลตรวจ](../superpowers/plans/2026-09-29-erp-completion-master-plan.md#ผลตรวจเอกสารและ-regression-gates-2026-09-29). Full backend gate ล่าสุดหลังแก้ Opportunity search และ Estimate review concurrency ผ่าน 2026-09-30: Integration 292/292, Unit 288/288 และ Architecture 3/3; build ผ่าน 0 warnings/errors. Frontend lint/typecheck/API parity, Vitest 608/608 และ production build ผ่าน; Chromium Estimate journey ผ่าน 1/1. รายละเอียดและข้อจำกัดอยู่ใน [Estimate Verification](../05-engineering/official-estimate-verification.md#review-decision-concurrency-follow-up-2026-09-30). SSL startup error ในรอบก่อนยังไม่ยืนยันสาเหตุ; ผล automated test ไม่แทน UAT หรือ Production sign-off.
 

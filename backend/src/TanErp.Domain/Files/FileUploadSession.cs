@@ -13,6 +13,7 @@ public static class FileParentTypes
     public const string ItemBrand = "item-brand";
     public const string CostRecord = "costrecord";
     public const string User = "user";
+    public const string SurveyDesignStyle = "survey-design-style";
 
     public static bool IsValid(string? parentType) =>
         parentType is not null &&
@@ -24,6 +25,7 @@ public static class FileParentTypes
          || string.Equals(parentType, ItemBrand, StringComparison.OrdinalIgnoreCase)
          || string.Equals(parentType, CostRecord, StringComparison.OrdinalIgnoreCase)
          || string.Equals(parentType, User, StringComparison.OrdinalIgnoreCase)
+         || string.Equals(parentType, SurveyDesignStyle, StringComparison.OrdinalIgnoreCase)
          // Owner types registered for shared attachments are valid upload parents without further edits here.
          || AttachmentOwnerTypes.IsRegistered(parentType.ToLowerInvariant()));
 }

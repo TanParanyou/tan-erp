@@ -13,6 +13,7 @@ public class SurveyDesignStyle : Entity
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid RowVersion { get; private set; } = Guid.NewGuid();
+    public Guid? ImageFileId { get; private set; }
 
     protected SurveyDesignStyle() { }
 
@@ -24,7 +25,8 @@ public class SurveyDesignStyle : Entity
         LocalizedText? description = null,
         int sortOrder = 0,
         bool isActive = true,
-        DateTimeOffset? createdAtUtc = null) : base(id)
+        DateTimeOffset? createdAtUtc = null,
+        Guid? imageFileId = null) : base(id)
     {
         if (organizationId == Guid.Empty)
             throw new ArgumentException("Organization ID cannot be empty.", nameof(organizationId));
@@ -39,9 +41,10 @@ public class SurveyDesignStyle : Entity
         SortOrder = sortOrder;
         IsActive = isActive;
         CreatedAtUtc = createdAtUtc ?? DateTimeOffset.UtcNow;
+        ImageFileId = imageFileId;
     }
 
-    public void Update(LocalizedText name, LocalizedText? description, int sortOrder, bool isActive)
+    public void Update(LocalizedText name, LocalizedText? description, int sortOrder, bool isActive, Guid? imageFileId = null)
     {
         ArgumentNullException.ThrowIfNull(name);
 
@@ -49,6 +52,7 @@ public class SurveyDesignStyle : Entity
         Description = description;
         SortOrder = sortOrder;
         IsActive = isActive;
+        ImageFileId = imageFileId;
         RowVersion = Guid.NewGuid();
     }
 }
