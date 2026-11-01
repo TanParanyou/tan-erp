@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
@@ -10,6 +10,9 @@ import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { FormSection } from "@/components/forms/FormSection";
+import { FormActionBar } from "@/components/forms/FormActionBar";
+import { IconTrash } from "@/components/common/Icons";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { formatCurrency, formatNumber } from "@/lib/formatters/formatters";
@@ -29,7 +32,9 @@ import { procurementErrorCode } from "../procurement-status";
 interface InvoiceDraftLine {
   key: string;
   purchaseOrderLineId: string;
-  itemLabel: string;
+  itemCode: string;
+  itemName: string;
+  unitCode: string;
   poUnitPrice: number;
   availableQuantity: number;
   quantity: string;
@@ -45,7 +50,9 @@ function fromInvoice(inv: SupplierInvoiceResponse): InvoiceDraftLine[] {
   return (inv.lines ?? []).map((line) => ({
     key: line.id ?? crypto.randomUUID(),
     purchaseOrderLineId: line.purchaseOrderLineId ?? "",
-    itemLabel: `${line.itemCode ?? "-"} · ${line.itemNameTh ?? "-"} (${line.unitCode ?? "-"})`,
+    itemCode: line.itemCode ?? "-",
+    itemName: line.itemNameTh ?? "-",
+    unitCode: line.unitCode ?? "-",
     poUnitPrice: line.poUnitPrice ?? 0,
     availableQuantity: line.quantity ?? 0,
     quantity: String(line.quantity ?? 1),
@@ -74,7 +81,6 @@ export function SupplierInvoiceEditor({ supplierInvoiceId }: SupplierInvoiceEdit
 
 function EditorForm({ invoice }: { invoice?: SupplierInvoiceResponse }) {
   const t = useTranslations("procurement.invoices");
-  const tOrders = useTranslations("procurement.orders");
   const tErrors = useTranslations("procurement.errors");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -112,7 +118,9 @@ function EditorForm({ invoice }: { invoice?: SupplierInvoiceResponse }) {
     const draftLines: InvoiceDraftLine[] = linesToUse.map((l) => ({
       key: l.id ?? crypto.randomUUID(),
       purchaseOrderLineId: l.id ?? "",
-      itemLabel: `${l.itemCode ?? "-"} · ${l.itemNameTh ?? "-"} (${l.unitCode ?? "-"})`,
+      itemCode: l.itemCode ?? "-",
+      itemName: l.itemNameTh ?? "-",
+      unitCode: l.unitCode ?? "-",
       poUnitPrice: l.unitPrice ?? 0,
       availableQuantity: l.uninvoicedReceivedQuantity ?? l.receivedQuantity ?? l.quantity ?? 0,
       quantity: String(l.uninvoicedReceivedQuantity ?? l.receivedQuantity ?? l.quantity ?? 1),
@@ -139,6 +147,40 @@ function EditorForm({ invoice }: { invoice?: SupplierInvoiceResponse }) {
   const total = subtotal + tax;
 
   const isBusy = mutations.create.isPending || mutations.update.isPending;
+  const isEdit = Boolean(invoice);
+
+  const isDirty = useMemo(() => {
+    if (!invoice) {
+      return Boolean(purchaseOrderId || supplierInvoiceNumber || note || lines.length > 0);
+    }
+    const origPoId = invoice.purchaseOrder?.id ?? "";
+    const origNumber = invoice.supplierInvoiceNumber ?? "";
+    const origInvoiceDate = invoice.invoiceDate ?? "";
+    const origDueDate = invoice.dueDate ?? "";
+    const origNote = invoice.note ?? "";
+    const origTax = String(invoice.taxAmount ?? "0");
+    const origLines = fromInvoice(invoice);
+
+    if (
+      purchaseOrderId !== origPoId ||
+      supplierInvoiceNumber !== origNumber ||
+      invoiceDate !== origInvoiceDate ||
+      dueDate !== origDueDate ||
+      taxAmount !== origTax ||
+      note !== origNote
+    ) {
+      return true;
+    }
+    if (lines.length !== origLines.length) return true;
+    return lines.some((line, index) => {
+      const orig = origLines[index];
+      return (
+        line.purchaseOrderLineId !== orig.purchaseOrderLineId ||
+        line.quantity !== orig.quantity ||
+        line.unitPrice !== orig.unitPrice
+      );
+    });
+  }, [invoice, purchaseOrderId, supplierInvoiceNumber, invoiceDate, dueDate, taxAmount, note, lines]);
 
   function updateLine(key: string, patch: Partial<InvoiceDraftLine>): void {
     setLines((current) => current.map((l) => (l.key === key ? { ...l, ...patch } : l)));
@@ -200,7 +242,7 @@ function EditorForm({ invoice }: { invoice?: SupplierInvoiceResponse }) {
   }
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-6 pb-20">
       <PageHeader
         title={invoice ? t("editTitle", { number: invoice.number ?? "-" }) : t("createTitle")}
         subtitle={t("editorSubtitle")}
@@ -211,197 +253,226 @@ function EditorForm({ invoice }: { invoice?: SupplierInvoiceResponse }) {
       />
       {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
 
-      <div className="erp-card p-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Select
-          label={t("purchaseOrder")}
-          required
-          value={purchaseOrderId}
-          placeholder={t("selectPurchaseOrder")}
-          disabled={isBusy || Boolean(invoice)}
-          options={(ordersQuery.data?.items ?? []).map((po) => ({
-            value: po.id ?? "",
-            label: `${po.number ?? "-"} · ${po.supplierNameTh ?? "-"} (${formatCurrency(po.totalAmount, "THB", locale)})`,
-          }))}
-          onChange={(event) => {
-            setPurchaseOrderId(event.target.value);
-            setLines([]);
-          }}
-        />
+      <FormSection title={t("title")}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Select
+            label={t("purchaseOrder")}
+            required
+            value={purchaseOrderId}
+            placeholder={t("selectPurchaseOrder")}
+            disabled={isBusy || Boolean(invoice)}
+            options={(ordersQuery.data?.items ?? []).map((po) => ({
+              value: po.id ?? "",
+              label: `${po.number ?? "-"} · ${po.supplierNameTh ?? "-"} (${formatCurrency(po.totalAmount, "THB", locale)})`,
+            }))}
+            onChange={(event) => {
+              setPurchaseOrderId(event.target.value);
+              setLines([]);
+            }}
+          />
 
-        <Input
-          label={t("supplierInvoiceNumber")}
-          required
-          value={supplierInvoiceNumber}
-          maxLength={100}
-          disabled={isBusy}
-          placeholder={t("invoiceNumberPlaceholder")}
-          onChange={(event) => setSupplierInvoiceNumber(event.target.value)}
-        />
+          <Input
+            label={t("supplierInvoiceNumber")}
+            required
+            value={supplierInvoiceNumber}
+            maxLength={100}
+            disabled={isBusy}
+            placeholder={t("invoiceNumberPlaceholder")}
+            onChange={(event) => setSupplierInvoiceNumber(event.target.value)}
+          />
 
-        <Input
-          type="date"
-          label={t("invoiceDate")}
-          required
-          placeholder={t("datePlaceholder")}
-          value={invoiceDate}
-          disabled={isBusy}
-          onChange={(event) => setInvoiceDate(event.target.value)}
-        />
+          <Input
+            type="date"
+            label={t("invoiceDate")}
+            required
+            placeholder={t("datePlaceholder")}
+            value={invoiceDate}
+            disabled={isBusy}
+            onChange={(event) => setInvoiceDate(event.target.value)}
+          />
 
-        <Input
-          type="date"
-          label={t("dueDate")}
-          required
-          placeholder={t("datePlaceholder")}
-          value={dueDate}
-          disabled={isBusy}
-          onChange={(event) => setDueDate(event.target.value)}
-        />
+          <Input
+            type="date"
+            label={t("dueDate")}
+            required
+            placeholder={t("datePlaceholder")}
+            value={dueDate}
+            disabled={isBusy}
+            onChange={(event) => setDueDate(event.target.value)}
+          />
 
-        <Input
-          type="number"
-          step="0.01"
-          min={0}
-          label={t("tax")}
-          value={taxAmount}
-          disabled={isBusy}
-          placeholder={t("taxAmountPlaceholder")}
-          onChange={(event) => {
-            setTaxAmount(event.target.value);
-            setTaxCustomized(true);
-          }}
-        />
+          <Input
+            type="number"
+            step="0.01"
+            min={0}
+            label={t("tax")}
+            value={taxAmount}
+            disabled={isBusy}
+            placeholder={t("taxAmountPlaceholder")}
+            onChange={(event) => {
+              setTaxAmount(event.target.value);
+              setTaxCustomized(true);
+            }}
+          />
 
-        <Input
-          label={t("note")}
-          value={note}
-          maxLength={500}
-          disabled={isBusy}
-          placeholder={t("notePlaceholder")}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </div>
+          <Input
+            label={t("note")}
+            value={note}
+            maxLength={500}
+            disabled={isBusy}
+            placeholder={t("notePlaceholder")}
+            onChange={(event) => setNote(event.target.value)}
+          />
+        </div>
+      </FormSection>
 
-      <div className="erp-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-erp-navy">{t("linesTitle")}</h3>
+      <FormSection
+        title={t("linesTitle")}
+        headerAction={
+          <div className="flex items-center gap-3 font-mono text-xs">
+            <span className="text-erp-text-muted">{t("subtotal")}: {formatCurrency(subtotal, "THB", locale)}</span>
+            <span className="text-erp-text-muted">+ {t("tax")}: {formatCurrency(tax, "THB", locale)}</span>
+            <span className="font-bold text-erp-navy text-sm">= {formatCurrency(total, "THB", locale)}</span>
+          </div>
+        }
+      >
         {selectedPoQuery.isLoading && (
           <div className="py-8 flex justify-center"><MonoSpinner size="md" /></div>
         )}
 
-        <ul className="space-y-3">
-          {lines.map((line) => {
-            const qty = Number(line.quantity) || 0;
-            const price = Number(line.unitPrice) || 0;
-            const diff = price - line.poUnitPrice;
-            const varianceAmount = diff * qty;
-            const variancePercent = line.poUnitPrice > 0 ? (diff / line.poUnitPrice) * 100 : 0;
-            const exceedsTolerance = Math.abs(variancePercent) > 2;
+        <div className="overflow-x-auto border border-erp-border bg-erp-surface">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-erp-border bg-erp-surface-subtle text-erp-navy font-bold">
+                <th className="py-2.5 px-3 w-12 text-center">#</th>
+                <th className="py-2.5 px-3 min-w-[200px]">{t("linesTitle")}</th>
+                <th className="py-2.5 px-3 w-32">{t("quantity")}</th>
+                <th className="py-2.5 px-3 w-36">{t("poUnitPrice")}</th>
+                <th className="py-2.5 px-3 w-36">{t("unitPrice")}</th>
+                <th className="py-2.5 px-3 w-36 text-right">{t("lineTotal")}</th>
+                <th className="py-2.5 px-3 w-36 text-center">{t("matchStatus")}</th>
+                <th className="py-2.5 px-3 w-14 text-center">
+                  <span className="sr-only">{tCommon("actions.delete")}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-erp-border/60">
+              {lines.map((line, index) => {
+                const qty = Number(line.quantity) || 0;
+                const price = Number(line.unitPrice) || 0;
+                const diff = price - line.poUnitPrice;
+                const variancePercent = line.poUnitPrice > 0 ? (diff / line.poUnitPrice) * 100 : 0;
+                const exceedsTolerance = Math.abs(variancePercent) > 2;
 
-            return (
-              <li
-                key={line.key}
-                className="border border-erp-border bg-erp-surface-subtle p-3 space-y-2"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-erp-text-main">{line.itemLabel}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-erp-text-muted">
-                      {t("availableUninvoiced", { quantity: formatNumber(line.availableQuantity) })}
-                    </span>
-                    {Math.abs(diff) > 0.001 ? (
-                      <StatusBadge
-                        label={exceedsTolerance ? t("exceedsTolerance") : t("withinTolerance")}
-                        variant={exceedsTolerance ? "warning" : "info"}
+                return (
+                  <tr key={line.key} className="align-middle hover:bg-erp-surface-subtle/50 transition-colors">
+                    <td className="py-2 px-3 text-center font-mono text-erp-text-muted">
+                      {index + 1}
+                    </td>
+                    <td className="py-2 px-3">
+                      <div className="text-sm font-medium text-erp-text-main">
+                        <span className="font-mono text-erp-navy font-semibold">{line.itemCode}</span> · {line.itemName}
+                      </div>
+                      <div className="text-xs text-erp-text-muted">
+                        {line.unitCode} · {t("availableUninvoiced", { quantity: formatNumber(line.availableQuantity) })}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3">
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.0001"
+                        aria-label={t("quantity")}
+                        placeholder={t("quantityPlaceholder")}
+                        value={line.quantity}
+                        disabled={isBusy}
+                        wrapperClassName="!mb-0"
+                        className="h-9 min-h-[36px] font-mono text-right"
+                        onChange={(event) => updateLine(line.key, { quantity: event.target.value })}
                       />
-                    ) : (
-                      <StatusBadge label={t("matchStatuses.matched")} variant="success" />
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-4 sm:items-end">
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.0001"
-                    label={t("quantity")}
-                    placeholder={t("quantityPlaceholder")}
-                    value={line.quantity}
-                    disabled={isBusy}
-                    onChange={(event) => updateLine(line.key, { quantity: event.target.value })}
-                  />
-                  <div>
-                    <span className="text-xs text-erp-text-muted block mb-1.5">{t("poUnitPrice")}</span>
-                    <div className="h-11 min-h-[44px] flex items-center px-3 border border-erp-border bg-erp-surface-disabled font-mono text-sm">
-                      {formatCurrency(line.poUnitPrice, "THB", locale)}
-                    </div>
-                  </div>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    label={t("unitPrice")}
-                    placeholder={t("unitPricePlaceholder")}
-                    value={line.unitPrice}
-                    disabled={isBusy}
-                    onChange={(event) => updateLine(line.key, { unitPrice: event.target.value })}
-                  />
-                  <div>
-                    <span className="text-xs text-erp-text-muted block mb-1.5">{t("lineTotal")}</span>
-                    <div className="h-11 min-h-[44px] flex items-center justify-between px-3 border border-erp-border bg-erp-surface font-mono text-sm">
-                      <span>{formatCurrency(qty * price, "THB", locale)}</span>
+                    </td>
+                    <td className="py-2 px-3">
+                      <div className="h-9 min-h-[36px] flex items-center justify-end px-3 border border-erp-border bg-erp-surface-disabled font-mono text-xs text-erp-text-muted">
+                        {formatCurrency(line.poUnitPrice, "THB", locale)}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3">
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        aria-label={t("unitPrice")}
+                        placeholder={t("unitPricePlaceholder")}
+                        value={line.unitPrice}
+                        disabled={isBusy}
+                        wrapperClassName="!mb-0"
+                        className="h-9 min-h-[36px] font-mono text-right"
+                        onChange={(event) => updateLine(line.key, { unitPrice: event.target.value })}
+                      />
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      <div className="font-mono font-semibold text-erp-navy text-sm">
+                        {formatCurrency(qty * price, "THB", locale)}
+                      </div>
                       {Math.abs(diff) > 0.001 && (
-                        <span className={`text-xs ${exceedsTolerance ? "text-erp-danger font-semibold" : "text-erp-warning"}`}>
+                        <div className={`text-[11px] font-mono ${exceedsTolerance ? "text-erp-danger font-semibold" : "text-erp-warning"}`}>
                           ({variancePercent > 0 ? "+" : ""}{variancePercent.toFixed(1)}%)
-                        </span>
+                        </div>
                       )}
-                    </div>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-          {lines.length === 0 && !selectedPoQuery.isLoading && (
-            <li className="text-xs text-erp-text-muted">{t("linesEmpty")}</li>
-          )}
-        </ul>
-      </div>
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {Math.abs(diff) > 0.001 ? (
+                        <StatusBadge
+                          label={exceedsTolerance ? t("exceedsTolerance") : t("withinTolerance")}
+                          variant={exceedsTolerance ? "warning" : "info"}
+                        />
+                      ) : (
+                        <StatusBadge label={t("matchStatuses.matched")} variant="success" />
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-erp-danger hover:text-erp-danger hover:bg-erp-danger/10"
+                        disabled={isBusy}
+                        title={tCommon("actions.delete")}
+                        aria-label={tCommon("actions.delete")}
+                        icon={<IconTrash size={16} />}
+                        onClick={() => setLines((current) => current.filter((l) => l.key !== line.key))}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+              {lines.length === 0 && !selectedPoQuery.isLoading && (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-sm text-erp-text-muted">
+                    {t("linesEmpty")}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </FormSection>
 
-      <div className="erp-card p-5 space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-erp-text-muted">{t("subtotal")}</span>
-          <span className="font-mono font-medium">{formatCurrency(subtotal, "THB", locale)}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-erp-text-muted">{t("tax")}</span>
-          <span className="font-mono font-medium">{formatCurrency(tax, "THB", locale)}</span>
-        </div>
-        <div className="flex justify-between text-base font-bold border-t border-erp-border pt-2">
-          <span className="text-erp-navy">{t("total")}</span>
-          <span className="font-mono text-erp-navy">{formatCurrency(total, "THB", locale)}</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="font-mono text-sm font-semibold text-erp-navy">
-          {t("draftTotal", { amount: formatCurrency(total, "THB", locale) })}
-        </span>
-        <div className="flex gap-3">
-          <Button type="button" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => router.back()}>
-            {tCommon("actions.cancel")}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            className="min-h-11"
-            isLoading={isBusy}
-            disabled={isBusy || lines.length === 0}
-            onClick={() => void save()}
-          >
-            {tCommon("actions.save")}
-          </Button>
-        </div>
-      </div>
+      <FormActionBar
+        isEditMode={isEdit}
+        isDirty={isDirty}
+        isLoading={isBusy}
+        isSaveDisabled={lines.length === 0}
+        sticky
+        saveButtonType="button"
+        onSave={() => void save()}
+        onCancel={() => router.back()}
+        statusContent={
+          <span className="font-mono text-sm font-semibold text-erp-navy">
+            {t("draftTotal", { amount: formatCurrency(total, "THB", locale) })}
+          </span>
+        }
+      />
     </section>
   );
 }

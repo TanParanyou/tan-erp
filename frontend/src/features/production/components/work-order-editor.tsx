@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { FormSection } from "@/components/forms/FormSection";
+import { FormActionBar } from "@/components/forms/FormActionBar";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -24,7 +25,6 @@ const PAGE_LIMIT = 100;
 export function WorkOrderEditor() {
   const t = useTranslations("production.workOrders");
   const tErrors = useTranslations("production.errors");
-  const tCommon = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
@@ -45,6 +45,18 @@ export function WorkOrderEditor() {
   // One key per form session so a retried create replays instead of creating a second order.
   const createKeyRef = useRef(crypto.randomUUID());
   const isBusy = mutations.create.isPending;
+
+  const isDirty = useMemo(() => {
+    return Boolean(
+      itemId ||
+      warehouseId ||
+      projectId ||
+      quantity !== "1" ||
+      plannedStartDate ||
+      plannedEndDate ||
+      note
+    );
+  }, [itemId, warehouseId, projectId, quantity, plannedStartDate, plannedEndDate, note]);
 
   async function save(): Promise<void> {
     setError(null);
@@ -81,57 +93,94 @@ export function WorkOrderEditor() {
   }
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-6 pb-20">
       <PageHeader
         title={t("createTitle")}
         subtitle={t("editorSubtitle")}
         breadcrumbs={[{ label: t("title"), href: `/${locale}/production/work-orders` }, { label: t("create") }]}
       />
       {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
-      <div className="erp-card p-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <ItemAutocomplete label={t("item")} required producibleOnly stockableOnly disabled={isBusy} value={itemId} onChange={(id) => setItemId(id)} />
-        <Select
-          label={t("warehouse")}
-          required
-          value={warehouseId}
-          placeholder={t("selectWarehouse")}
-          disabled={isBusy}
-          options={(warehouses.data?.items ?? []).map((w) => ({ value: w.id ?? "", label: `${w.code ?? "-"} · ${w.name ?? "-"}` }))}
-          onChange={(event) => setWarehouseId(event.target.value)}
-        />
-        {canReadProjects && (
+
+      <FormSection title={t("title")}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="erp-form-group !mb-0">
+            <ItemAutocomplete
+              label={t("item")}
+              required
+              producibleOnly
+              stockableOnly
+              disabled={isBusy}
+              value={itemId}
+              onChange={(id) => setItemId(id)}
+            />
+          </div>
           <Select
-            label={t("project")}
-            value={projectId}
-            placeholder={t("noProject")}
+            label={t("warehouse")}
+            required
+            value={warehouseId}
+            placeholder={t("selectWarehouse")}
             disabled={isBusy}
-            options={(projects.data?.items ?? []).map((p) => ({ value: p.id ?? "", label: `${p.code ?? "-"} · ${p.name ?? "-"}` }))}
-            onChange={(event) => setProjectId(event.target.value)}
+            options={(warehouses.data?.items ?? []).map((w) => ({ value: w.id ?? "", label: `${w.code ?? "-"} · ${w.name ?? "-"}` }))}
+            onChange={(event) => setWarehouseId(event.target.value)}
           />
-        )}
-        <Input type="number" min={0} step="0.0001" label={t("plannedQuantity")} value={quantity} disabled={isBusy} placeholder={t("plannedQuantityPlaceholder")} onChange={(event) => setQuantity(event.target.value)} />
-        <Input
-          type="date"
-          label={t("plannedStartDate")}
-          value={plannedStartDate}
-          disabled={isBusy}
-          placeholder="YYYY-MM-DD"
-          onChange={(event) => setPlannedStartDate(event.target.value)}
-        />
-        <Input
-          type="date"
-          label={t("plannedEndDate")}
-          value={plannedEndDate}
-          disabled={isBusy}
-          placeholder="YYYY-MM-DD"
-          onChange={(event) => setPlannedEndDate(event.target.value)}
-        />
-        <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
-      </div>
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => router.back()}>{tCommon("actions.cancel")}</Button>
-        <Button type="button" variant="primary" className="min-h-11" isLoading={isBusy} disabled={isBusy} onClick={() => void save()}>{tCommon("actions.save")}</Button>
-      </div>
+          {canReadProjects && (
+            <Select
+              label={t("project")}
+              value={projectId}
+              placeholder={t("noProject")}
+              disabled={isBusy}
+              options={(projects.data?.items ?? []).map((p) => ({ value: p.id ?? "", label: `${p.code ?? "-"} · ${p.name ?? "-"}` }))}
+              onChange={(event) => setProjectId(event.target.value)}
+            />
+          )}
+          <Input
+            type="number"
+            min={0}
+            step="0.0001"
+            label={t("plannedQuantity")}
+            value={quantity}
+            disabled={isBusy}
+            placeholder={t("plannedQuantityPlaceholder")}
+            onChange={(event) => setQuantity(event.target.value)}
+          />
+          <Input
+            type="date"
+            label={t("plannedStartDate")}
+            value={plannedStartDate}
+            disabled={isBusy}
+            placeholder="YYYY-MM-DD"
+            onChange={(event) => setPlannedStartDate(event.target.value)}
+          />
+          <Input
+            type="date"
+            label={t("plannedEndDate")}
+            value={plannedEndDate}
+            disabled={isBusy}
+            placeholder="YYYY-MM-DD"
+            onChange={(event) => setPlannedEndDate(event.target.value)}
+          />
+          <div className="md:col-span-2">
+            <Input
+              label={t("note")}
+              value={note}
+              maxLength={500}
+              disabled={isBusy}
+              placeholder={t("notePlaceholder")}
+              onChange={(event) => setNote(event.target.value)}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormActionBar
+        isEditMode={false}
+        isDirty={isDirty}
+        isLoading={isBusy}
+        sticky
+        saveButtonType="button"
+        onSave={() => void save()}
+        onCancel={() => router.back()}
+      />
     </section>
   );
 }

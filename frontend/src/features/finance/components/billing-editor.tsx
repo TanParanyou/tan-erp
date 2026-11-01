@@ -4,11 +4,12 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { FormSection } from "@/components/forms/FormSection";
+import { FormActionBar } from "@/components/forms/FormActionBar";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { formatCurrency } from "@/lib/formatters/formatters";
@@ -93,85 +94,96 @@ export function BillingEditor() {
     }
   }
 
+  const isDirty = Boolean(projectId || description || amount || dueDate || retentionRatePercent || applyVat);
+
   return (
-    <section className="space-y-5">
+    <section className="space-y-6 pb-20">
       <PageHeader title={t("createTitle")} subtitle={t("editorSubtitle")} breadcrumbs={[{ label: t("title"), href: `/${locale}/finance/billings` }, { label: t("create") }]} />
       {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
-      <div className="erp-card grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
-        <Select
-          label={t("project")}
-          required
-          value={projectId}
-          placeholder={t("selectProject")}
-          disabled={isBusy}
-          options={(projects.data?.items ?? []).map((p) => ({ value: p.id ?? "", label: `${p.code ?? "-"} · ${p.name ?? "-"}` }))}
-          onChange={(event) => setProjectId(event.target.value)}
-        />
-        <Select label={t("kind")} value={kind} disabled={isBusy} options={BILLING_KINDS.map((value) => ({ value, label: t(`kinds.${value}`) }))} onChange={(event) => setKind(event.target.value)} />
-        <Input label={t("description")} placeholder={t("descriptionPlaceholder")} required value={description} maxLength={200} disabled={isBusy} onChange={(event) => setDescription(event.target.value)} />
-        <Input type="number" min={0} step="0.01" label={t("amount")} placeholder={t("amountPlaceholder")} required value={amount} disabled={isBusy} onChange={(event) => setAmount(event.target.value)} />
-        <Input type="date" label={t("dueDate")} placeholder={t("datePlaceholder")} value={dueDate} disabled={isBusy} onChange={(event) => setDueDate(event.target.value)} />
-        <Input
-          type="number"
-          min={0}
-          max={30}
-          step="0.1"
-          label={t("retentionRatePercent")}
-          placeholder={t("retentionRatePlaceholder")}
-          value={retentionRatePercent}
-          disabled={isBusy}
-          onChange={(event) => setRetentionRatePercent(event.target.value)}
-        />
-        <div className="flex items-center md:col-span-2 pt-2">
-          <Checkbox
-            checked={applyVat}
+
+      <FormSection title={t("createTitle")} description={t("editorSubtitle")}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Select
+            label={t("project")}
+            required
+            value={projectId}
+            placeholder={t("selectProject")}
             disabled={isBusy}
-            onCheckedChange={(checked) => setApplyVat(checked === true)}
-            label={t("applyVat")}
+            options={(projects.data?.items ?? []).map((p) => ({ value: p.id ?? "", label: `${p.code ?? "-"} · ${p.name ?? "-"}` }))}
+            onChange={(event) => setProjectId(event.target.value)}
           />
-        </div>
-
-        {/* Live Tax & Retention Preview */}
-        {liveCalc.taxBase > 0 && (
-          <div className="border border-erp-border bg-erp-surface-subtle p-4 md:col-span-2 space-y-2">
-            <h4 className="text-xs font-bold text-erp-navy uppercase tracking-wider">{t("summaryTitle")}</h4>
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5 text-xs">
-              <div>
-                <dt className="text-erp-text-muted">{t("taxBase")}</dt>
-                <dd className="font-mono font-semibold">{formatCurrency(liveCalc.taxBase, "THB", locale)}</dd>
-              </div>
-              <div>
-                <dt className="text-erp-text-muted">{t("vatAmount")}</dt>
-                <dd className="font-mono font-semibold">{formatCurrency(liveCalc.vat, "THB", locale)}</dd>
-              </div>
-              <div>
-                <dt className="text-erp-text-muted">{t("grossTotal")}</dt>
-                <dd className="font-mono font-semibold">{formatCurrency(liveCalc.grossTotal, "THB", locale)}</dd>
-              </div>
-              <div>
-                <dt className="text-erp-text-muted">{t("retentionAmount")}</dt>
-                <dd className="font-mono font-semibold text-erp-warning">{formatCurrency(liveCalc.retentionHeld, "THB", locale)}</dd>
-              </div>
-              <div>
-                <dt className="text-erp-text-muted">{t("netReceivableNow")}</dt>
-                <dd className="font-mono font-bold text-erp-navy">{formatCurrency(liveCalc.netReceivableNow, "THB", locale)}</dd>
-              </div>
-            </dl>
+          <Select label={t("kind")} value={kind} disabled={isBusy} options={BILLING_KINDS.map((value) => ({ value, label: t(`kinds.${value}`) }))} onChange={(event) => setKind(event.target.value)} />
+          <Input label={t("description")} placeholder={t("descriptionPlaceholder")} required value={description} maxLength={200} disabled={isBusy} onChange={(event) => setDescription(event.target.value)} />
+          <Input type="number" min={0} step="0.01" label={t("amount")} placeholder={t("amountPlaceholder")} required value={amount} disabled={isBusy} onChange={(event) => setAmount(event.target.value)} />
+          <Input type="date" label={t("dueDate")} placeholder={t("datePlaceholder")} value={dueDate} disabled={isBusy} onChange={(event) => setDueDate(event.target.value)} />
+          <Input
+            type="number"
+            min={0}
+            max={30}
+            step="0.1"
+            label={t("retentionRatePercent")}
+            placeholder={t("retentionRatePlaceholder")}
+            value={retentionRatePercent}
+            disabled={isBusy}
+            onChange={(event) => setRetentionRatePercent(event.target.value)}
+          />
+          <div className="flex items-center md:col-span-2 pt-2">
+            <Checkbox
+              checked={applyVat}
+              disabled={isBusy}
+              onCheckedChange={(checked) => setApplyVat(checked === true)}
+              label={t("applyVat")}
+            />
           </div>
-        )}
 
-        {summary.data && (
-          <dl className="grid grid-cols-3 gap-3 text-xs md:col-span-2" aria-label={t("summaryTitle")}>
-            <div><dt className="text-erp-text-muted">{t("contractAmount")}</dt><dd className="font-mono font-semibold">{formatCurrency(summary.data.contractAmount, "THB", locale)}</dd></div>
-            <div><dt className="text-erp-text-muted">{t("billed")}</dt><dd className="font-mono font-semibold">{formatCurrency(summary.data.billed, "THB", locale)}</dd></div>
-            <div><dt className="text-erp-text-muted">{t("unbilled")}</dt><dd className="font-mono font-semibold">{formatCurrency(summary.data.unbilled, "THB", locale)}</dd></div>
-          </dl>
-        )}
-      </div>
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => router.back()}>{tCommon("actions.cancel")}</Button>
-        <Button type="button" variant="primary" className="min-h-11" isLoading={isBusy} disabled={isBusy} onClick={() => void save()}>{t("issue")}</Button>
-      </div>
+          {/* Live Tax & Retention Preview */}
+          {liveCalc.taxBase > 0 && (
+            <div className="border border-erp-border bg-erp-surface-subtle p-4 md:col-span-2 space-y-2">
+              <h4 className="text-xs font-bold text-erp-navy uppercase tracking-wider">{t("summaryTitle")}</h4>
+              <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5 text-xs">
+                <div>
+                  <dt className="text-erp-text-muted">{t("taxBase")}</dt>
+                  <dd className="font-mono font-semibold">{formatCurrency(liveCalc.taxBase, "THB", locale)}</dd>
+                </div>
+                <div>
+                  <dt className="text-erp-text-muted">{t("vatAmount")}</dt>
+                  <dd className="font-mono font-semibold">{formatCurrency(liveCalc.vat, "THB", locale)}</dd>
+                </div>
+                <div>
+                  <dt className="text-erp-text-muted">{t("grossTotal")}</dt>
+                  <dd className="font-mono font-semibold">{formatCurrency(liveCalc.grossTotal, "THB", locale)}</dd>
+                </div>
+                <div>
+                  <dt className="text-erp-text-muted">{t("retentionAmount")}</dt>
+                  <dd className="font-mono font-semibold text-erp-warning">{formatCurrency(liveCalc.retentionHeld, "THB", locale)}</dd>
+                </div>
+                <div>
+                  <dt className="text-erp-text-muted">{t("netReceivableNow")}</dt>
+                  <dd className="font-mono font-bold text-erp-navy">{formatCurrency(liveCalc.netReceivableNow, "THB", locale)}</dd>
+                </div>
+              </dl>
+            </div>
+          )}
+
+          {summary.data && (
+            <dl className="grid grid-cols-3 gap-3 text-xs md:col-span-2" aria-label={t("summaryTitle")}>
+              <div><dt className="text-erp-text-muted">{t("contractAmount")}</dt><dd className="font-mono font-semibold">{formatCurrency(summary.data.contractAmount, "THB", locale)}</dd></div>
+              <div><dt className="text-erp-text-muted">{t("billed")}</dt><dd className="font-mono font-semibold">{formatCurrency(summary.data.billed, "THB", locale)}</dd></div>
+              <div><dt className="text-erp-text-muted">{t("unbilled")}</dt><dd className="font-mono font-semibold">{formatCurrency(summary.data.unbilled, "THB", locale)}</dd></div>
+            </dl>
+          )}
+        </div>
+      </FormSection>
+
+      <FormActionBar
+        sticky={true}
+        isEditMode={false}
+        isDirty={isDirty}
+        isLoading={isBusy}
+        saveText={t("issue")}
+        onSave={() => void save()}
+        onCancel={() => router.back()}
+      />
     </section>
   );
 }

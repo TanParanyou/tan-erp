@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Select } from "@/components/ui/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { FormSection } from "@/components/forms/FormSection";
+import { FormActionBar } from "@/components/forms/FormActionBar";
+import { IconPlus, IconTrash } from "@/components/common/Icons";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { formatCurrency } from "@/lib/formatters/formatters";
@@ -17,14 +20,16 @@ import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { ItemAutocomplete } from "@/features/item-master/components/item-autocomplete";
 import { useProjectList } from "@/features/projects/api/project-queries";
-import type { PurchaseOrderRequest, PurchaseOrderResponse } from "@/lib/api/api-client";
-import { usePurchaseOrder, usePurchaseOrderMutations, useSupplierList } from "../api/procurement-queries";
+import type { ItemResponse, PurchaseOrderRequest, PurchaseOrderResponse } from "@/lib/api/api-client";
+import { useEffectiveSupplierPriceLookup, usePurchaseOrder, usePurchaseOrderMutations, useSupplierList } from "../api/procurement-queries";
 import { procurementErrorCode } from "../procurement-status";
 
 interface DraftLine {
   key: string;
   itemId: string;
-  label: string;
+  itemCode: string;
+  itemName: string;
+  unitCode: string;
   quantity: string;
   unitPrice: string;
 }
@@ -40,7 +45,9 @@ function fromOrder(order: PurchaseOrderResponse): DraftLine[] {
   return (order.lines ?? []).map((line) => ({
     key: line.id ?? crypto.randomUUID(),
     itemId: line.itemId ?? "",
-    label: `${line.itemCode ?? "-"} · ${line.itemNameTh ?? "-"} (${line.unitCode ?? "-"})`,
+    itemCode: line.itemCode ?? "-",
+    itemName: line.itemNameTh ?? "-",
+    unitCode: line.unitCode ?? "-",
     quantity: String(line.quantity ?? 1),
     unitPrice: String(line.unitPrice ?? 0),
   }));
@@ -68,13 +75,13 @@ export function PurchaseOrderEditor({ purchaseOrderId }: PurchaseOrderEditorProp
 function EditorForm({ order }: { order?: PurchaseOrderResponse }) {
   const t = useTranslations("procurement.orders");
   const tErrors = useTranslations("procurement.errors");
-  const tCommon = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
   const { selectedMembership } = useSelectedMembership();
   const canReadProjects = can(selectedMembership, PERMISSIONS.PROJECTS_READ);
   const mutations = usePurchaseOrderMutations();
+  const lookupSupplierPrice = useEffectiveSupplierPriceLookup();
   const suppliers = useSupplierList({ status: "active", page: 1, pageSize: PAGE_LIMIT });
   const projects = useProjectList({ page: 1, pageSize: PAGE_LIMIT }, canReadProjects);
 
@@ -83,16 +90,92 @@ function EditorForm({ order }: { order?: PurchaseOrderResponse }) {
   const [expectedDelivery, setExpectedDelivery] = useState(order?.expectedDeliveryDate ?? "");
   const [note, setNote] = useState(order?.note ?? "");
   const [lines, setLines] = useState<DraftLine[]>(order ? fromOrder(order) : []);
-  const [pickerKey, setPickerKey] = useState(0);
+  const [selectedItem, setSelectedItem] = useState<ItemResponse | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [itemPickerKey, setItemPickerKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   // One key per form session so a retried create replays instead of creating a second order.
   const createKeyRef = useRef(crypto.randomUUID());
 
   const isBusy = mutations.create.isPending || mutations.update.isPending;
+  const isEdit = Boolean(order);
+
+  const isDirty = useMemo(() => {
+    if (!order) {
+      return Boolean(supplierId || projectId || expectedDelivery || note || lines.length > 0);
+    }
+    const origSupplierId = order.supplier?.id ?? "";
+    const origProjectId = order.project?.id ?? "";
+    const origExpectedDelivery = order.expectedDeliveryDate ?? "";
+    const origNote = order.note ?? "";
+    const origLines = fromOrder(order);
+    if (
+      supplierId !== origSupplierId ||
+      projectId !== origProjectId ||
+      expectedDelivery !== origExpectedDelivery ||
+      note !== origNote
+    ) {
+      return true;
+    }
+    if (lines.length !== origLines.length) {
+      return true;
+    }
+    return lines.some((line, index) => {
+      const orig = origLines[index];
+      return (
+        line.itemId !== orig.itemId ||
+        line.quantity !== orig.quantity ||
+        line.unitPrice !== orig.unitPrice
+      );
+    });
+  }, [order, supplierId, projectId, expectedDelivery, note, lines]);
+
   const total = lines.reduce((sum, line) => sum + (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0), 0);
 
   function updateLine(key: string, patch: Partial<DraftLine>): void {
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...patch } : line)));
+  }
+
+  async function handleAddItem(): Promise<void> {
+    if (!selectedItemId || !selectedItem) return;
+    if (lines.some((l) => l.itemId === selectedItemId)) {
+      setSelectedItemId("");
+      setSelectedItem(null);
+      setItemPickerKey((k) => k + 1);
+      return;
+    }
+
+    const name = (locale === "en" ? selectedItem?.name?.english : selectedItem?.name?.thai) ?? "-";
+    const lineKey = crypto.randomUUID();
+    let initialUnitPrice = "0";
+
+    if (supplierId) {
+      try {
+        const price = await lookupSupplierPrice(supplierId, selectedItemId);
+        if (price?.unitPrice != null) {
+          initialUnitPrice = String(price.unitPrice);
+        }
+      } catch {
+        // Fallback to 0 if lookup fails
+      }
+    }
+
+    setLines((current) => [
+      ...current,
+      {
+        key: lineKey,
+        itemId: selectedItemId,
+        itemCode: selectedItem?.code ?? "-",
+        itemName: name,
+        unitCode: selectedItem?.baseUnit?.code ?? "-",
+        quantity: "1",
+        unitPrice: initialUnitPrice,
+      },
+    ]);
+
+    setSelectedItemId("");
+    setSelectedItem(null);
+    setItemPickerKey((k) => k + 1);
   }
 
   async function save(): Promise<void> {
@@ -129,7 +212,7 @@ function EditorForm({ order }: { order?: PurchaseOrderResponse }) {
   }
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-6 pb-20">
       <PageHeader
         title={order ? t("editTitle", { number: order.number ?? "-" }) : t("createTitle")}
         subtitle={t("editorSubtitle")}
@@ -137,75 +220,176 @@ function EditorForm({ order }: { order?: PurchaseOrderResponse }) {
       />
       {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
 
-      <div className="erp-card p-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Select
-          label={t("supplier")}
-          required
-          value={supplierId}
-          placeholder={t("selectSupplier")}
-          disabled={isBusy || Boolean(order)}
-          options={(suppliers.data?.items ?? []).map((s) => ({ value: s.id ?? "", label: `${s.code ?? "-"} · ${s.nameTh ?? "-"}` }))}
-          onChange={(event) => setSupplierId(event.target.value)}
-        />
-        {canReadProjects && (
+      <FormSection title={t("title")}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Select
-            label={t("project")}
-            value={projectId}
-            placeholder={t("noProject")}
-            disabled={isBusy}
-            options={(projects.data?.items ?? []).map((p) => ({ value: p.id ?? "", label: `${p.code ?? "-"} · ${p.name ?? "-"}` }))}
-            onChange={(event) => setProjectId(event.target.value)}
+            label={t("supplier")}
+            required
+            value={supplierId}
+            placeholder={t("selectSupplier")}
+            disabled={isBusy || Boolean(order)}
+            options={(suppliers.data?.items ?? []).map((s) => ({ value: s.id ?? "", label: `${s.code ?? "-"} · ${s.nameTh ?? "-"}` }))}
+            onChange={(event) => setSupplierId(event.target.value)}
           />
-        )}
-        <Input type="date" label={t("expectedDelivery")} placeholder={t("datePlaceholder")} value={expectedDelivery} disabled={isBusy} onChange={(event) => setExpectedDelivery(event.target.value)} />
-        <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
-      </div>
-
-      <div className="erp-card p-5 space-y-4">
-        <h3 className="text-sm font-bold text-erp-navy">{t("linesTitle")}</h3>
-        <ul className="space-y-2">
-          {lines.map((line) => (
-            <li key={line.key} className="grid grid-cols-1 gap-2 border border-erp-border bg-erp-surface-subtle p-3 sm:grid-cols-[1fr_130px_150px_auto] sm:items-end">
-              <div className="text-sm font-medium text-erp-text-main">{line.label}</div>
-              <Input type="number" min={0} step="0.0001" aria-label={t("quantity")} placeholder={t("quantity")} value={line.quantity} disabled={isBusy} onChange={(event) => updateLine(line.key, { quantity: event.target.value })} />
-              <Input type="number" min={0} step="0.01" aria-label={t("unitPrice")} placeholder={t("unitPrice")} value={line.unitPrice} disabled={isBusy} onChange={(event) => updateLine(line.key, { unitPrice: event.target.value })} />
-              <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={isBusy} onClick={() => setLines((current) => current.filter((l) => l.key !== line.key))}>{t("removeLine")}</Button>
-            </li>
-          ))}
-          {lines.length === 0 && <li className="text-xs text-erp-text-muted">{t("linesEmpty")}</li>}
-        </ul>
-
-        <ItemAutocomplete
-          key={pickerKey}
-          label={t("addItem")}
-          purchasableOnly
-          disabled={isBusy}
-          onChange={(itemId, item) => {
-            if (!itemId || lines.some((l) => l.itemId === itemId)) {
-              setPickerKey((k) => k + 1);
-              return;
-            }
-
-            const name = (locale === "en" ? item?.name?.english : item?.name?.thai) ?? "-";
-            setLines((current) => [...current, {
-              key: crypto.randomUUID(),
-              itemId,
-              label: `${item?.code ?? "-"} · ${name} (${item?.baseUnit?.code ?? "-"})`,
-              quantity: "1",
-              unitPrice: "0",
-            }]);
-            setPickerKey((k) => k + 1);
-          }}
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="font-mono text-sm font-semibold text-erp-navy">{t("draftTotal", { amount: formatCurrency(total, "THB", locale) })}</span>
-        <div className="flex gap-3">
-          <Button type="button" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => router.back()}>{tCommon("actions.cancel")}</Button>
-          <Button type="button" variant="primary" className="min-h-11" isLoading={isBusy} disabled={isBusy} onClick={() => void save()}>{tCommon("actions.save")}</Button>
+          {canReadProjects && (
+            <Select
+              label={t("project")}
+              value={projectId}
+              placeholder={t("noProject")}
+              disabled={isBusy}
+              options={(projects.data?.items ?? []).map((p) => ({ value: p.id ?? "", label: `${p.code ?? "-"} · ${p.name ?? "-"}` }))}
+              onChange={(event) => setProjectId(event.target.value)}
+            />
+          )}
+          <Input type="date" label={t("expectedDelivery")} placeholder={t("datePlaceholder")} value={expectedDelivery} disabled={isBusy} onChange={(event) => setExpectedDelivery(event.target.value)} />
+          <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
         </div>
-      </div>
+      </FormSection>
+
+      <FormSection
+        title={t("linesTitle")}
+        headerAction={
+          <span className="font-mono text-sm font-semibold text-erp-navy">
+            {t("draftTotal", { amount: formatCurrency(total, "THB", locale) })}
+          </span>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className="erp-form-group !mb-0">
+            <label className="erp-label !mb-1.5">{t("addItem")}</label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <ItemAutocomplete
+                  key={itemPickerKey}
+                  label=""
+                  variant="filter"
+                  purchasableOnly
+                  disabled={isBusy}
+                  value={selectedItemId}
+                  onChange={(itemId, item) => {
+                    setSelectedItemId(itemId);
+                    setSelectedItem(item);
+                  }}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                className="h-11 min-h-[44px] shrink-0"
+                icon={<IconPlus size={16} />}
+                disabled={isBusy || !selectedItemId}
+                onClick={() => void handleAddItem()}
+              >
+                {t("addItem")}
+              </Button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto border border-erp-border bg-erp-surface">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-erp-border bg-erp-surface-subtle text-erp-navy font-bold">
+                  <th className="py-2.5 px-3 w-12 text-center">#</th>
+                  <th className="py-2.5 px-3 min-w-[200px]">{t("linesTitle")}</th>
+                  <th className="py-2.5 px-3 w-32">{t("quantity")}</th>
+                  <th className="py-2.5 px-3 w-36">{t("unitPrice")}</th>
+                  <th className="py-2.5 px-3 w-32 text-right">{t("draftTotal", { amount: "" }).replace(/[\s:]+/g, "")}</th>
+                  <th className="py-2.5 px-3 w-14 text-center">
+                    <span className="sr-only">{t("removeLine")}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-erp-border/60">
+                {lines.map((line, index) => {
+                  const lineTotal = (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0);
+                  return (
+                    <tr key={line.key} className="align-middle hover:bg-erp-surface-subtle/50 transition-colors">
+                      <td className="py-2 px-3 text-center font-mono text-erp-text-muted">
+                        {index + 1}
+                      </td>
+                      <td className="py-2 px-3">
+                        <div className="text-sm font-medium text-erp-text-main">
+                          <span className="font-mono text-erp-navy font-semibold">{line.itemCode}</span> · {line.itemName}
+                        </div>
+                        <div className="text-xs text-erp-text-muted">
+                          {line.unitCode}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3">
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.0001"
+                          aria-label={t("quantity")}
+                          placeholder={t("quantity")}
+                          value={line.quantity}
+                          disabled={isBusy}
+                          wrapperClassName="!mb-0"
+                          className="h-9 min-h-[36px] font-mono text-right"
+                          onChange={(event) => updateLine(line.key, { quantity: event.target.value })}
+                        />
+                      </td>
+                      <td className="py-2 px-3">
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          aria-label={t("unitPrice")}
+                          placeholder={t("unitPrice")}
+                          value={line.unitPrice}
+                          disabled={isBusy}
+                          wrapperClassName="!mb-0"
+                          className="h-9 min-h-[36px] font-mono text-right"
+                          onChange={(event) => updateLine(line.key, { unitPrice: event.target.value })}
+                        />
+                      </td>
+                      <td className="py-2 px-3 text-right font-mono font-semibold text-erp-navy text-sm">
+                        {formatCurrency(lineTotal, "THB", locale)}
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-erp-danger hover:text-erp-danger hover:bg-erp-danger/10"
+                          disabled={isBusy}
+                          title={t("removeLine")}
+                          aria-label={t("removeLine")}
+                          icon={<IconTrash size={16} />}
+                          onClick={() => setLines((current) => current.filter((l) => l.key !== line.key))}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+                {lines.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-sm text-erp-text-muted">
+                      {t("linesEmpty")}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </FormSection>
+
+      <FormActionBar
+        isEditMode={isEdit}
+        isDirty={isDirty}
+        isLoading={isBusy}
+        sticky
+        saveButtonType="button"
+        onSave={() => void save()}
+        onCancel={() => router.back()}
+        statusContent={
+          <span className="font-mono text-sm font-semibold text-erp-navy">
+            {t("draftTotal", { amount: formatCurrency(total, "THB", locale) })}
+          </span>
+        }
+      />
     </section>
   );
 }

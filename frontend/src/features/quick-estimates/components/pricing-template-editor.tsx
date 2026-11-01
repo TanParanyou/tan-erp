@@ -172,7 +172,15 @@ export function PricingTemplateEditor({ template, onDone }: PricingTemplateEdito
   }
 
   const numberField = (key: (typeof REQUIRED_NUMBERS)[number], step = "0.01") => (
-    <Input type="number" step={step} label={t(`fields.${key}`)} value={form[key]} disabled={isBusy} placeholder={t(`fields.${key}Placeholder`)} onChange={(event) => set(key, event.target.value)} />
+    <Input
+      type="number"
+      step={step}
+      label={t(`fields.${key}`)}
+      value={form[key]}
+      disabled={isBusy}
+      placeholder={t("numberFieldPlaceholder")}
+      onChange={(event) => set(key, event.target.value)}
+    />
   );
 
   return (

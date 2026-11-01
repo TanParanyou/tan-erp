@@ -20,6 +20,7 @@ export interface ItemAutocompleteProps {
   producibleOnly?: boolean;
   /** Only items that are tracked in stock. */
   stockableOnly?: boolean;
+  variant?: "default" | "filter";
   className?: string;
 }
 
@@ -37,6 +38,7 @@ export function ItemAutocomplete({
   purchasableOnly = false,
   producibleOnly = false,
   stockableOnly = false,
+  variant,
   className,
 }: ItemAutocompleteProps) {
   const locale = useLocale();
@@ -54,12 +56,13 @@ export function ItemAutocomplete({
       onChange={(id) => onChange(id, items.find((item) => item.id === id) ?? selected)}
       selectedItem={selected}
       onSelectedItemChange={setSelected}
-      label={label ?? t("itemAutocompleteLabel")}
+      label={label !== undefined ? label : t("itemAutocompleteLabel")}
       placeholder={placeholder ?? t("itemAutocompletePlaceholder")}
       error={error}
       required={required}
       disabled={disabled}
       className={className}
+      variant={variant}
       items={items}
       isLoading={query.isLoading}
       emptyText={t("noResults")}
