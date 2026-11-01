@@ -121,6 +121,7 @@ public class SurveyMasterDataEndpointsTests : IAsyncLifetime
         Assert.Equal("wabi_sabi", created.Code);
         Assert.Equal("วาบิ-ซาบิ (Wabi-Sabi)", created.Name.Thai);
         Assert.Equal("Wabi-Sabi Natural Imperfection", created.Name.English);
+        Assert.Null(created.ImageFileId);
 
         // 2. Update the style
         var updatePayload = new UpdateSurveyDesignStyleRequest(

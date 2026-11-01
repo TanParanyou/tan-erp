@@ -17,8 +17,19 @@ import {
   IconSparkles,
   IconPalette,
   IconFileText,
+  IconUpload,
+  IconTrash,
+  IconEye,
+  IconCheckCircle,
 } from "@/components/common/Icons";
 import { SurveyTemplateManager } from "./survey-template-manager";
+import { DesignStyleThumbnail } from "./design-style-thumbnail";
+import { DesignStyleIllustration } from "./design-style-illustration";
+import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
+import { GalleryLightboxModal, type GalleryItemMetadata } from "@/components/common/GalleryLightboxModal";
+import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
+import { getAuthToken } from "@/lib/auth/auth-session";
+import { useOptionalSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { useToast } from "@/hooks/useToast";
 import {
   useSurveyDesignStyles,
@@ -35,6 +46,12 @@ import type {
 
 type MasterDataTab = "design-styles" | "mood-tones" | "templates";
 
+interface PendingImageItem {
+  id: string;
+  file: File;
+  previewUrl: string;
+}
+
 interface ItemEditorState {
   id?: string;
   code: string;
@@ -45,6 +62,8 @@ interface ItemEditorState {
   colorPalette: string[];
   sortOrder: number;
   isActive: boolean;
+  imageFileId?: string | null;
+  imageFileIds: string[];
 }
 
 const initialEditorState: ItemEditorState = {
@@ -56,6 +75,8 @@ const initialEditorState: ItemEditorState = {
   colorPalette: [],
   sortOrder: 0,
   isActive: true,
+  imageFileId: null,
+  imageFileIds: [],
 };
 
 export function SurveyMasterDataManager() {
@@ -69,6 +90,21 @@ export function SurveyMasterDataManager() {
   // eslint-disable-next-line no-restricted-syntax -- token-exempt: default value of a colour picker input (user data, not theme)
   const [newColorInput, setNewColorInput] = useState("#3B82F6");
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // File upload & gallery state for design style illustration(s)
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [pendingImages, setPendingImages] = useState<PendingImageItem[]>([]);
+  const [existingImageFileIds, setExistingImageFileIds] = useState<string[]>([]);
+  
+  // Drawer Gallery Lightbox state
+  const [isDrawerLightboxOpen, setIsDrawerLightboxOpen] = useState(false);
+  const [drawerLightboxIndex, setDrawerLightboxIndex] = useState(0);
+
+  const membershipContext = useOptionalSelectedMembership();
+  const { uploadFiles, isUploading: isFileUploading } = useDeferredFileUpload({
+    parentType: "survey-design-style",
+    parentId: editorState.id ?? null,
+  });
 
   // Queries
   const {
@@ -95,10 +131,20 @@ export function SurveyMasterDataManager() {
     createStyleMutation.isPending ||
     updateStyleMutation.isPending ||
     createToneMutation.isPending ||
-    updateToneMutation.isPending;
+    updateToneMutation.isPending ||
+    isFileUploading;
+
+  const cleanupPendingPreviews = () => {
+    for (const item of pendingImages) {
+      URL.revokeObjectURL(item.previewUrl);
+    }
+    setPendingImages([]);
+  };
 
   // Open drawer for creating
   const handleAddNew = () => {
+    cleanupPendingPreviews();
+    setExistingImageFileIds([]);
     setEditorState(initialEditorState);
     setValidationError(null);
     setIsDrawerOpen(true);
@@ -106,6 +152,21 @@ export function SurveyMasterDataManager() {
 
   // Open drawer for editing design style
   const handleEditStyle = (item: SurveyDesignStyleResponse) => {
+    cleanupPendingPreviews();
+    // Resolve existing image IDs
+    const resolvedIds: string[] = [];
+    if (item.imageFileIds && Array.isArray(item.imageFileIds)) {
+      for (const id of item.imageFileIds) {
+        if (id && !resolvedIds.includes(id)) {
+          resolvedIds.push(id);
+        }
+      }
+    }
+    if (item.imageFileId && !resolvedIds.includes(item.imageFileId)) {
+      resolvedIds.unshift(item.imageFileId);
+    }
+
+    setExistingImageFileIds(resolvedIds);
     setEditorState({
       id: item.id,
       code: item.code ?? "",
@@ -116,6 +177,8 @@ export function SurveyMasterDataManager() {
       colorPalette: [],
       sortOrder: item.sortOrder ?? 0,
       isActive: item.isActive ?? true,
+      imageFileId: item.imageFileId ?? (resolvedIds[0] || null),
+      imageFileIds: resolvedIds,
     });
     setValidationError(null);
     setIsDrawerOpen(true);
@@ -123,6 +186,8 @@ export function SurveyMasterDataManager() {
 
   // Open drawer for editing mood tone
   const handleEditTone = (item: SurveyMoodToneResponse) => {
+    cleanupPendingPreviews();
+    setExistingImageFileIds([]);
     setEditorState({
       id: item.id,
       code: item.code ?? "",
@@ -133,6 +198,8 @@ export function SurveyMasterDataManager() {
       colorPalette: item.colorPalette ? [...item.colorPalette] : [],
       sortOrder: item.sortOrder ?? 0,
       isActive: item.isActive ?? true,
+      imageFileId: null,
+      imageFileIds: [],
     });
     setValidationError(null);
     setIsDrawerOpen(true);
@@ -140,9 +207,83 @@ export function SurveyMasterDataManager() {
 
   const handleCloseDrawer = () => {
     if (isSaving) return;
+    cleanupPendingPreviews();
+    setExistingImageFileIds([]);
     setIsDrawerOpen(false);
     setEditorState(initialEditorState);
     setValidationError(null);
+  };
+
+  // Multi-image selection handler
+  const handleFilesSelect = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const newItems: PendingImageItem[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file) continue;
+      newItems.push({
+        id: `pending-${crypto.randomUUID()}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      });
+    }
+    setPendingImages((prev) => [...prev, ...newItems]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveExistingImage = (fileIdToRemove: string) => {
+    setExistingImageFileIds((prev) => prev.filter((id) => id !== fileIdToRemove));
+  };
+
+  const handleRemovePendingImage = (pendingIdToRemove: string) => {
+    setPendingImages((prev) => {
+      const found = prev.find((p) => p.id === pendingIdToRemove);
+      if (found) {
+        URL.revokeObjectURL(found.previewUrl);
+      }
+      return prev.filter((p) => p.id !== pendingIdToRemove);
+    });
+  };
+
+  const handleRemoveAllImages = () => {
+    cleanupPendingPreviews();
+    setExistingImageFileIds([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Set cover (move selected image to index 0)
+  const handleSetCoverExisting = (fileId: string) => {
+    setExistingImageFileIds((prev) => [fileId, ...prev.filter((id) => id !== fileId)]);
+  };
+
+  const handleSetCoverPending = (pendingId: string) => {
+    const selected = pendingImages.find((p) => p.id === pendingId);
+    if (!selected) return;
+    setPendingImages((prev) => [selected, ...prev.filter((p) => p.id !== pendingId)]);
+  };
+
+  // Build combined items for Drawer Lightbox
+  const totalImageCount = existingImageFileIds.length + pendingImages.length;
+  const drawerLightboxItems: GalleryItemMetadata[] = [
+    ...existingImageFileIds.map((fId, idx) => ({
+      id: `existing-${fId}`,
+      fileId: fId,
+      caption: `${editorState.nameTh || editorState.code} (${idx + 1}/${totalImageCount})`,
+    })),
+    ...pendingImages.map((p, idx) => ({
+      id: p.id,
+      imageUrl: p.previewUrl,
+      caption: `${editorState.nameTh || editorState.code} (${existingImageFileIds.length + idx + 1}/${totalImageCount})`,
+    })),
+  ];
+
+  const openDrawerLightboxAtIndex = (index: number) => {
+    setDrawerLightboxIndex(index);
+    setIsDrawerLightboxOpen(true);
   };
 
   // Color palette operations for mood & tone
@@ -191,6 +332,27 @@ export function SurveyMasterDataManager() {
 
     try {
       if (activeTab === "design-styles") {
+        // Upload any newly selected pending files
+        const newlyUploadedIds: string[] = [];
+        if (pendingImages.length > 0) {
+          const token = await getAuthToken();
+          const uploadResult = await uploadFiles(
+            pendingImages.map((p) => p.file),
+            {
+              token: token ?? "",
+              membershipId: membershipContext?.selectedMembership?.id,
+              locale: "th",
+            }
+          );
+          for (const f of uploadResult.files) {
+            newlyUploadedIds.push(f.fileId);
+          }
+        }
+
+        // Combine remaining existing IDs and new IDs
+        const combinedIds = [...existingImageFileIds, ...newlyUploadedIds];
+        const primaryCoverId = combinedIds[0] ?? null;
+
         if (editorState.id) {
           await updateStyleMutation.mutateAsync({
             id: editorState.id,
@@ -199,6 +361,8 @@ export function SurveyMasterDataManager() {
               description: descriptionPayload,
               sortOrder: editorState.sortOrder,
               isActive: editorState.isActive,
+              imageFileId: primaryCoverId,
+              imageFileIds: combinedIds,
             },
           });
           toast.success(t("messages.updateSuccess"));
@@ -208,6 +372,8 @@ export function SurveyMasterDataManager() {
             name: namePayload,
             description: descriptionPayload,
             sortOrder: editorState.sortOrder,
+            imageFileId: primaryCoverId,
+            imageFileIds: combinedIds,
           });
           toast.success(t("messages.createSuccess"));
         }
@@ -244,6 +410,22 @@ export function SurveyMasterDataManager() {
   // Columns for Design Styles Table
   const styleColumns = useMemo<Column<SurveyDesignStyleResponse>[]>(
     () => [
+      {
+        id: "illustration",
+        header: t("table.illustration"),
+        className: "w-24 text-center",
+        cell: (_val, item) => (
+          <div className="flex items-center justify-center">
+            <DesignStyleThumbnail
+              code={item.code ?? ""}
+              imageFileId={item.imageFileId}
+              imageFileIds={item.imageFileIds}
+              name={item.name?.thai || item.name?.english || item.code || ""}
+              size="md"
+            />
+          </div>
+        ),
+      },
       {
         id: "code",
         header: t("table.code"),
@@ -544,7 +726,7 @@ export function SurveyMasterDataManager() {
         />
       )}
 
-      {/* Drawer for Create / Edit */}
+      {/* Slide-over Drawer for Create / Edit */}
       <Drawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
@@ -561,26 +743,32 @@ export function SurveyMasterDataManager() {
         footer={
           <div className="flex items-center justify-end gap-2 w-full">
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={handleCloseDrawer}
               disabled={isSaving}
             >
-              {t("actions.cancel")}
+              <span>{t("actions.cancel")}</span>
             </Button>
             <Button
+              type="submit"
+              form="survey-item-editor-form"
               variant="primary"
               size="sm"
-              onClick={handleSave}
               isLoading={isSaving}
               disabled={isSaving}
             >
-              {t("actions.save")}
+              <span>{t("actions.save")}</span>
             </Button>
           </div>
         }
       >
-        <form onSubmit={handleSave} className="flex flex-col gap-4">
+        <form
+          id="survey-item-editor-form"
+          onSubmit={handleSave}
+          className="flex flex-col gap-4"
+        >
           {validationError && (
             <div className="p-3 bg-red-50 border border-red-200 text-xs text-red-600 rounded-none">
               {validationError}
@@ -595,7 +783,10 @@ export function SurveyMasterDataManager() {
             <Input
               value={editorState.code}
               onChange={(e) =>
-                setEditorState((prev) => ({ ...prev, code: e.target.value }))
+                setEditorState((prev) => ({
+                  ...prev,
+                  code: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
+                }))
               }
               placeholder={t("fields.codePlaceholder")}
               disabled={Boolean(editorState.id) || isSaving}
@@ -644,6 +835,221 @@ export function SurveyMasterDataManager() {
             disabled={isSaving}
           />
 
+          {/* Design Style Illustrations (Multi-image & Preview) */}
+          {activeTab === "design-styles" && (
+            <div className="erp-form-group">
+              <div className="flex items-center justify-between mb-1">
+                <label className="erp-label">{t("fields.illustration")}</label>
+                {totalImageCount > 0 && (
+                  <span className="text-xs font-mono font-medium text-erp-navy">
+                    {t("fields.imageCount", { count: totalImageCount })}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-erp-text-muted mb-3">
+                {t("fields.illustrationHelp")}
+              </p>
+
+              {/* Multi-image Cards Grid */}
+              <div className="flex flex-col gap-3 p-3 bg-erp-surface-subtle border border-erp-border">
+                {totalImageCount === 0 ? (
+                  <div className="flex items-center gap-4">
+                    {/* Default Architectural Artwork */}
+                    <div className="relative w-28 h-20 border border-erp-border bg-white overflow-hidden shrink-0 shadow-2xs">
+                      <DesignStyleIllustration
+                        code={editorState.code || "default"}
+                        alt={editorState.nameTh || editorState.code}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-erp-text-main">
+                        {t("fields.removeCustomImage")}
+                      </span>
+                      <span className="text-[11px] text-erp-text-muted">
+                        ระบบจะแสดงภาพประกอบเชิงสถาปัตยกรรมมาตรฐานสำหรับสไตล์นี้
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {/* Existing Uploaded Images */}
+                    {existingImageFileIds.map((fileId, idx) => {
+                      const isCover = idx === 0;
+                      return (
+                        <div
+                          key={`existing-${fileId}`}
+                          className="relative group border border-erp-border bg-white overflow-hidden shadow-2xs flex flex-col"
+                        >
+                          <div
+                            className="relative w-full aspect-4/3 cursor-pointer overflow-hidden bg-erp-surface-subtle"
+                            onClick={() => openDrawerLightboxAtIndex(idx)}
+                            title={t("fields.preview")}
+                          >
+                            <AuthenticatedFileImage
+                              fileId={fileId}
+                              alt={editorState.nameTh || editorState.code}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-2">
+                              <IconEye size={18} />
+                              <span className="text-xs">{t("fields.preview")}</span>
+                            </div>
+                            {/* Cover Badge */}
+                            {isCover && (
+                              <div className="absolute top-1 left-1 px-1.5 py-0.5 text-[10px] font-bold bg-erp-navy text-white shadow-xs">
+                                {t("fields.coverBadge")}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Card Actions Bar */}
+                          <div className="flex items-center justify-between p-1.5 border-t border-erp-border bg-erp-surface-subtle text-xs">
+                            {!isCover ? (
+                              <button
+                                type="button"
+                                onClick={() => handleSetCoverExisting(fileId)}
+                                className="inline-flex items-center gap-1 text-[11px] text-erp-text-muted hover:text-erp-navy transition-colors"
+                                title={t("fields.setCover")}
+                              >
+                                <IconCheckCircle size={12} />
+                                <span>{t("fields.setCover")}</span>
+                              </button>
+                            ) : (
+                              <span className="text-[11px] font-semibold text-erp-navy flex items-center gap-1">
+                                <IconCheckCircle size={12} className="text-erp-navy" />
+                                <span>{t("fields.coverBadge")}</span>
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveExistingImage(fileId)}
+                              className="text-erp-text-muted hover:text-erp-danger p-1 transition-colors"
+                              title={t("fields.removeCustomImage")}
+                            >
+                              <IconTrash size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Pending Newly Selected Images */}
+                    {pendingImages.map((p, idx) => {
+                      const absoluteIdx = existingImageFileIds.length + idx;
+                      const isCover = absoluteIdx === 0;
+                      return (
+                        <div
+                          key={p.id}
+                          className="relative group border border-erp-border bg-white overflow-hidden shadow-2xs flex flex-col"
+                        >
+                          <div
+                            className="relative w-full aspect-4/3 cursor-pointer overflow-hidden bg-erp-surface-subtle"
+                            onClick={() => openDrawerLightboxAtIndex(absoluteIdx)}
+                            title={t("fields.preview")}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={p.previewUrl}
+                              alt={p.file.name}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-2">
+                              <IconEye size={18} />
+                              <span className="text-xs">{t("fields.preview")}</span>
+                            </div>
+                            {/* Cover Badge */}
+                            {isCover && (
+                              <div className="absolute top-1 left-1 px-1.5 py-0.5 text-[10px] font-bold bg-erp-navy text-white shadow-xs">
+                                {t("fields.coverBadge")}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Card Actions Bar */}
+                          <div className="flex items-center justify-between p-1.5 border-t border-erp-border bg-erp-surface-subtle text-xs">
+                            {!isCover ? (
+                              <button
+                                type="button"
+                                onClick={() => handleSetCoverPending(p.id)}
+                                className="inline-flex items-center gap-1 text-[11px] text-erp-text-muted hover:text-erp-navy transition-colors"
+                                title={t("fields.setCover")}
+                              >
+                                <IconCheckCircle size={12} />
+                                <span>{t("fields.setCover")}</span>
+                              </button>
+                            ) : (
+                              <span className="text-[11px] font-semibold text-erp-navy flex items-center gap-1">
+                                <IconCheckCircle size={12} className="text-erp-navy" />
+                                <span>{t("fields.coverBadge")}</span>
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePendingImage(p.id)}
+                              className="text-erp-text-muted hover:text-erp-danger p-1 transition-colors"
+                              title={t("fields.removeCustomImage")}
+                            >
+                              <IconTrash size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Toolbar for Uploading & Removing */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-erp-border">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      multiple
+                      onChange={(e) => handleFilesSelect(e.target.files)}
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      id="survey-design-style-images-input"
+                      disabled={isSaving}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isSaving}
+                      icon={<IconUpload size={14} />}
+                    >
+                      <span>
+                        {totalImageCount > 0
+                          ? t("fields.uploadImage")
+                          : t("fields.uploadImage")}
+                      </span>
+                    </Button>
+
+                    {totalImageCount > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveAllImages}
+                        disabled={isSaving}
+                        className="text-erp-text-muted hover:text-erp-danger"
+                        icon={<IconTrash size={14} />}
+                      >
+                        <span>{t("fields.removeAllImages")}</span>
+                      </Button>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-erp-text-muted">
+                    PNG, JPG, WebP (max 5MB)
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Color Palette (Mood & Tone only) */}
           {activeTab === "mood-tones" && (
             <div className="erp-form-group">
@@ -668,8 +1074,9 @@ export function SurveyMasterDataManager() {
                   size="sm"
                   onClick={handleAddColor}
                   className="h-11 min-h-[44px]"
+                  icon={<IconPlus size={14} />}
                 >
-                  {t("actions.addColor")}
+                  <span>{t("actions.addColor")}</span>
                 </Button>
               </div>
 
@@ -733,6 +1140,18 @@ export function SurveyMasterDataManager() {
           </div>
         </form>
       </Drawer>
+
+      {/* Drawer Gallery Lightbox Modal */}
+      {drawerLightboxItems.length > 0 && (
+        <GalleryLightboxModal
+          isOpen={isDrawerLightboxOpen}
+          onClose={() => setIsDrawerLightboxOpen(false)}
+          items={drawerLightboxItems}
+          currentIndex={drawerLightboxIndex}
+          onIndexChange={setDrawerLightboxIndex}
+          title={editorState.nameTh || editorState.code}
+        />
+      )}
     </div>
   );
 }

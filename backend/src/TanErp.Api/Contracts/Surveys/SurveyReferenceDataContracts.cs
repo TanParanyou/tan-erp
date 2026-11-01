@@ -25,7 +25,8 @@ public sealed record SurveyDesignStyleOptionResponse(
     SurveyLocalizedLabel Name,
     string? Description,
     int SortOrder,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    IReadOnlyList<string>? ImageFileIds = null);
 
 public sealed record SurveyMoodToneOptionResponse(
     string Code,

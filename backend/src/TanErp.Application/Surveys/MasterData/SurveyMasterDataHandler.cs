@@ -57,7 +57,8 @@ public class SurveyMasterDataHandler
             name,
             description,
             input.SortOrder,
-            imageFileId: input.ImageFileId);
+            imageFileId: input.ImageFileId,
+            imageFileIds: input.ImageFileIds);
 
         await _store.AddDesignStyleAsync(style, ct);
         return Result<SurveyDesignStyleDto>.Success(ToStyleDto(style));
@@ -79,7 +80,7 @@ public class SurveyMasterDataHandler
         var name = LocalizedText.Create(input.Name.Thai, input.Name.English);
         var description = input.Description != null ? LocalizedText.CreateOptional(input.Description.Thai, input.Description.English) : null;
 
-        existing.Update(name, description, input.SortOrder, input.IsActive, input.ImageFileId);
+        existing.Update(name, description, input.SortOrder, input.IsActive, input.ImageFileId, input.ImageFileIds);
         await _store.UpdateDesignStyleAsync(existing, ct);
 
         return Result<SurveyDesignStyleDto>.Success(ToStyleDto(existing));
@@ -173,7 +174,7 @@ public class SurveyMasterDataHandler
     }
 
     private static SurveyDesignStyleDto ToStyleDto(SurveyDesignStyle s) =>
-        new(s.Id, s.Code, new LocalizedNameDto(s.Name.Thai, s.Name.English), s.Description != null ? new LocalizedNameDto(s.Description.Thai, s.Description.English) : null, s.SortOrder, s.IsActive, s.CreatedAtUtc, s.ImageFileId);
+        new(s.Id, s.Code, new LocalizedNameDto(s.Name.Thai, s.Name.English), s.Description != null ? new LocalizedNameDto(s.Description.Thai, s.Description.English) : null, s.SortOrder, s.IsActive, s.CreatedAtUtc, s.ImageFileId, s.ImageFileIds);
 
     private static SurveyMoodToneDto ToMoodToneDto(SurveyMoodTone m) =>
         new(m.Id, m.Code, new LocalizedNameDto(m.Name.Thai, m.Name.English), m.Description != null ? new LocalizedNameDto(m.Description.Thai, m.Description.English) : null, m.ColorPalette, m.SortOrder, m.IsActive, m.CreatedAtUtc);

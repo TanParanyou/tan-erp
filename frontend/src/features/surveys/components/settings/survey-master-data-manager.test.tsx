@@ -188,4 +188,16 @@ describe("SurveyMasterDataManager", () => {
       expect(mockToastSuccess).toHaveBeenCalled();
     });
   });
+
+  it("renders illustration column in design styles table and preview in drawer", () => {
+    renderComponent();
+
+    expect(screen.getByText("ภาพประกอบ")).toBeInTheDocument();
+
+    const editButtons = screen.getAllByRole("button", { name: /แก้ไข/i });
+    fireEvent.click(editButtons[0]);
+
+    expect(screen.getByText("ภาพประกอบสไตล์การออกแบบ")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /เพิ่มรูปภาพ/i })).toBeInTheDocument();
+  });
 });

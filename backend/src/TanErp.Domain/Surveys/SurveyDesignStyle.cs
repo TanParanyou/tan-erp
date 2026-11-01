@@ -14,6 +14,7 @@ public class SurveyDesignStyle : Entity
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid RowVersion { get; private set; } = Guid.NewGuid();
     public Guid? ImageFileId { get; private set; }
+    public IReadOnlyList<string> ImageFileIds { get; private set; } = Array.Empty<string>();
 
     protected SurveyDesignStyle() { }
 
@@ -26,13 +27,25 @@ public class SurveyDesignStyle : Entity
         int sortOrder = 0,
         bool isActive = true,
         DateTimeOffset? createdAtUtc = null,
-        Guid? imageFileId = null) : base(id)
+        Guid? imageFileId = null,
+        IReadOnlyList<string>? imageFileIds = null) : base(id)
     {
         if (organizationId == Guid.Empty)
             throw new ArgumentException("Organization ID cannot be empty.", nameof(organizationId));
         if (string.IsNullOrWhiteSpace(code))
             throw new ArgumentException("Code cannot be empty.", nameof(code));
         ArgumentNullException.ThrowIfNull(name);
+
+        var fileIds = (imageFileIds ?? Array.Empty<string>())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (imageFileId.HasValue && !fileIds.Contains(imageFileId.Value.ToString(), StringComparer.OrdinalIgnoreCase))
+        {
+            fileIds.Insert(0, imageFileId.Value.ToString());
+        }
 
         OrganizationId = organizationId;
         Code = code.Trim().ToLowerInvariant();
@@ -41,18 +54,37 @@ public class SurveyDesignStyle : Entity
         SortOrder = sortOrder;
         IsActive = isActive;
         CreatedAtUtc = createdAtUtc ?? DateTimeOffset.UtcNow;
-        ImageFileId = imageFileId;
+        ImageFileIds = fileIds.AsReadOnly();
+        ImageFileId = fileIds.Count > 0 && Guid.TryParse(fileIds[0], out var primary) ? primary : imageFileId;
     }
 
-    public void Update(LocalizedText name, LocalizedText? description, int sortOrder, bool isActive, Guid? imageFileId = null)
+    public void Update(
+        LocalizedText name,
+        LocalizedText? description,
+        int sortOrder,
+        bool isActive,
+        Guid? imageFileId = null,
+        IReadOnlyList<string>? imageFileIds = null)
     {
         ArgumentNullException.ThrowIfNull(name);
+
+        var fileIds = (imageFileIds ?? Array.Empty<string>())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (imageFileId.HasValue && !fileIds.Contains(imageFileId.Value.ToString(), StringComparer.OrdinalIgnoreCase))
+        {
+            fileIds.Insert(0, imageFileId.Value.ToString());
+        }
 
         Name = name;
         Description = description;
         SortOrder = sortOrder;
         IsActive = isActive;
-        ImageFileId = imageFileId;
+        ImageFileIds = fileIds.AsReadOnly();
+        ImageFileId = fileIds.Count > 0 && Guid.TryParse(fileIds[0], out var primary) ? primary : imageFileId;
         RowVersion = Guid.NewGuid();
     }
 }

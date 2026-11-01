@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TanErp.Domain.Items;
@@ -26,6 +27,15 @@ public class SurveyDesignStyleConfiguration : IEntityTypeConfiguration<SurveyDes
             v => v == null ? null : JsonSerializer.Serialize(new { th = v.Thai, en = v.English }, (JsonSerializerOptions?)null),
             v => v == null ? null : ItemConfiguration.DeserializeLocalizedText(v));
 
+        var imageFileIdsConverter = new ValueConverter<IReadOnlyList<string>, string>(
+            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+            v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>());
+
+        var imageFileIdsComparer = new ValueComparer<IReadOnlyList<string>>(
+            (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c.ToList());
+
         builder.Property(x => x.Name)
             .HasColumnName("name")
             .HasColumnType("jsonb")
@@ -42,6 +52,11 @@ public class SurveyDesignStyleConfiguration : IEntityTypeConfiguration<SurveyDes
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.ImageFileId).HasColumnName("image_file_id");
+        builder.Property(x => x.ImageFileIds)
+            .HasColumnName("image_file_ids")
+            .HasColumnType("jsonb")
+            .HasConversion(imageFileIdsConverter, imageFileIdsComparer)
+            .IsRequired();
 
         builder.HasIndex(x => new { x.OrganizationId, x.Code })
             .IsUnique()

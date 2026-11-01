@@ -50,18 +50,13 @@ import {
   IconArrowRight,
 } from "@/components/common/Icons";
 
-export interface DesignStyleOption {
-  code: string;
-  label: string;
-  description: string;
-}
+import {
+  SurveyStylePreferenceSelector,
+  type SurveyDesignStyleOption as DesignStyleOption,
+  type SurveyMoodToneOption as MoodToneOption,
+} from "./survey-style-preference-selector";
 
-export interface MoodToneOption {
-  code: string;
-  label: string;
-  description: string;
-  colorPalette: readonly string[];
-}
+export type { DesignStyleOption, MoodToneOption };
 
 export interface FieldSurveyWorkspaceProps {
   initialOpportunityId?: string;
@@ -127,6 +122,8 @@ export function FieldSurveyWorkspace({
           code: s.code,
           label: locale === "en" ? s.name?.english || s.code : s.name?.thai || s.code,
           description: s.description || "",
+          imageFileId: s.imageFileId ?? null,
+          imageFileIds: s.imageFileIds ?? null,
         }))
     : [
         { code: "modern_luxury", label: "Modern Luxury", description: "โมเดิร์น ลักชูรี่ หรูหรา กระจก/หินอ่อน/โลหะทอง" },
@@ -625,103 +622,17 @@ export function FieldSurveyWorkspace({
         title={t("style.sectionTitle")}
         description={t("style.sectionDesc")}
       >
-        <div className="space-y-4">
-          {/* Design Style */}
-          <div>
-            <label className="erp-label mb-2 block font-medium text-erp-text-main">
-              {t("style.designStyleLabel")}
-            </label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {designStyleOptions.map((style) => {
-                const isSelected = designStyle === style.code;
-                return (
-                  <button
-                    key={style.code}
-                    type="button"
-                    onClick={() => setDesignStyle(isSelected ? "" : style.code)}
-                    disabled={isSaving}
-                    className={`flex flex-col items-start border p-2.5 text-left transition-colors ${
-                      isSelected
-                        ? "border-erp-navy bg-erp-navy text-white shadow-sm"
-                        : "border-erp-border bg-white text-erp-text-main hover:border-erp-navy/50 hover:bg-erp-surface-subtle"
-                    }`}
-                  >
-                    <span className="text-xs font-semibold">{style.label}</span>
-                    {style.description ? (
-                      <span
-                        className={`mt-1 line-clamp-2 text-[10px] ${
-                          isSelected ? "text-white/80" : "text-erp-text-muted"
-                        }`}
-                      >
-                        {style.description}
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Mood & Tone with Color Swatches */}
-          <div>
-            <label className="erp-label mb-2 block font-medium text-erp-text-main">
-              {t("style.moodToneLabel")}
-            </label>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              {moodToneOptions.map((tone) => {
-                const isSelected = moodTone === tone.code;
-                return (
-                  <button
-                    key={tone.code}
-                    type="button"
-                    onClick={() => setMoodTone(isSelected ? "" : tone.code)}
-                    disabled={isSaving}
-                    className={`flex flex-col border p-2.5 text-left transition-colors ${
-                      isSelected
-                        ? "border-erp-navy bg-erp-navy text-white shadow-sm"
-                        : "border-erp-border bg-white text-erp-text-main hover:border-erp-navy/50 hover:bg-erp-surface-subtle"
-                    }`}
-                  >
-                    {tone.colorPalette && tone.colorPalette.length > 0 ? (
-                      <div className="mb-2 flex h-3 w-full border border-black/10 overflow-hidden">
-                        {tone.colorPalette.map((color, cIdx) => (
-                          <div
-                            key={cIdx}
-                            className="h-full flex-1"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                    ) : null}
-                    <span className="text-xs font-semibold">{tone.label}</span>
-                    {tone.description ? (
-                      <span
-                        className={`mt-1 line-clamp-2 text-[10px] ${
-                          isSelected ? "text-white/80" : "text-erp-text-muted"
-                        }`}
-                      >
-                        {tone.description}
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Style & Color Notes */}
-          <div>
-            <Input
-              label={t("style.customStyleNotes")}
-              value={customStyleNotes}
-              onChange={(e) => setCustomStyleNotes(e.target.value)}
-              disabled={isSaving}
-              placeholder={t("style.customStyleNotesPlaceholder")}
-              wrapperClassName="!mb-0"
-              className="text-xs"
-            />
-          </div>
-        </div>
+        <SurveyStylePreferenceSelector
+          designStyles={designStyleOptions}
+          moodTones={moodToneOptions}
+          selectedDesignStyle={designStyle}
+          selectedMoodTone={moodTone}
+          onDesignStyleChange={setDesignStyle}
+          onMoodToneChange={setMoodTone}
+          customStyleNotes={customStyleNotes}
+          onCustomStyleNotesChange={setCustomStyleNotes}
+          disabled={isSaving}
+        />
       </FormSection>
 
       {/* Section 2: Custom Items in this Room */}

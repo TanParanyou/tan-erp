@@ -54,7 +54,8 @@ public class SurveyMasterDataController : ControllerBase
             new LocalizedNameInput(request.Name.Thai, request.Name.English),
             request.Description != null ? new LocalizedNameInput(request.Description.Thai, request.Description.English) : null,
             request.SortOrder,
-            request.ImageFileId);
+            request.ImageFileId,
+            request.ImageFileIds);
 
         var result = await _handler.CreateDesignStyleAsync(caller, input, cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
@@ -80,7 +81,8 @@ public class SurveyMasterDataController : ControllerBase
             request.Description != null ? new LocalizedNameInput(request.Description.Thai, request.Description.English) : null,
             request.SortOrder,
             request.IsActive,
-            request.ImageFileId);
+            request.ImageFileId,
+            request.ImageFileIds);
 
         var result = await _handler.UpdateDesignStyleAsync(caller, id, input, cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
@@ -157,7 +159,7 @@ public class SurveyMasterDataController : ControllerBase
     }
 
     private static SurveyDesignStyleResponse ToResponse(SurveyDesignStyleDto d) =>
-        new(d.Id, d.Code, new SurveyLocalizedNameContract(d.Name.Thai, d.Name.English), d.Description != null ? new SurveyLocalizedNameContract(d.Description.Thai, d.Description.English) : null, d.SortOrder, d.IsActive, d.CreatedAtUtc, d.ImageFileId);
+        new(d.Id, d.Code, new SurveyLocalizedNameContract(d.Name.Thai, d.Name.English), d.Description != null ? new SurveyLocalizedNameContract(d.Description.Thai, d.Description.English) : null, d.SortOrder, d.IsActive, d.CreatedAtUtc, d.ImageFileId, d.ImageFileIds);
 
     private static SurveyMoodToneResponse ToResponse(SurveyMoodToneDto d) =>
         new(d.Id, d.Code, new SurveyLocalizedNameContract(d.Name.Thai, d.Name.English), d.Description != null ? new SurveyLocalizedNameContract(d.Description.Thai, d.Description.English) : null, d.ColorPalette, d.SortOrder, d.IsActive, d.CreatedAtUtc);

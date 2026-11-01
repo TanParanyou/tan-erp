@@ -7,14 +7,16 @@ public sealed record CreateSurveyDesignStyleRequest(
     SurveyLocalizedNameContract Name,
     SurveyLocalizedNameContract? Description,
     int SortOrder = 0,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    IReadOnlyList<string>? ImageFileIds = null);
 
 public sealed record UpdateSurveyDesignStyleRequest(
     SurveyLocalizedNameContract Name,
     SurveyLocalizedNameContract? Description,
     int SortOrder,
     bool IsActive,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    IReadOnlyList<string>? ImageFileIds = null);
 
 public sealed record SurveyDesignStyleResponse(
     Guid Id,
@@ -24,7 +26,8 @@ public sealed record SurveyDesignStyleResponse(
     int SortOrder,
     bool IsActive,
     DateTimeOffset CreatedAtUtc,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    IReadOnlyList<string>? ImageFileIds = null);
 
 public sealed record CreateSurveyMoodToneRequest(
     string Code,

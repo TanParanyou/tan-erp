@@ -7,14 +7,16 @@ public sealed record CreateSurveyDesignStyleInput(
     LocalizedNameInput Name,
     LocalizedNameInput? Description,
     int SortOrder = 0,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    IReadOnlyList<string>? ImageFileIds = null);
 
 public sealed record UpdateSurveyDesignStyleInput(
     LocalizedNameInput Name,
     LocalizedNameInput? Description,
     int SortOrder,
     bool IsActive,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    IReadOnlyList<string>? ImageFileIds = null);
 
 public sealed record CreateSurveyMoodToneInput(
     string Code,
@@ -40,7 +42,8 @@ public sealed record SurveyDesignStyleDto(
     int SortOrder,
     bool IsActive,
     DateTimeOffset CreatedAtUtc,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    IReadOnlyList<string>? ImageFileIds = null);
 
 public sealed record SurveyMoodToneDto(
     Guid Id,
