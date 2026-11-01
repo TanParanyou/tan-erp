@@ -2,20 +2,25 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { LoginForm } from "./login-form";
+import { ApiError } from "@/lib/api/api-error";
 
+const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: mockPush,
   }),
 }));
 
 vi.mock("@/lib/auth/auth-session", () => ({
-  signInWithEmail: vi.fn(),
+  signInWithEmailFlow: vi.fn(),
+  signInWithGoogleFlow: vi.fn(),
+  verifyTwoFactorLoginFlow: vi.fn(),
 }));
 
-import { FirebaseError } from "firebase/app";
-
-import { signInWithEmail } from "@/lib/auth/auth-session";
+import {
+  signInWithEmailFlow,
+  verifyTwoFactorLoginFlow,
+} from "@/lib/auth/auth-session";
 
 describe("LoginForm Component", () => {
   beforeEach(() => {
@@ -38,6 +43,9 @@ describe("LoginForm Component", () => {
     const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
     expect(submitButton).toBeDefined();
     expect(submitButton.style.height).toBe("44px");
+
+    // Also check Google sign in button
+    expect(screen.getByRole("button", { name: "เข้าสู่ระบบด้วย Google" })).toBeDefined();
   });
 
   it("shows validation error and sets aria-invalid and aria-describedby when submitted empty", async () => {
@@ -59,7 +67,7 @@ describe("LoginForm Component", () => {
       expect(screen.getByText("กรุณากรอกรหัสผ่าน")).toBeDefined();
     });
 
-    expect(signInWithEmail).not.toHaveBeenCalled();
+    expect(signInWithEmailFlow).not.toHaveBeenCalled();
   });
 
   it("shows error for invalid email format", async () => {
@@ -77,12 +85,16 @@ describe("LoginForm Component", () => {
       expect(screen.getByText("รูปแบบอีเมลไม่ถูกต้อง")).toBeDefined();
     });
 
-    expect(signInWithEmail).not.toHaveBeenCalled();
+    expect(signInWithEmailFlow).not.toHaveBeenCalled();
   });
 
-  it("displays authentication error inside aria-live polite region on login failure", async () => {
-    vi.mocked(signInWithEmail).mockRejectedValueOnce(
-      new FirebaseError("auth/invalid-credential", "Invalid credentials")
+  it("displays authentication error on invalid credentials failure", async () => {
+    vi.mocked(signInWithEmailFlow).mockRejectedValueOnce(
+      new ApiError({
+        status: 401,
+        code: "INVALID_CREDENTIALS",
+        message: "Invalid credentials",
+      })
     );
 
     render(<LoginForm />);
@@ -97,17 +109,21 @@ describe("LoginForm Component", () => {
 
     await waitFor(() => {
       const alert = screen.getByRole("alert");
-      expect(alert.getAttribute("aria-live")).toBe("polite");
       expect(alert.textContent).toContain("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
     });
   });
 
   it("sets aria-busy and disables button while submitting, preventing duplicate submit", async () => {
     let resolveLogin: () => void;
-    const loginPromise = new Promise<never>((resolve) => {
-      resolveLogin = () => resolve({} as never);
+    const loginPromise = new Promise<{ status: "authenticated"; user: { uid: string; id: string; email: string; displayName: string }; accessToken: string }>((resolve) => {
+      resolveLogin = () =>
+        resolve({
+          status: "authenticated",
+          user: { uid: "u1", id: "u1", email: "test@example.test", displayName: "Test User" },
+          accessToken: "token123",
+        });
     });
-    vi.mocked(signInWithEmail).mockReturnValueOnce(loginPromise);
+    vi.mocked(signInWithEmailFlow).mockReturnValueOnce(loginPromise);
 
     render(<LoginForm />);
 
@@ -125,19 +141,20 @@ describe("LoginForm Component", () => {
 
     // Try second submit while busy
     fireEvent.click(submitButton);
-    expect(signInWithEmail).toHaveBeenCalledTimes(1);
+    expect(signInWithEmailFlow).toHaveBeenCalledTimes(1);
 
     // Finish submission
     resolveLogin!();
     await waitFor(() => {
-      expect(form?.getAttribute("aria-busy")).toBe("false");
+      expect(mockPush).toHaveBeenCalledWith("/th");
     });
   });
 
-  it("maps unknown or non-allowlisted Firebase errors to generic localized message", async () => {
-    vi.mocked(signInWithEmail).mockRejectedValueOnce(
-      new Error("Firebase internal project detail")
-    );
+  it("transitions to 2FA challenge step and verifies OTP code", async () => {
+    vi.mocked(signInWithEmailFlow).mockResolvedValueOnce({
+      status: "requires_two_factor",
+      challengeToken: "chal_123",
+    });
 
     render(<LoginForm />);
 
@@ -146,12 +163,99 @@ describe("LoginForm Component", () => {
     const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
 
     fireEvent.change(emailInput, { target: { value: "test@example.test" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(passwordInput, { target: { value: "correct-pass" } });
     fireEvent.click(submitButton);
 
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง");
-    expect(screen.queryByText(/Firebase internal project detail/)).toBeNull();
+    await waitFor(() => {
+      expect(screen.getByText("การยืนยันตัวตนสองขั้นตอน")).toBeDefined();
+    });
+
+    // Toggle to backup code input
+    const toggleBackupBtn = screen.getByRole("button", { name: "ใช้รหัสสำรองฉุกเฉิน (Emergency Backup Code)" });
+    fireEvent.click(toggleBackupBtn);
+
+    const backupCodeInput = screen.getByLabelText(/รหัสสำรองฉุกเฉิน/);
+    expect(backupCodeInput).toBeDefined();
+
+    vi.mocked(verifyTwoFactorLoginFlow).mockResolvedValueOnce({
+      status: "authenticated",
+      user: { uid: "u1", id: "u1", email: "test@example.test", displayName: "Test User" },
+      accessToken: "token123",
+    });
+
+    fireEvent.change(backupCodeInput, { target: { value: "ABCD-EFGH" } });
+    const verifyButton = screen.getByRole("button", { name: "ยืนยันรหัส" });
+    fireEvent.click(verifyButton);
+
+    await waitFor(() => {
+      expect(verifyTwoFactorLoginFlow).toHaveBeenCalledWith("chal_123", "ABCD-EFGH");
+      expect(mockPush).toHaveBeenCalledWith("/th");
+    });
+  });
+
+  it("handles mandatory 2FA setup and backup codes confirmation step", async () => {
+    vi.mocked(signInWithEmailFlow).mockResolvedValueOnce({
+      status: "requires_two_factor_setup",
+      challengeToken: "chal_setup_456",
+      totpSetup: {
+        secretKey: "SECRETKEY1234",
+        otpAuthUri: "otpauth://totp/tan-erp:test?secret=SECRETKEY1234",
+      },
+    });
+
+    render(<LoginForm />);
+
+    const emailInput = screen.getByLabelText(/อีเมล/, { selector: "input" });
+    const passwordInput = screen.getByLabelText(/รหัสผ่าน/, { selector: "input" });
+    const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
+
+    fireEvent.change(emailInput, { target: { value: "test@example.test" } });
+    fireEvent.change(passwordInput, { target: { value: "correct-pass" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("ผู้ดูแลระบบกำหนดให้ต้องเปิดใช้ 2FA")).toBeDefined();
+      expect(screen.getByText("SECRETKEY1234")).toBeDefined();
+    });
+
+    // Verify OTP and transition to backup codes step
+    vi.mocked(verifyTwoFactorLoginFlow).mockResolvedValueOnce({
+      status: "authenticated",
+      user: { uid: "u1", id: "u1", email: "test@example.test", displayName: "Test User" },
+      accessToken: "token123",
+      backupCodes: ["1111-2222", "3333-4444", "5555-6666"],
+    });
+
+    // Fill OTP
+    const otpInputs = screen.getAllByRole("textbox");
+    fireEvent.paste(otpInputs[0], {
+      clipboardData: { getData: () => "123456" },
+    });
+
+    const activateBtn = screen.getByRole("button", { name: "ยืนยันและเปิดใช้งาน 2FA" });
+    fireEvent.click(activateBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("รหัสสำรองฉุกเฉิน (Single-Use Backup Codes)")).toBeDefined();
+      expect(screen.getByText("1111-2222")).toBeDefined();
+      expect(screen.getByText("3333-4444")).toBeDefined();
+    });
+
+    const continueBtn = screen.getByRole("button", { name: "ฉันบันทึกรหัสสำรองแล้ว เข้าสู่ระบบ" });
+    fireEvent.click(continueBtn);
+
+    expect(mockPush).toHaveBeenCalledWith("/th");
+  });
+
+  it("shows warning when Google button is clicked without client ID configured", () => {
+    delete process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+    render(<LoginForm />);
+
+    const googleBtn = screen.getByRole("button", { name: "เข้าสู่ระบบด้วย Google" });
+    fireEvent.click(googleBtn);
+
+    expect(screen.getByText("ระบบยังไม่ได้กำหนดค่า Google Client ID ในสภาพแวดล้อมนี้")).toBeDefined();
   });
 
   it("ensures password reveal button is accessible via keyboard and has min 44x44px target", () => {

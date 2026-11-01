@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { AccessGate } from "./access-gate";
 import { ApiError } from "@/lib/api/api-error";
-import type { User } from "firebase/auth";
+import type { AuthSessionUser } from "@/lib/auth/auth-session";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-let mockAuthStateCallback: ((user: User | null) => void) | null = null;
+let mockAuthStateCallback: ((user: AuthSessionUser | null) => void) | null = null;
 vi.mock("@/lib/auth/auth-session", () => ({
   subscribeToAuthChanges: vi.fn((_client, cb) => {
     mockAuthStateCallback = cb;
@@ -107,7 +107,7 @@ describe("AccessGate Component", () => {
 
     // Provide user so session loading finishes
     act(() => {
-      mockAuthStateCallback!({ uid: "uid-1" } as User);
+      mockAuthStateCallback!({ uid: "uid-1" } as AuthSessionUser);
     });
 
     const status = screen.getByRole("status");
@@ -134,7 +134,7 @@ describe("AccessGate Component", () => {
     );
 
     act(() => {
-      mockAuthStateCallback!({ uid: "uid-1" } as User);
+      mockAuthStateCallback!({ uid: "uid-1" } as AuthSessionUser);
     });
 
     await waitFor(() => {
@@ -162,7 +162,7 @@ describe("AccessGate Component", () => {
     );
 
     act(() => {
-      mockAuthStateCallback!({ uid: "uid-1" } as User);
+      mockAuthStateCallback!({ uid: "uid-1" } as AuthSessionUser);
     });
 
     const alert = screen.getByRole("alert");
@@ -190,7 +190,7 @@ describe("AccessGate Component", () => {
     );
 
     act(() => {
-      mockAuthStateCallback!({ uid: "uid-1" } as User);
+      mockAuthStateCallback!({ uid: "uid-1" } as AuthSessionUser);
     });
 
     const alert = screen.getByRole("alert");
@@ -219,7 +219,7 @@ describe("AccessGate Component", () => {
     );
 
     act(() => {
-      mockAuthStateCallback!({ uid: "uid-1" } as User);
+      mockAuthStateCallback!({ uid: "uid-1" } as AuthSessionUser);
     });
 
     const alert = screen.getByRole("alert");
@@ -263,7 +263,7 @@ describe("AccessGate Component", () => {
     );
 
     act(() => {
-      mockAuthStateCallback!({ uid: "uid-1" } as User);
+      mockAuthStateCallback!({ uid: "uid-1" } as AuthSessionUser);
     });
 
     expect(screen.getByTestId("protected-content").textContent).toContain("Welcome Somsak");

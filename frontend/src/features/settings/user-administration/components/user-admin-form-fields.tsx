@@ -37,6 +37,8 @@ export interface UserAdminFormValues {
   startsAt: string;
   expiresAt: string;
   roleIds: string[];
+  initialPassword?: string;
+  requireTwoFactor?: boolean;
 }
 
 interface UserAdminFormFieldsProps {
@@ -191,6 +193,36 @@ export function UserAdminFormFields({
               placeholder={t("fields.employeeCodePlaceholder")}
               {...register("employeeCode")}
             />
+            {mode === "create" && (
+              <>
+                <Input
+                  label={t("fields.initialPassword")}
+                  type="password"
+                  autoComplete="new-password"
+                  disabled={disabled}
+                  error={errors.initialPassword?.message}
+                  placeholder={t("fields.initialPasswordPlaceholder")}
+                  helperText={t("fields.initialPasswordHint")}
+                  {...register("initialPassword")}
+                />
+                <div className="flex items-center pt-2 md:pt-6">
+                  <Controller
+                    name="requireTwoFactor"
+                    control={control}
+                    render={({ field }) => (
+                      <Checkbox
+                        id="user-admin-require-two-factor"
+                        checked={Boolean(field.value)}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        disabled={disabled}
+                        label={t("fields.requireTwoFactor")}
+                        description={t("fields.requireTwoFactorHint")}
+                      />
+                    )}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </FormSection>

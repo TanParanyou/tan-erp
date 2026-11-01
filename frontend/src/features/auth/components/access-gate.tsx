@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { User } from "firebase/auth";
+import type { AuthSessionUser } from "@/lib/auth/auth-session";
 import { useQueryClient } from "@tanstack/react-query";
 import { subscribeToAuthChanges, signOutSession } from "@/lib/auth/auth-session";
 import { useCurrentUser } from "@/features/auth/api/current-user-query";
@@ -22,11 +22,11 @@ export function AccessGate({ children }: AccessGateProps) {
   const tAuth = useTranslations("auth");
   const locale = useLocale();
   const router = useRouter();
-  const [firebaseUser, setFirebaseUser] = useState<User | null | undefined>(undefined);
+  const [authUser, setAuthUser] = useState<AuthSessionUser | null | undefined>(undefined);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges(queryClient, (user) => {
-      setFirebaseUser(user);
+      setAuthUser(user);
     });
     return () => unsubscribe();
   }, [queryClient]);
@@ -36,18 +36,18 @@ export function AccessGate({ children }: AccessGateProps) {
     isLoading: isProfileLoading,
     error,
     refetch,
-  } = useCurrentUser(firebaseUser?.uid, locale === "en" ? "en" : "th");
+  } = useCurrentUser(authUser?.uid, locale === "en" ? "en" : "th");
 
   const apiError = error instanceof ApiError ? error : null;
   const errorCode = apiError?.code;
   const isUnauthorized = apiError?.status === 401 || errorCode === "AUTHENTICATION_INVALID";
 
-  // Effect: Redirect to login when there is no Firebase session
+  // Effect: Redirect to login when there is no auth session
   useEffect(() => {
-    if (firebaseUser === null) {
+    if (authUser === null) {
       router.push(`/${locale}/login`);
     }
-  }, [firebaseUser, locale, router]);
+  }, [authUser, locale, router]);
 
   // Effect: Sign out and redirect to login on 401 / invalid authentication
   useEffect(() => {
@@ -58,8 +58,8 @@ export function AccessGate({ children }: AccessGateProps) {
     }
   }, [isUnauthorized, locale, router, queryClient]);
 
-  // 1. Firebase session loading
-  if (firebaseUser === undefined) {
+  // 1. Auth session loading
+  if (authUser === undefined) {
     return (
       <div
         style={{
@@ -74,8 +74,8 @@ export function AccessGate({ children }: AccessGateProps) {
     );
   }
 
-  // 2. No Firebase session -> redirect to login (handled in useEffect)
-  if (firebaseUser === null) {
+  // 2. No auth session -> redirect to login (handled in useEffect)
+  if (authUser === null) {
     return null;
   }
 

@@ -1,6 +1,6 @@
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
-import { useOptionalSelectedMembership, useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import * as membershipContextModule from "@/lib/membership/selected-membership-context";
 import type { RequestOptions } from "./api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "./api-error";
 
@@ -25,7 +25,17 @@ export interface ApiRequestContext {
 export function useApiRequestContext(): ApiRequestContext {
   const rawLocale = useSafeLocale();
   const locale: ApiLocale = rawLocale === "en" ? "en" : "th";
-  const membershipContext = useOptionalSelectedMembership();
+
+  const getMembership =
+    "useOptionalSelectedMembership" in membershipContextModule &&
+    typeof membershipContextModule.useOptionalSelectedMembership === "function"
+      ? membershipContextModule.useOptionalSelectedMembership
+      : "useSelectedMembership" in membershipContextModule &&
+        typeof membershipContextModule.useSelectedMembership === "function"
+      ? membershipContextModule.useSelectedMembership
+      : undefined;
+
+  const membershipContext = getMembership ? getMembership() : null;
   const membershipId = membershipContext?.selectedMembership?.id;
 
   return {

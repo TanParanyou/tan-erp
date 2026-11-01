@@ -38,6 +38,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import { SidebarNav } from "./SidebarNav";
 import { useSaveThemePreferences } from "@/features/profile/api/profile-queries";
 import { NotificationBell } from "./NotificationBell";
+import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
+import { InactivityTimeoutDialog } from "@/components/common/InactivityTimeoutDialog";
 import { cn } from "@/lib/utils/cn";
 
 interface ErpShellProps {
@@ -95,6 +97,12 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
     await signOutSession(queryClient);
     router.push(`/${locale}/login`);
   };
+
+  const { isWarningOpen, secondsRemaining, stayLoggedIn } = useInactivityTimeout({
+    idleTimeoutMs: 30 * 60 * 1000,
+    warningDurationMs: 60 * 1000,
+    onTimeout: handleSignOut,
+  });
 
   const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/`;
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
@@ -644,6 +652,13 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           )}
         </main>
       </div>
+
+      <InactivityTimeoutDialog
+        isOpen={isWarningOpen}
+        secondsRemaining={secondsRemaining}
+        onStayLoggedIn={stayLoggedIn}
+        onLogout={handleSignOut}
+      />
     </div>
   );
 }

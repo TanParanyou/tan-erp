@@ -24,6 +24,12 @@ vi.mock("@/lib/membership/selected-membership-context", () => ({
       permissions: [{ key: "users.manage", scope: "organization" }],
     },
   }),
+  useOptionalSelectedMembership: () => ({
+    selectedMembership: {
+      id: "membership-1",
+      permissions: [{ key: "users.manage", scope: "organization" }],
+    },
+  }),
 }));
 
 vi.mock("@/hooks/useToast", () => ({
@@ -110,6 +116,8 @@ describe("UserAdminEditor", () => {
       startsAtUtc: null,
       expiresAtUtc: null,
       roleIds: ["r-read"],
+      initialPassword: null,
+      requireTwoFactor: false,
     });
     expect(call.idempotencyKey).toMatch(/[0-9a-f-]{36}/);
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/th/settings/users/new-user"));

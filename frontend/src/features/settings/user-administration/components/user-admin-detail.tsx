@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Select } from "@/components/ui/Select";
@@ -29,10 +30,13 @@ import {
   useAssignAdminRole,
   useDecideAdminRoleRequest,
   useRevokeAdminRole,
+  useResetAdminUserTwoFactor,
   useSetAdminMembershipActive,
   useSetAdminUserActive,
+  useSetAdminUserPassword,
   useUpdateAdminMembership,
   useUpdateAdminUserProfile,
+  useUpdateAdminUserTwoFactorPolicy,
 } from "../api/user-admin-queries";
 import { adminErrorKey } from "../user-admin-errors";
 import { UserAdminFormFields, type UserAdminFormValues } from "./user-admin-form-fields";
@@ -42,7 +46,9 @@ type PendingAction =
   | { kind: "user-active"; active: boolean }
   | { kind: "membership-active"; membership: AdminMembershipResponse; active: boolean }
   | { kind: "revoke-role"; membership: AdminMembershipResponse; roleId: string; roleName: string }
-  | { kind: "cancel-request"; requestId: string; rowVersion: string; roleName: string };
+  | { kind: "cancel-request"; requestId: string; rowVersion: string; roleName: string }
+  | { kind: "reset-2fa" }
+  | { kind: "toggle-2fa-policy"; requireTwoFactor: boolean };
 
 interface UserAdminDetailProps {
   userId: string;
@@ -85,6 +91,9 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
   const assignMutation = useAssignAdminRole();
   const revokeMutation = useRevokeAdminRole();
   const decideMutation = useDecideAdminRoleRequest();
+  const setPasswordMutation = useSetAdminUserPassword();
+  const updateTwoFactorPolicyMutation = useUpdateAdminUserTwoFactorPolicy();
+  const resetTwoFactorMutation = useResetAdminUserTwoFactor();
 
   const { uploadSingleFile, isUploading: isAvatarUploading } = useDeferredFileUpload({
     parentType: "user",
@@ -96,6 +105,10 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [tempPassword, setTempPassword] = useState("");
+  const [passwordModalError, setPasswordModalError] = useState<string | null>(null);
 
   const [roleChoice, setRoleChoice] = useState<Record<string, string>>({});
   const [membershipDraft, setMembershipDraft] = useState<
@@ -155,7 +168,10 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
     updateMembershipMutation.isPending ||
     assignMutation.isPending ||
     revokeMutation.isPending ||
-    decideMutation.isPending;
+    decideMutation.isPending ||
+    setPasswordMutation.isPending ||
+    updateTwoFactorPolicyMutation.isPending ||
+    resetTwoFactorMutation.isPending;
 
   if (userQuery.isPending) {
     return <MonoSpinner size="lg" label={tCommon("states.loading")} />;
@@ -222,6 +238,14 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
       } else if (pendingAction.kind === "revoke-role") {
         if (!pendingAction.membership.id) return;
         await revokeMutation.mutateAsync({ membershipId: pendingAction.membership.id, roleId: pendingAction.roleId });
+      } else if (pendingAction.kind === "reset-2fa") {
+        await resetTwoFactorMutation.mutateAsync({ userId, ifMatch: userRowVersion });
+      } else if (pendingAction.kind === "toggle-2fa-policy") {
+        await updateTwoFactorPolicyMutation.mutateAsync({
+          userId,
+          requireTwoFactor: pendingAction.requireTwoFactor,
+          ifMatch: userRowVersion,
+        });
       } else {
         await decideMutation.mutateAsync({
           requestId: pendingAction.requestId,
@@ -234,6 +258,26 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
     } catch (error: unknown) {
       fail(error);
       setPendingAction(null);
+    }
+  };
+
+  const handleSetPassword = async () => {
+    if (tempPassword.length < 8) {
+      setPasswordModalError(t("validation.passwordTooShort"));
+      return;
+    }
+    setPasswordModalError(null);
+    try {
+      await setPasswordMutation.mutateAsync({
+        userId,
+        newPassword: tempPassword,
+        ifMatch: userRowVersion,
+      });
+      toast.success(t("security.passwordChangedSuccess"));
+      setIsSettingPassword(false);
+      setTempPassword("");
+    } catch (err: unknown) {
+      setPasswordModalError(err instanceof Error ? err.message : t("errors.GENERIC"));
     }
   };
 
@@ -300,6 +344,20 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
           title: t("confirm.revokeRoleTitle"),
           message: t("confirm.revokeRoleMessage", { role: pendingAction.roleName }),
           variant: "danger" as const,
+        };
+      case "reset-2fa":
+        return {
+          title: t("security.resetTwoFactorTitle"),
+          message: t("security.resetTwoFactorDesc"),
+          variant: "danger" as const,
+        };
+      case "toggle-2fa-policy":
+        return {
+          title: t("security.toggleTwoFactorPolicy"),
+          message: pendingAction.requireTwoFactor
+            ? t("fields.requireTwoFactorHint")
+            : t("fields.requireTwoFactorHint"),
+          variant: "warning" as const,
         };
       default:
         return {
@@ -434,6 +492,93 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
             )}
           </div>
         )}
+      </section>
+
+      {/* Security & Sign-In Section */}
+      <section className="border border-erp-border bg-erp-surface p-4 space-y-4" aria-labelledby="user-security-heading">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-erp-border pb-3">
+          <div>
+            <h2 id="user-security-heading" className="text-base font-bold text-erp-text-main">
+              {t("sections.security")}
+            </h2>
+            <p className="text-xs text-erp-text-muted mt-0.5">
+              {t("sections.securityHint")}
+            </p>
+          </div>
+
+          {canManageUsers && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTempPassword("");
+                  setPasswordModalError(null);
+                  setIsSettingPassword(true);
+                }}
+              >
+                {t("security.setPassword")}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setPendingAction({
+                    kind: "toggle-2fa-policy",
+                    requireTwoFactor: !user.requireTwoFactor,
+                  })
+                }
+              >
+                {t("security.toggleTwoFactorPolicy")}
+              </Button>
+
+              {user.isTotpEnabled && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setPendingAction({ kind: "reset-2fa" })}
+                >
+                  {t("security.resetTwoFactor")}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div className="space-y-1">
+            <span className="text-xs text-erp-text-muted block">{t("security.passwordCol")}</span>
+            <StatusBadge
+              variant={user.hasPassword ? "success" : "neutral"}
+              label={user.hasPassword ? t("security.passwordSet") : t("security.noPassword")}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-xs text-erp-text-muted block">{t("security.googleCol")}</span>
+            <StatusBadge
+              variant={user.hasGoogleLinked ? "info" : "neutral"}
+              label={user.hasGoogleLinked ? t("security.googleLinked") : t("security.googleNotLinked")}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-xs text-erp-text-muted block">{t("security.twoFactorCol")}</span>
+            <StatusBadge
+              variant={user.isTotpEnabled ? "success" : "neutral"}
+              label={user.isTotpEnabled ? t("security.twoFactorEnabled") : t("security.twoFactorDisabled")}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-xs text-erp-text-muted block">{t("security.twoFactorPolicyCol")}</span>
+            <StatusBadge
+              variant={user.requireTwoFactor ? "warning" : "neutral"}
+              label={user.requireTwoFactor ? t("security.twoFactorRequired") : t("security.twoFactorOptional")}
+            />
+          </div>
+        </div>
       </section>
 
       {/* Memberships & Roles */}
@@ -647,6 +792,49 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
           onClose={() => setPendingAction(null)}
         />
       ) : null}
+
+      {/* Set Temporary Password Modal */}
+      <Modal
+        isOpen={isSettingPassword}
+        onClose={() => setIsSettingPassword(false)}
+        title={t("security.setPasswordTitle")}
+        size="md"
+      >
+        <div className="space-y-4">
+          {passwordModalError && <Alert variant="danger">{passwordModalError}</Alert>}
+
+          <Input
+            id="admin-user-temp-password"
+            label={t("security.newPasswordLabel")}
+            placeholder={t("security.newPasswordPlaceholder")}
+            type="password"
+            value={tempPassword}
+            onChange={(e) => setTempPassword(e.target.value)}
+            disabled={setPasswordMutation.isPending}
+            required
+          />
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-erp-border">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsSettingPassword(false)}
+              disabled={setPasswordMutation.isPending}
+            >
+              {tCommon("actions.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleSetPassword}
+              isLoading={setPasswordMutation.isPending}
+              disabled={setPasswordMutation.isPending || tempPassword.length < 8}
+            >
+              {tCommon("actions.save")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

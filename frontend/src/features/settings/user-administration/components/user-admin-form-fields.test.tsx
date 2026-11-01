@@ -16,6 +16,12 @@ vi.mock("@/lib/membership/selected-membership-context", () => ({
       permissions: [{ key: "users.manage", scope: "organization" }],
     },
   }),
+  useOptionalSelectedMembership: () => ({
+    selectedMembership: {
+      id: "membership-1",
+      permissions: [{ key: "users.manage", scope: "organization" }],
+    },
+  }),
 }));
 
 vi.mock("@/features/item-master/api/item-master-queries", () => ({

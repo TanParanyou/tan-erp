@@ -12,10 +12,19 @@ const mocks = vi.hoisted(() => ({
   userActive: vi.fn(),
   decide: vi.fn(),
   success: vi.fn(),
+  setPassword: vi.fn(),
+  updateTwoFactorPolicy: vi.fn(),
+  resetTwoFactor: vi.fn(),
 }));
 
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({
+    selectedMembership: {
+      id: "membership-1",
+      permissions: mocks.permissions.map((key) => ({ key, scope: "organization" })),
+    },
+  }),
+  useOptionalSelectedMembership: () => ({
     selectedMembership: {
       id: "membership-1",
       permissions: mocks.permissions.map((key) => ({ key, scope: "organization" })),
@@ -61,6 +70,9 @@ vi.mock("../api/user-admin-queries", () => {
     useRevokeAdminRole: idle((...args: never[]) => mocks.revoke(...args)),
     useDecideAdminRoleRequest: idle((...args: never[]) => mocks.decide(...args)),
     useUpdateAdminUserProfile: idle(vi.fn()),
+    useSetAdminUserPassword: idle((...args: never[]) => mocks.setPassword(...args)),
+    useUpdateAdminUserTwoFactorPolicy: idle((...args: never[]) => mocks.updateTwoFactorPolicy(...args)),
+    useResetAdminUserTwoFactor: idle((...args: never[]) => mocks.resetTwoFactor(...args)),
     useDepartments: () => ({ data: [], isLoading: false }),
     useJobTitles: () => ({ data: [], isLoading: false }),
     useCreateDepartment: idle(vi.fn()),
@@ -75,6 +87,10 @@ function buildUser() {
     email: "somchai@example.test",
     status: "active",
     rowVersion: "user-v1",
+    hasPassword: true,
+    hasGoogleLinked: false,
+    isTotpEnabled: true,
+    requireTwoFactor: false,
     memberships: [
       {
         id: "m1",
@@ -176,5 +192,57 @@ describe("UserAdminDetail", () => {
     fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "ยืนยัน" }));
 
     await waitFor(() => expect(mocks.userActive).toHaveBeenCalledWith({ userId: "u1", active: false, ifMatch: "user-v1" }));
+  });
+
+  it("renders security status badges and allows setting temporary password", async () => {
+    render(<UserAdminDetail userId="u1" />);
+
+    expect(screen.getByText("ความปลอดภัยและการเข้าสู่ระบบ")).toBeInTheDocument();
+    expect(screen.getByText("มีรหัสผ่าน")).toBeInTheDocument();
+    expect(screen.getByText("ไม่ได้เชื่อมต่อ Google")).toBeInTheDocument();
+    expect(screen.getByText("เปิดใช้ 2FA แล้ว")).toBeInTheDocument();
+    expect(screen.getByText("ไม่บังคับใช้ 2FA")).toBeInTheDocument();
+
+    // Click set temporary password
+    fireEvent.click(screen.getByRole("button", { name: "ตั้งรหัสผ่านใหม่" }));
+    const dialog = screen.getByRole("dialog");
+    const passwordInput = within(dialog).getByLabelText(/^รหัสผ่านใหม่/);
+    fireEvent.change(passwordInput, { target: { value: "newTempPass123" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "บันทึก" }));
+
+    await waitFor(() =>
+      expect(mocks.setPassword).toHaveBeenCalledWith({
+        userId: "u1",
+        newPassword: "newTempPass123",
+        ifMatch: "user-v1",
+      })
+    );
+  });
+
+  it("allows toggling 2FA policy and emergency resetting 2FA", async () => {
+    render(<UserAdminDetail userId="u1" />);
+
+    // Toggle 2FA policy
+    fireEvent.click(screen.getByRole("button", { name: "ปรับนโยบาย 2FA" }));
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "ยืนยัน" }));
+
+    await waitFor(() =>
+      expect(mocks.updateTwoFactorPolicy).toHaveBeenCalledWith({
+        userId: "u1",
+        requireTwoFactor: true,
+        ifMatch: "user-v1",
+      })
+    );
+
+    // Emergency reset 2FA
+    fireEvent.click(screen.getByRole("button", { name: "รีเซ็ต 2FA ฉุกเฉิน" }));
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "ยืนยัน" }));
+
+    await waitFor(() =>
+      expect(mocks.resetTwoFactor).toHaveBeenCalledWith({
+        userId: "u1",
+        ifMatch: "user-v1",
+      })
+    );
   });
 });

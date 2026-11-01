@@ -20,7 +20,40 @@
     "passwordRequired": "กรุณากรอกรหัสผ่าน",
     "invalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
     "signInFailed": "ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง",
-    "logout": "ออกจากระบบ"
+    "logout": "ออกจากระบบ",
+    "orDivider": "หรือ",
+    "signInWithGoogle": "เข้าสู่ระบบด้วย Google",
+    "googleClientNotConfigured": "ระบบยังไม่ได้กำหนดค่า Google Client ID ในสภาพแวดล้อมนี้",
+    "twoFactorTitle": "การยืนยันตัวตนสองขั้นตอน",
+    "twoFactorPrompt": "โปรดกรอกรหัสยืนยัน 6 หลักจากแอปพลิเคชัน Authenticator ของคุณ",
+    "useBackupCode": "ใช้รหัสสำรองฉุกเฉิน (Emergency Backup Code)",
+    "useAuthenticatorCode": "ใช้รหัสจากแอปพลิเคชัน Authenticator",
+    "backupCodeLabel": "รหัสสำรองฉุกเฉิน",
+    "backupCodePlaceholder": "เช่น ABCD-EFGH",
+    "authenticatorCodeLabel": "รหัสยืนยัน 6 หลัก",
+    "otpPlaceholder": "000000",
+    "verifyButton": "ยืนยันรหัส",
+    "verifying": "กำลังยืนยัน...",
+    "backToSignIn": "ย้อนกลับไปหน้าเข้าสู่ระบบ",
+    "mandatoryTwoFactorTitle": "ผู้ดูแลระบบกำหนดให้ต้องเปิดใช้ 2FA",
+    "mandatoryTwoFactorDesc": "นโยบายความปลอดภัยขององค์กรกำหนดให้บัญชีของคุณต้องเปิดใช้งานการยืนยันตัวตนสองขั้นตอนก่อนเข้าใช้งานระบบ",
+    "setupQrInstructions": "สแกน QR Code นี้ด้วยแอปพลิเคชัน Authenticator (เช่น Google Authenticator, Microsoft Authenticator หรือ 1Password)",
+    "secretKeyLabel": "หรือระบุรหัส Secret Key ด้วยตนเอง:",
+    "enterOtpLabel": "กรอกรหัส 6 หลักจากแอปเพื่อเปิดใช้งาน",
+    "verifyAndActivate": "ยืนยันและเปิดใช้งาน 2FA",
+    "backupCodesTitle": "รหัสสำรองฉุกเฉิน (Single-Use Backup Codes)",
+    "backupCodesNotice": "โปรดคัดลอกและบันทึกรหัสสำรองทั้ง 8 รหัสนี้ไว้ในที่ปลอดภัย แต่ละรหัสสามารถใช้เข้าสู่ระบบได้เพียงครั้งเดียวหากคุณไม่สามารถเข้าถึงแอปพลิเคชัน Authenticator ได้",
+    "copyAllCodes": "คัดลอกรหัสทั้งหมด",
+    "copiedAllCodes": "คัดลอกรหัสทั้งหมดเรียบร้อยแล้ว",
+    "backupCodesSavedContinue": "ฉันบันทึกรหัสสำรองแล้ว เข้าสู่ระบบ",
+    "accountLockedOut": "บัญชีของคุณถูกระงับชั่วคราวเนื่องจากพยายามเข้าสู่ระบบไม่สำเร็จหลายครั้ง กรุณาลองใหม่ในภายหลัง",
+    "userNotInvited": "อีเมลนี้ยังไม่ได้รับสิทธิ์เข้าใช้งานระบบ กรุณาติดต่อผู้ดูแลระบบ",
+    "userAccessDisabled": "บัญชีผู้ใช้นี้ถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแลระบบ",
+    "googleAuthNotConfigured": "ระบบยังไม่เปิดให้เข้าสู่ระบบผ่าน Google",
+    "googleTokenInvalid": "โทเค็นยืนยันตัวตนของ Google ไม่ถูกต้องหรือหมดอายุ",
+    "googleAccountMismatch": "บัญชี Google นี้ไม่ตรงกับข้อมูลในระบบ",
+    "twoFactorCodeInvalid": "รหัสยืนยัน 2FA หรือรหัสสำรองไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง",
+    "twoFactorChallengeInvalid": "เซสชันการยืนยันตัวตนหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง"
   },
   "gate": {
     "authLoading": "กำลังตรวจสอบตัวตน...",
@@ -1843,6 +1876,16 @@
       "moodToneName": "ชื่อมู้ดและโทนสี",
       "description": "คำอธิบาย",
       "descriptionPlaceholder": "ระบุคำอธิบายลักษณะหรือความต้องการ...",
+      "illustration": "ภาพประกอบสไตล์การออกแบบ",
+      "illustrationHelp": "อัปโหลดภาพประกอบตัวอย่างได้หลายรูป (PNG, JPG, WebP) สามารถคลิกดูพรีวิวภาพขยาย และเลือกตั้งเป็นภาพหลักได้",
+      "uploadImage": "เพิ่มรูปภาพ",
+      "changeImage": "เพิ่มรูปภาพ",
+      "removeCustomImage": "ลบรูปนี้",
+      "removeAllImages": "ลบรูปทั้งหมด (ใช้ภาพมาตรฐาน)",
+      "setCover": "ตั้งเป็นภาพหลัก",
+      "coverBadge": "ภาพหลัก",
+      "preview": "ดูภาพขยาย",
+      "imageCount": "{count} ภาพ",
       "colorPalette": "ชุดโทนสี (Color Palette)",
       "colorHexPlaceholder": "#3B82F6 หรือชื่อสี",
       "sortOrder": "ลำดับการแสดงผล",
@@ -1851,6 +1894,7 @@
       "sortOrderPlaceholder": "0"
     },
     "table": {
+      "illustration": "ภาพประกอบ",
       "code": "รหัส",
       "name": "ชื่อ (TH / EN)",
       "description": "คำอธิบาย",
@@ -2452,7 +2496,9 @@
       "access": "การเข้าถึงและสมาชิกภาพ",
       "accessHint": "เลือกสาขาและช่วงเวลาที่มีผล",
       "roles": "บทบาทหน้าที่",
-      "rolesHint": "เลือกบทบาทที่ผู้ใช้จะได้รับในระบบ"
+      "rolesHint": "เลือกบทบาทที่ผู้ใช้จะได้รับในระบบ",
+      "security": "ความปลอดภัยและการเข้าสู่ระบบ",
+      "securityHint": "สถานะรหัสผ่าน การเชื่อมต่อบัญชี และนโยบาย 2FA"
     },
     "fields": {
       "displayName": "ชื่อที่แสดง",
@@ -2484,7 +2530,12 @@
       "displayNamePlaceholder": "เช่น สมชาย ใจดี",
       "emailPlaceholder": "user@example.com",
       "startsAtPlaceholder": "วว/ดด/ปปปป --:--",
-      "expiresAtPlaceholder": "วว/ดด/ปปปป --:--"
+      "expiresAtPlaceholder": "วว/ดด/ปปปป --:--",
+      "initialPassword": "รหัสผ่านเริ่มต้น (ไม่บังคับ)",
+      "initialPasswordPlaceholder": "กำหนดรหัสผ่านชั่วคราวอย่างน้อย 8 ตัวอักษร",
+      "initialPasswordHint": "หากเว้นว่างไว้ ผู้ใช้สามารถเข้าสู่ระบบผ่าน Google Workspace ด้วยอีเมลที่ได้รับเชิญได้ทันที",
+      "requireTwoFactor": "บังคับใช้การยืนยันตัวตนสองขั้นตอน (Enforce 2FA)",
+      "requireTwoFactorHint": "ผู้ใช้จะต้องตั้งค่า 2FA ทันทีเมื่อเข้าสู่ระบบครั้งถัดไป"
     },
     "masterData": {
       "quickAddDepartment": "เพิ่มแผนกใหม่",
@@ -2510,7 +2561,8 @@
       "roleRequired": "กรุณาเลือกอย่างน้อยหนึ่งบทบาท",
       "phoneTooLong": "เบอร์โทรศัพท์ต้องไม่เกิน 50 ตัวอักษร",
       "codeTooLong": "รหัสพนักงานต้องไม่เกิน 50 ตัวอักษร",
-      "notesTooLong": "หมายเหตุต้องไม่เกิน 1,000 ตัวอักษร"
+      "notesTooLong": "หมายเหตุต้องไม่เกิน 1,000 ตัวอักษร",
+      "passwordTooShort": "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร"
     },
     "requiresApproval": "ต้องมีผู้ตรวจอนุมัติ",
     "notAssignable": "มอบไม่ได้",
@@ -2585,6 +2637,31 @@
       "BRANCH_INACTIVE": "สาขาที่เลือกถูกปิดใช้งาน",
       "PERMISSION_DENIED": "คุณไม่มีสิทธิ์ทำรายการนี้",
       "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"
+    },
+    "security": {
+      "passwordSet": "มีรหัสผ่าน",
+      "noPassword": "ไม่มีรหัสผ่าน",
+      "googleLinked": "เชื่อมต่อ Google แล้ว",
+      "googleNotLinked": "ไม่ได้เชื่อมต่อ Google",
+      "twoFactorEnabled": "เปิดใช้ 2FA แล้ว",
+      "twoFactorDisabled": "ยังไม่เปิดใช้ 2FA",
+      "twoFactorRequired": "บังคับใช้ 2FA",
+      "twoFactorOptional": "ไม่บังคับใช้ 2FA",
+      "setPassword": "ตั้งรหัสผ่านใหม่",
+      "setPasswordTitle": "ตั้งรหัสผ่านใหม่สำหรับผู้ใช้",
+      "newPasswordLabel": "รหัสผ่านใหม่",
+      "newPasswordPlaceholder": "อย่างน้อย 8 ตัวอักษร",
+      "passwordChangedSuccess": "เปลี่ยนรหัสผ่านสำหรับผู้ใช้เรียบร้อยแล้ว",
+      "toggleTwoFactorPolicy": "ปรับนโยบาย 2FA",
+      "twoFactorPolicyUpdated": "ปรับปรุงนโยบาย 2FA เรียบร้อยแล้ว",
+      "resetTwoFactor": "รีเซ็ต 2FA ฉุกเฉิน",
+      "resetTwoFactorTitle": "ยืนยันการรีเซ็ต 2FA ฉุกเฉิน",
+      "resetTwoFactorDesc": "การรีเซ็ตจะปิดการใช้งาน 2FA และยกเลิกรหัสสำรองทั้งหมดของผู้ใช้นี้ทันที ใช้ในกรณีที่ผู้ใช้ทำอุปกรณ์สูญหาย",
+      "resetTwoFactorSuccess": "รีเซ็ต 2FA สำหรับผู้ใช้เรียบร้อยแล้ว",
+      "passwordCol": "รหัสผ่าน",
+      "googleCol": "บัญชี Google",
+      "twoFactorCol": "การยืนยันสองขั้นตอน",
+      "twoFactorPolicyCol": "นโยบายความปลอดภัย"
     }
   },
   "quotationDocument": {
@@ -5210,7 +5287,29 @@
     "twoFactorInfoDisabled": "เมื่อเปิดใช้งาน คุณจะต้องป้อนรหัส 6 หลักจากแอป Authenticator (Google Authenticator, Microsoft Authenticator หรือ 1Password) ทุกครั้งที่เข้าสู่ระบบ",
     "twoFactorProtected": "บัญชีของคุณได้รับการปกป้องด้วย 2FA เรียบร้อยแล้ว",
     "copy": "คัดลอก",
-    "thisDevice": "อุปกรณ์นี้"
+    "thisDevice": "อุปกรณ์นี้",
+    "requiredByAdmin": "ผู้ดูแลระบบกำหนดให้ต้องเปิดใช้งาน",
+    "remainingBackupCodes": "รหัสสำรองคงเหลือ {count} รหัส",
+    "regenerateBackupCodes": "สร้างรหัสสำรองใหม่",
+    "regenerateBackupCodesDesc": "หากรหัสสำรองเดิมสูญหายหรือถูกใช้ไปหมดแล้ว สามารถสร้างรหัสใหม่ 8 รหัสได้ทันที (รหัสเดิมจะถูกยกเลิก)",
+    "confirmRegenerate": "สร้างรหัสใหม่",
+    "backupCodesGeneratedTitle": "รหัสสำรองฉุกเฉินชุดใหม่ของคุณ",
+    "backupCodesWarning": "โปรดบันทึกรหัสเหล่านี้ไว้ในที่ปลอดภัย แต่ละรหัสใช้ได้เพียงครั้งเดียว และระบบจะไม่แสดงรหัสเหล่านี้อีก",
+    "backupCodesSaved": "ฉันบันทึกรหัสเรียบร้อยแล้ว",
+    "disable2FaModalTitle": "ยืนยันการปิดการใช้งาน 2FA",
+    "disable2FaModalDesc": "การปิดใช้งาน 2FA จะลดระดับความปลอดภัยของบัญชีของคุณลง โปรดยืนยันด้วยรหัส 6 หลักจาก Authenticator",
+    "disable2FaRestrictedByAdmin": "ไม่สามารถปิดการใช้งาน 2FA ได้เนื่องจากผู้ดูแลระบบกำหนดนโยบายความปลอดภัยสำหรับบัญชีนี้",
+    "enterOtpToConfirm": "กรอกรหัสยืนยัน 6 หลัก",
+    "revokeAllOtherSessions": "ออกจากระบบอุปกรณ์อื่นทั้งหมด",
+    "revokeSessionConfirmTitle": "ยืนยันการเพิกถอนเซสชัน",
+    "revokeSessionConfirmDesc": "ต้องการออกจากระบบบนอุปกรณ์นี้ใช่หรือไม่? ผู้ใช้จะต้องเข้าสู่ระบบใหม่อีกครั้ง",
+    "revokeOtherSessionsConfirmTitle": "ยืนยันการออกจากระบบอุปกรณ์อื่นทั้งหมด",
+    "revokeOtherSessionsConfirmDesc": "อุปกรณ์และเบราว์เซอร์อื่นทั้งหมดที่เข้าสู่ระบบบัญชีนี้อยู่จะถูกบังคับให้ออกจากระบบทันที",
+    "toastAllOtherSessionsRevoked": "ออกจากระบบอุปกรณ์อื่นทั้งหมดเรียบร้อยแล้ว",
+    "noOtherSessions": "ไม่มีเซสชันอื่นที่เข้าสู่ระบบค้างไว้",
+    "otpPlaceholder": "000000",
+    "confirmButton": "ยืนยัน",
+    "close": "ปิด"
   },
   "attachments": {
     "title": "ไฟล์แนบ",
@@ -6322,7 +6421,8 @@
     },
     "actions": {
       "save": "บันทึกโปรไฟล์",
-      "changePassword": "เปลี่ยนรหัสผ่าน"
+      "changePassword": "เปลี่ยนรหัสผ่าน",
+      "setPassword": "ตั้งรหัสผ่าน"
     },
     "saveSuccess": "บันทึกโปรไฟล์เรียบร้อยแล้ว",
     "passwordSuccess": "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว",
@@ -6335,7 +6435,10 @@
       "WRONG_PASSWORD": "รหัสผ่านปัจจุบันไม่ถูกต้อง",
       "WEAK_PASSWORD": "รหัสผ่านใหม่ไม่ปลอดภัยพอ กรุณาใช้รหัสผ่านที่คาดเดาได้ยากขึ้น",
       "REQUIRES_RECENT_LOGIN": "กรุณาออกจากระบบและเข้าสู่ระบบใหม่ก่อนเปลี่ยนรหัสผ่าน",
-      "TOO_MANY_REQUESTS": "ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่"
+      "TOO_MANY_REQUESTS": "ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่",
+      "CURRENT_PASSWORD_INVALID": "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+      "PASSWORD_TOO_SHORT": "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร",
+      "PASSWORD_SAME_AS_CURRENT": "รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านปัจจุบัน"
     },
     "appearance": {
       "description": "ปรับโหมดสี ความแน่นของหน้าจอ และขนาดตัวอักษร ค่าที่บันทึกใช้ร่วมกันทุกอุปกรณ์",

@@ -5,19 +5,19 @@ import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import type { SupportedLocale } from "@/lib/i18n/locales";
 
-export function currentUserQueryKey(firebaseUid: string | null | undefined, locale: SupportedLocale = "th") {
-  return ["current-user", firebaseUid, locale] as const;
+export function currentUserQueryKey(userId: string | null | undefined, locale: SupportedLocale = "th") {
+  return ["current-user", userId, locale] as const;
 }
 
 export function useCurrentUser(
-  firebaseUid: string | null | undefined,
+  userId: string | null | undefined,
   locale?: SupportedLocale
 ): UseQueryResult<CurrentUserResponse, Error> {
   const routeLocale = useSafeLocale();
   const effectiveLocale = locale || routeLocale;
 
   return useQuery<CurrentUserResponse, Error>({
-    queryKey: currentUserQueryKey(firebaseUid, effectiveLocale),
+    queryKey: currentUserQueryKey(userId, effectiveLocale),
     queryFn: async ({ signal }) => {
       const token = await getAuthToken();
       if (!token) {
@@ -25,7 +25,7 @@ export function useCurrentUser(
       }
       return apiClient.getCurrentUser(token, effectiveLocale, signal);
     },
-    enabled: Boolean(firebaseUid),
+    enabled: Boolean(userId),
     retry: (failureCount, error) => {
       // Do not retry 401/403
       const status = error && typeof error === "object" && "status" in error ? (error as { status?: unknown }).status : undefined;

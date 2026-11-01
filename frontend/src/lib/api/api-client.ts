@@ -108,6 +108,17 @@ export type UserListResponse = components["schemas"]["UserListResponse"];
 export type AdminUserResponse = components["schemas"]["AdminUserResponse"];
 export type AdminMembershipResponse = components["schemas"]["AdminMembershipResponse"];
 export type AdminUserListResponse = components["schemas"]["AdminUserListResponse"];
+export type SetAdminUserPasswordRequest = components["schemas"]["SetAdminUserPasswordRequest"];
+export type UpdateAdminUserTwoFactorPolicyRequest = components["schemas"]["UpdateAdminUserTwoFactorPolicyRequest"];
+export type MySecurityStatusResponse = components["schemas"]["MySecurityStatusResponse"];
+export type TotpSetupPayloadDto = components["schemas"]["TotpSetupPayloadDto"];
+export type EnableTwoFactorRequest = components["schemas"]["EnableTwoFactorRequest"];
+export type DisableTwoFactorRequest = components["schemas"]["DisableTwoFactorRequest"];
+export type RegenerateBackupCodesRequest = components["schemas"]["RegenerateBackupCodesRequest"];
+export type TwoFactorBackupCodesResponse = components["schemas"]["TwoFactorBackupCodesResponse"];
+export type ActiveSessionListResponse = components["schemas"]["ActiveSessionListResponse"];
+export type ActiveSessionItemDto = components["schemas"]["ActiveSessionItemDto"];
+export type RevokeSessionsResponse = components["schemas"]["RevokeSessionsResponse"];
 export type AdminRoleResponse = components["schemas"]["AdminRoleResponse"];
 export type AdminRoleListResponse = components["schemas"]["AdminRoleListResponse"];
 export type AdminRoleRequestResponse = components["schemas"]["AdminRoleRequestResponse"];
@@ -800,6 +811,38 @@ export class ApiClient {
 
   async updateMyProfile(payload: UpdateMyProfileRequest, options: RequestOptions): Promise<UserDto> {
     return this.request<UserDto>("/api/v1/me/profile", "PUT", options, payload);
+  }
+
+  async getMySecurityStatus(options: RequestOptions): Promise<MySecurityStatusResponse> {
+    return this.request<MySecurityStatusResponse>("/api/v1/me/security", "GET", options);
+  }
+
+  async setupMyTwoFactor(options: RequestOptions): Promise<TotpSetupPayloadDto> {
+    return this.request<TotpSetupPayloadDto>("/api/v1/me/2fa/setup", "POST", options);
+  }
+
+  async enableMyTwoFactor(payload: EnableTwoFactorRequest, options: RequestOptions): Promise<TwoFactorBackupCodesResponse> {
+    return this.request<TwoFactorBackupCodesResponse>("/api/v1/me/2fa/enable", "POST", options, payload);
+  }
+
+  async disableMyTwoFactor(payload: DisableTwoFactorRequest, options: RequestOptions): Promise<TwoFactorBackupCodesResponse> {
+    return this.request<TwoFactorBackupCodesResponse>("/api/v1/me/2fa/disable", "POST", options, payload);
+  }
+
+  async regenerateMyBackupCodes(payload: RegenerateBackupCodesRequest, options: RequestOptions): Promise<TwoFactorBackupCodesResponse> {
+    return this.request<TwoFactorBackupCodesResponse>("/api/v1/me/2fa/backup-codes/regenerate", "POST", options, payload);
+  }
+
+  async listMySessions(options: RequestOptions): Promise<ActiveSessionListResponse> {
+    return this.request<ActiveSessionListResponse>("/api/v1/me/sessions", "GET", options);
+  }
+
+  async revokeMySession(sessionId: string, options: RequestOptions): Promise<void> {
+    return this.request<void>(`/api/v1/me/sessions/${encodeURIComponent(sessionId)}`, "DELETE", options);
+  }
+
+  async revokeOtherSessions(options: RequestOptions): Promise<RevokeSessionsResponse> {
+    return this.request<RevokeSessionsResponse>("/api/v1/me/sessions/revoke-others", "POST", options);
   }
 
   async listCustomers(
@@ -1589,6 +1632,18 @@ export class ApiClient {
 
   async updateAdminUserProfile(userId: string, payload: UpdateAdminUserProfileRequest, options: RequestOptions): Promise<AdminUserResponse> {
     return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}/profile`, "PUT", options, payload);
+  }
+
+  async setAdminUserPassword(userId: string, payload: SetAdminUserPasswordRequest, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}/password`, "PUT", options, payload);
+  }
+
+  async updateAdminUserTwoFactorPolicy(userId: string, payload: UpdateAdminUserTwoFactorPolicyRequest, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}/two-factor-policy`, "PUT", options, payload);
+  }
+
+  async resetAdminUserTwoFactor(userId: string, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}/two-factor-reset`, "POST", options);
   }
 
   async listDepartments(onlyActive = true, options: RequestOptions): Promise<DepartmentResponse[]> {

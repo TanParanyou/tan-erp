@@ -20,7 +20,40 @@
     "passwordRequired": "Password is required",
     "invalidCredentials": "Invalid email or password",
     "signInFailed": "Unable to sign in. Please try again.",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "orDivider": "OR",
+    "signInWithGoogle": "Sign in with Google",
+    "googleClientNotConfigured": "Google Client ID is not configured in this environment.",
+    "twoFactorTitle": "Two-Factor Authentication",
+    "twoFactorPrompt": "Please enter the 6-digit verification code from your authenticator app.",
+    "useBackupCode": "Use emergency backup code",
+    "useAuthenticatorCode": "Use authenticator app code",
+    "backupCodeLabel": "Emergency Backup Code",
+    "backupCodePlaceholder": "e.g. ABCD-EFGH",
+    "authenticatorCodeLabel": "6-digit verification code",
+    "otpPlaceholder": "000000",
+    "verifyButton": "Verify",
+    "verifying": "Verifying...",
+    "backToSignIn": "Back to sign in",
+    "mandatoryTwoFactorTitle": "Two-Factor Authentication Required",
+    "mandatoryTwoFactorDesc": "Organization security policy requires your account to set up two-factor authentication before proceeding.",
+    "setupQrInstructions": "Scan this QR code with your authenticator app (such as Google Authenticator, Microsoft Authenticator, or 1Password).",
+    "secretKeyLabel": "Or enter secret key manually:",
+    "enterOtpLabel": "Enter 6-digit code from the app to activate",
+    "verifyAndActivate": "Verify and Activate 2FA",
+    "backupCodesTitle": "Emergency Backup Codes",
+    "backupCodesNotice": "Please copy and save these 8 backup codes in a safe place. Each code can only be used once if you lose access to your authenticator app.",
+    "copyAllCodes": "Copy All Codes",
+    "copiedAllCodes": "All codes copied to clipboard",
+    "backupCodesSavedContinue": "I have saved my backup codes, Continue",
+    "accountLockedOut": "Account is temporarily locked due to multiple failed login attempts. Please try again later.",
+    "userNotInvited": "This user has not been invited to access the system. Please contact your administrator.",
+    "userAccessDisabled": "This account has been disabled. Please contact your administrator.",
+    "googleAuthNotConfigured": "Google authentication is not configured.",
+    "googleTokenInvalid": "Google verification token is invalid or expired.",
+    "googleAccountMismatch": "Google account does not match registered user.",
+    "twoFactorCodeInvalid": "Invalid two-factor code or backup code. Please check and try again.",
+    "twoFactorChallengeInvalid": "Two-factor verification challenge has expired. Please sign in again."
   },
   "gate": {
     "authLoading": "Verifying identity...",
@@ -1843,6 +1876,16 @@
       "moodToneName": "Mood & Tone Name",
       "description": "Description",
       "descriptionPlaceholder": "Describe style characteristics or aesthetics...",
+      "illustration": "Design Style Illustrations",
+      "illustrationHelp": "Upload multiple sample photos (PNG, JPG, WebP), click to preview full size, and set primary cover image",
+      "uploadImage": "Add Images",
+      "changeImage": "Add Images",
+      "removeCustomImage": "Remove this image",
+      "removeAllImages": "Remove all images (Use default artwork)",
+      "setCover": "Set as Cover",
+      "coverBadge": "Cover",
+      "preview": "Preview",
+      "imageCount": "{count} images",
       "colorPalette": "Color Palette",
       "colorHexPlaceholder": "#3B82F6 or color name",
       "sortOrder": "Sort Order",
@@ -1851,6 +1894,7 @@
       "sortOrderPlaceholder": "0"
     },
     "table": {
+      "illustration": "Illustration",
       "code": "Code",
       "name": "Name (TH / EN)",
       "description": "Description",
@@ -2452,7 +2496,9 @@
       "access": "Access and Membership",
       "accessHint": "Choose the branch and effective dates",
       "roles": "Roles and Permissions",
-      "rolesHint": "Select roles assigned to this user"
+      "rolesHint": "Select roles assigned to this user",
+      "security": "Security & Sign-In",
+      "securityHint": "Password status, linked accounts, and 2FA policies"
     },
     "fields": {
       "displayName": "Display name",
@@ -2484,7 +2530,12 @@
       "displayNamePlaceholder": "e.g. John Doe",
       "emailPlaceholder": "user@example.com",
       "startsAtPlaceholder": "dd/mm/yyyy --:--",
-      "expiresAtPlaceholder": "dd/mm/yyyy --:--"
+      "expiresAtPlaceholder": "dd/mm/yyyy --:--",
+      "initialPassword": "Initial Password (Optional)",
+      "initialPasswordPlaceholder": "At least 8 characters temporary password",
+      "initialPasswordHint": "If left blank, user can sign in via Google OAuth with their invited email",
+      "requireTwoFactor": "Require Two-Factor Authentication (2FA)",
+      "requireTwoFactorHint": "User must configure 2FA on their next sign-in"
     },
     "masterData": {
       "quickAddDepartment": "Add new department",
@@ -2510,7 +2561,8 @@
       "roleRequired": "Select at least one role",
       "phoneTooLong": "Phone number must be 50 characters or fewer",
       "codeTooLong": "Employee code must be 50 characters or fewer",
-      "notesTooLong": "Notes must be 1,000 characters or fewer"
+      "notesTooLong": "Notes must be 1,000 characters or fewer",
+      "passwordTooShort": "Password must be at least 8 characters long"
     },
     "requiresApproval": "Needs checker approval",
     "notAssignable": "Not assignable",
@@ -2585,6 +2637,31 @@
       "BRANCH_INACTIVE": "The selected branch is inactive.",
       "PERMISSION_DENIED": "You do not have permission to do this.",
       "RESOURCE_NOT_FOUND": "The requested record was not found."
+    },
+    "security": {
+      "passwordSet": "Password Set",
+      "noPassword": "No Password",
+      "googleLinked": "Google Linked",
+      "googleNotLinked": "Google Not Linked",
+      "twoFactorEnabled": "2FA Enabled",
+      "twoFactorDisabled": "2FA Not Enabled",
+      "twoFactorRequired": "2FA Enforced",
+      "twoFactorOptional": "2FA Optional",
+      "setPassword": "Set Password",
+      "setPasswordTitle": "Set New Password for User",
+      "newPasswordLabel": "New Password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "passwordChangedSuccess": "User password updated successfully",
+      "toggleTwoFactorPolicy": "Update 2FA Policy",
+      "twoFactorPolicyUpdated": "2FA policy updated successfully",
+      "resetTwoFactor": "Emergency Reset 2FA",
+      "resetTwoFactorTitle": "Confirm Emergency 2FA Reset",
+      "resetTwoFactorDesc": "This will immediately disable 2FA and invalidate all backup codes for this user. Use only if user lost access.",
+      "resetTwoFactorSuccess": "User 2FA has been reset successfully",
+      "passwordCol": "Password",
+      "googleCol": "Google Account",
+      "twoFactorCol": "Two-Factor Auth",
+      "twoFactorPolicyCol": "Security Policy"
     }
   },
   "quotationDocument": {
@@ -5210,7 +5287,29 @@
     "twoFactorInfoDisabled": "When enabled, you will need to enter a 6-digit code from your Authenticator app every time you log in",
     "twoFactorProtected": "Your account is currently protected with 2FA",
     "copy": "Copy",
-    "thisDevice": "This device"
+    "thisDevice": "This device",
+    "requiredByAdmin": "Required by administrator",
+    "remainingBackupCodes": "{count} backup codes remaining",
+    "regenerateBackupCodes": "Regenerate backup codes",
+    "regenerateBackupCodesDesc": "Generate 8 new emergency backup codes. Existing codes will be invalidated.",
+    "confirmRegenerate": "Regenerate",
+    "backupCodesGeneratedTitle": "Your new emergency backup codes",
+    "backupCodesWarning": "Save these codes in a safe place. Each code can only be used once.",
+    "backupCodesSaved": "I have saved these codes",
+    "disable2FaModalTitle": "Confirm disable 2FA",
+    "disable2FaModalDesc": "Disabling 2FA reduces account security. Please confirm with your 6-digit Authenticator code.",
+    "disable2FaRestrictedByAdmin": "Cannot disable 2FA because it is enforced by administrator policy.",
+    "enterOtpToConfirm": "Enter 6-digit confirmation code",
+    "revokeAllOtherSessions": "Sign out all other devices",
+    "revokeSessionConfirmTitle": "Confirm revoke session",
+    "revokeSessionConfirmDesc": "Are you sure you want to sign out this session? The device will need to sign in again.",
+    "revokeOtherSessionsConfirmTitle": "Confirm revoke all other sessions",
+    "revokeOtherSessionsConfirmDesc": "All other devices and browsers will be immediately signed out.",
+    "toastAllOtherSessionsRevoked": "All other sessions have been revoked.",
+    "noOtherSessions": "No other active sessions.",
+    "otpPlaceholder": "000000",
+    "confirmButton": "Confirm",
+    "close": "Close"
   },
   "attachments": {
     "title": "Attachments",
@@ -6322,7 +6421,8 @@
     },
     "actions": {
       "save": "Save profile",
-      "changePassword": "Change password"
+      "changePassword": "Change password",
+      "setPassword": "Set password"
     },
     "saveSuccess": "Profile saved successfully",
     "passwordSuccess": "Password changed successfully",
@@ -6335,7 +6435,10 @@
       "WRONG_PASSWORD": "The current password is incorrect",
       "WEAK_PASSWORD": "The new password is too weak. Please choose a stronger one.",
       "REQUIRES_RECENT_LOGIN": "Please sign out and sign in again before changing your password",
-      "TOO_MANY_REQUESTS": "Too many attempts. Please wait a moment and try again."
+      "TOO_MANY_REQUESTS": "Too many attempts. Please wait a moment and try again.",
+      "CURRENT_PASSWORD_INVALID": "The current password is incorrect",
+      "PASSWORD_TOO_SHORT": "Password must be at least 8 characters long",
+      "PASSWORD_SAME_AS_CURRENT": "New password must be different from current password"
     },
     "appearance": {
       "description": "Adjust colour mode, screen density and text size. Saved values follow you on every device.",

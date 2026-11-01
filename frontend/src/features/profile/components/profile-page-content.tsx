@@ -9,6 +9,9 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 import { PersonalProfileForm } from "./personal-profile-form";
 import { AppearancePreferencesForm } from "./appearance-preferences-form";
 import { ChangePasswordForm } from "./change-password-form";
+import { TwoFactorAuthCard } from "@/components/features/security/TwoFactorAuthCard";
+import { ActiveSessionsCard } from "@/components/features/security/ActiveSessionsCard";
+import { useMySecurityStatus } from "../api/security-queries";
 
 type ProfileTab = "personal" | "appearance" | "security";
 
@@ -16,6 +19,7 @@ export function ProfilePageContent() {
   const t = useTranslations("myProfile");
   const { currentUser } = useSelectedMembership();
   const [activeTab, setActiveTab] = useState<ProfileTab>("personal");
+  const { data: securityStatus } = useMySecurityStatus();
   const user = currentUser.user;
 
   if (!user) return null;
@@ -39,8 +43,10 @@ export function ProfilePageContent() {
         <div id="tabpanel-appearance" role="tabpanel" aria-labelledby="tab-appearance" className={activeTab === "appearance" ? undefined : "hidden"}>
           <AppearancePreferencesForm />
         </div>
-        <div id="tabpanel-security" role="tabpanel" aria-labelledby="tab-security" className={activeTab === "security" ? undefined : "hidden"}>
-          <ChangePasswordForm />
+        <div id="tabpanel-security" role="tabpanel" aria-labelledby="tab-security" className={activeTab === "security" ? "flex flex-col gap-6" : "hidden"}>
+          <ChangePasswordForm hasPassword={securityStatus?.hasPassword ?? true} />
+          <TwoFactorAuthCard />
+          <ActiveSessionsCard />
         </div>
       </div>
     </FormContainer>

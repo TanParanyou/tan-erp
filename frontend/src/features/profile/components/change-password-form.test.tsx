@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChangePasswordForm } from "./change-password-form";
 
 vi.mock("@/lib/auth/auth-session", () => ({
@@ -20,13 +21,20 @@ vi.mock("@/hooks/useToast", () => ({
 
 import { changeOwnPassword } from "@/lib/auth/auth-session";
 
+function renderWithClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
+
 describe("ChangePasswordForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("renders current password, new password, and confirm password fields with submit button", () => {
-    render(<ChangePasswordForm />);
+    renderWithClient(<ChangePasswordForm />);
 
     expect(screen.getByLabelText(/รหัสผ่านปัจจุบัน/)).toBeDefined();
     expect(screen.getByLabelText(/^รหัสผ่านใหม่/)).toBeDefined();
@@ -35,7 +43,7 @@ describe("ChangePasswordForm", () => {
   });
 
   it("shows validation error when submitted empty", async () => {
-    render(<ChangePasswordForm />);
+    renderWithClient(<ChangePasswordForm />);
 
     fireEvent.click(screen.getByRole("button", { name: "เปลี่ยนรหัสผ่าน" }));
 
@@ -47,7 +55,7 @@ describe("ChangePasswordForm", () => {
   });
 
   it("shows validation error when new password does not match confirmation", async () => {
-    render(<ChangePasswordForm />);
+    renderWithClient(<ChangePasswordForm />);
 
     fireEvent.change(screen.getByLabelText(/รหัสผ่านปัจจุบัน/), { target: { value: "oldPassword123" } });
     fireEvent.change(screen.getByLabelText(/^รหัสผ่านใหม่/), { target: { value: "newPassword123" } });
@@ -65,7 +73,7 @@ describe("ChangePasswordForm", () => {
   it("submits change password and displays success toast when valid", async () => {
     vi.mocked(changeOwnPassword).mockResolvedValueOnce();
 
-    render(<ChangePasswordForm />);
+    renderWithClient(<ChangePasswordForm />);
 
     fireEvent.change(screen.getByLabelText(/รหัสผ่านปัจจุบัน/), { target: { value: "oldPassword123" } });
     fireEvent.change(screen.getByLabelText(/^รหัสผ่านใหม่/), { target: { value: "newPassword123" } });
@@ -82,7 +90,7 @@ describe("ChangePasswordForm", () => {
   it("shows error alert on auth failure (wrong password)", async () => {
     vi.mocked(changeOwnPassword).mockRejectedValueOnce({ code: "auth/wrong-password" });
 
-    render(<ChangePasswordForm />);
+    renderWithClient(<ChangePasswordForm />);
 
     fireEvent.change(screen.getByLabelText(/รหัสผ่านปัจจุบัน/), { target: { value: "wrongOldPassword" } });
     fireEvent.change(screen.getByLabelText(/^รหัสผ่านใหม่/), { target: { value: "newPassword123" } });

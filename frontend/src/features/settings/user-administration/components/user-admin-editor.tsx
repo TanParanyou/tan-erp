@@ -56,6 +56,11 @@ export function UserAdminEditor() {
     startsAt: z.string(),
     expiresAt: z.string(),
     roleIds: z.array(z.string()).min(1, t("validation.roleRequired")),
+    initialPassword: z
+      .string()
+      .optional()
+      .refine((v) => !v || v.length >= 8, { message: t("validation.passwordTooShort") }),
+    requireTwoFactor: z.boolean().optional(),
   });
 
   const {
@@ -78,6 +83,8 @@ export function UserAdminEditor() {
       startsAt: "",
       expiresAt: "",
       roleIds: [],
+      initialPassword: "",
+      requireTwoFactor: false,
     },
   });
 
@@ -118,6 +125,8 @@ export function UserAdminEditor() {
       startsAtUtc: fromInputValue(values.startsAt),
       expiresAtUtc: fromInputValue(values.expiresAt),
       roleIds: values.roleIds,
+      initialPassword: values.initialPassword ? values.initialPassword.trim() : null,
+      requireTwoFactor: Boolean(values.requireTwoFactor),
     };
 
     const fingerprint = JSON.stringify(payload);

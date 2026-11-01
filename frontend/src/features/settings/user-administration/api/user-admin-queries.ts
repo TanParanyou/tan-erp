@@ -20,8 +20,10 @@ import {
   type CreateJobTitleRequest,
   type DepartmentResponse,
   type JobTitleResponse,
+  type SetAdminUserPasswordRequest,
   type UpdateAdminMembershipRequest,
   type UpdateAdminUserProfileRequest,
+  type UpdateAdminUserTwoFactorPolicyRequest,
 } from "@/lib/api/api-client";
 import { useApiRequestContext, type ApiLocale } from "@/lib/api/use-api-request-context";
 
@@ -240,5 +242,62 @@ export function useDecideAdminRoleRequest(): UseMutationResult<
     mutationFn: async ({ requestId, decision, ifMatch }) =>
       apiClient.decideAdminRoleRequest(requestId, decision, await context.buildOptions({ ifMatch })),
     onSuccess: () => invalidateAdmin(queryClient, context.membershipId),
+  });
+}
+
+export function useSetAdminUserPassword(): UseMutationResult<
+  AdminUserResponse,
+  Error,
+  { userId: string; newPassword: string; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ userId, newPassword, ifMatch }) =>
+      apiClient.setAdminUserPassword(userId, { newPassword }, await context.buildOptions({ ifMatch })),
+    onSuccess: (_, { userId }) => {
+      invalidateAdmin(queryClient, context.membershipId);
+      void queryClient.invalidateQueries({
+        queryKey: userAdminKeys.detail(context.membershipId, context.locale, userId),
+      });
+    },
+  });
+}
+
+export function useUpdateAdminUserTwoFactorPolicy(): UseMutationResult<
+  AdminUserResponse,
+  Error,
+  { userId: string; requireTwoFactor: boolean; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ userId, requireTwoFactor, ifMatch }) =>
+      apiClient.updateAdminUserTwoFactorPolicy(userId, { requireTwoFactor }, await context.buildOptions({ ifMatch })),
+    onSuccess: (_, { userId }) => {
+      invalidateAdmin(queryClient, context.membershipId);
+      void queryClient.invalidateQueries({
+        queryKey: userAdminKeys.detail(context.membershipId, context.locale, userId),
+      });
+    },
+  });
+}
+
+export function useResetAdminUserTwoFactor(): UseMutationResult<
+  AdminUserResponse,
+  Error,
+  { userId: string; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ userId, ifMatch }) =>
+      apiClient.resetAdminUserTwoFactor(userId, await context.buildOptions({ ifMatch })),
+    onSuccess: (_, { userId }) => {
+      invalidateAdmin(queryClient, context.membershipId);
+      void queryClient.invalidateQueries({
+        queryKey: userAdminKeys.detail(context.membershipId, context.locale, userId),
+      });
+    },
   });
 }
