@@ -50,3 +50,10 @@
 - การคำนวณ KPI รอบแรกอ่านข้อมูลสดจาก PostgreSQL ผ่าน Dapper (`commandTimeout: 15s`) โดยยังไม่มี Materialized View หรือ Scheduled Snapshot สำหรับข้อมูลระดับหลายแสนแถว (`VQ-RPT-01`)
 - สูตรนับอัตราชนะงาน (`Won / (Won + Lost)`) และการไม่รวมใบเสนอราคาสถานะ `draft`/`voided`/`superseded` ในยอด `IssuedAmount` เป็นสมมติฐานเริ่มต้นที่รอผู้บริหาร/ฝ่ายขายยืนยันใน UAT (`VQ-RPT-02`)
 - ผลการทดสอบอัตโนมัติข้างต้นยังไม่แทนการตรวจรับ UAT โดยผู้ใช้งานจริงตามบทบาทใน Production
+
+## G-25 Materialized views (2026-11-01)
+
+- เพิ่ม migration `AddReportingMaterializedViews` (3 views + unique index สำหรับ CONCURRENTLY), `ReportingMaterializedViewRefreshWorker` (opt-in, ไม่ทำงานใน Test), `ReportingMaterializedViewOptions`, และเส้นทางอ่านที่เลือก SQL ตามค่า `Enabled` ใน `ReportingStore`.
+- ตรวจแล้ว: `dotnet build` 0 warnings/errors. **ไม่ได้ตรวจ:** migration ยังไม่ได้ apply/รันกับ PostgreSQL (SQL คัดลอกจาก query สดเดิม), ไม่ได้เทียบผล MV กับ query สด, ไม่ได้วัดประสิทธิภาพ, ไม่มี test ใหม่, ไม่ได้ทดสอบ worker.
+- VQ-RPT-01 (ต้องการยอดสดหรือ snapshot) **ยังไม่ได้รับคำตอบจากผู้บริหาร** จึงคงค่าเริ่มต้นเป็นอ่านสด; เปิดใช้เมื่อมีปริมาณข้อมูลที่ทำให้ช้าจริงและยอมรับความเก่าของข้อมูลได้.
+- worker นี้เป็น scheduler ตัวที่สองต่อจาก [ADR 0022](../adr/0022-membership-expiry-reminder-and-hosted-worker.md) ซึ่งระบุว่าเป็น scheduler เดียวของแอป — ADR นี้ยังไม่ได้แก้ถ้อยคำ ต้องให้เจ้าของงานยืนยันการเพิ่ม scheduler.

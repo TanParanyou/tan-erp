@@ -100,3 +100,7 @@
 - `401 Unauthorized` (`AUTHENTICATION_REQUIRED`): ไม่ได้ส่งหรือส่ง Token ไม่ถูกต้อง
 - `403 Forbidden` (`ACTIVE_MEMBERSHIP_REQUIRED`): ไม่พบ Membership ที่ใช้งานอยู่
 - `403 Forbidden` (`PERMISSION_DENIED`): ไม่มีสิทธิ์อ่านรายงานนั้น หรือพยายามเข้าถึง `branchId` ข้ามสาขาที่ตนสังกัด
+
+## Materialized view read path (G-25, 2026-11-01, opt-in)
+
+สัญญา API ไม่เปลี่ยน. เมื่อเปิด `Reporting:MaterializedViews:Enabled=true` รายงาน **Pipeline, Project Budget และ Stock Value** (รวมการ์ดใน `dashboard-summary`) อ่านจาก materialized view ใน schema `reporting` (`mv_pipeline_stages`, `mv_project_budget`, `mv_stock_value`) ซึ่ง worker refresh ทุก `RefreshIntervalMinutes` (ค่าเริ่มต้น 15, ช่วง 1-1440) ด้วย `REFRESH MATERIALIZED VIEW CONCURRENTLY` ข้อมูลจึงเก่าได้ไม่เกินหนึ่งรอบ. Quotation, AR Aging และ Service SLA ยังอ่านสดเสมอ (ขึ้นกับวันที่/เวลาปัจจุบัน). ค่าเริ่มต้นคือ **ปิด** (อ่านสดเหมือนเดิม). การกรอง `organization_id` และ Branch Clamping ใช้เงื่อนไขเดียวกันบน view. **ข้อจำกัด:** response ยังไม่แจ้งว่าข้อมูลมาจาก snapshot หรือเก่าเท่าไร (`generatedAtUtc` คือเวลาที่ตอบ ไม่ใช่เวลา refresh).

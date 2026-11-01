@@ -11,10 +11,12 @@ namespace TanErp.Infrastructure.Persistence.Reporting;
 public class ReportingStore : IReportingStore
 {
     private readonly AppDbContext _db;
+    private readonly ReportingMaterializedViewOptions _mv;
 
-    public ReportingStore(AppDbContext db)
+    public ReportingStore(AppDbContext db, ReportingMaterializedViewOptions mv)
     {
         _db = db;
+        _mv = mv;
     }
 
     private async Task<IDbConnection> GetOpenConnectionAsync(CancellationToken ct)
@@ -54,7 +56,7 @@ public class ReportingStore : IReportingStore
 
     private async Task<IReadOnlyList<PipelineStageRow>> QueryPipelineStagesAsync(Guid organizationId, Guid? branchId, CancellationToken ct)
     {
-        const string sql = """
+        const string liveSql = """
             SELECT
                 stage AS "Stage",
                 COUNT(*)::int AS "OpportunityCount",
@@ -65,6 +67,18 @@ public class ReportingStore : IReportingStore
             GROUP BY stage
             ORDER BY stage ASC
             """;
+        const string mvSql = """
+            SELECT
+                stage AS "Stage",
+                SUM(opportunity_count)::int AS "OpportunityCount",
+                COALESCE(SUM(expected_budget_total), 0) AS "ExpectedBudgetTotal"
+            FROM reporting.mv_pipeline_stages
+            WHERE organization_id = @OrgId
+              AND (@BranchId::uuid IS NULL OR branch_id = @BranchId)
+            GROUP BY stage
+            ORDER BY stage ASC
+            """;
+        var sql = _mv.Enabled ? mvSql : liveSql;
 
         var conn = await GetOpenConnectionAsync(ct);
         var cmd = new CommandDefinition(sql, new { OrgId = organizationId, BranchId = branchId }, commandTimeout: 15, cancellationToken: ct);
@@ -247,7 +261,7 @@ public class ReportingStore : IReportingStore
 
     private async Task<IReadOnlyList<ProjectBudgetRowRecord>> QueryProjectBudgetRowsAsync(Guid organizationId, Guid? branchId, CancellationToken ct)
     {
-        const string sql = """
+        const string liveSql = """
             SELECT
                 p.id AS "ProjectId",
                 p.code AS "ProjectCode",
@@ -282,6 +296,17 @@ public class ReportingStore : IReportingStore
               AND p.status <> 'cancelled'
             ORDER BY p.code ASC, p.id ASC
             """;
+        const string mvSql = """
+            SELECT
+                project_id AS "ProjectId", project_code AS "ProjectCode", project_name AS "ProjectName", branch_code AS "BranchCode",
+                status AS "Status", baseline_contract_amount AS "BaselineContractAmount", baseline_budget AS "BaselineBudget",
+                approved_change_order_budget AS "ApprovedChangeOrderBudget", committed_amount AS "CommittedAmount", actual_amount AS "ActualAmount"
+            FROM reporting.mv_project_budget
+            WHERE organization_id = @OrgId
+              AND (@BranchId::uuid IS NULL OR branch_id = @BranchId)
+            ORDER BY project_code ASC, project_id ASC
+            """;
+        var sql = _mv.Enabled ? mvSql : liveSql;
 
         var conn = await GetOpenConnectionAsync(ct);
         var cmd = new CommandDefinition(sql, new { OrgId = organizationId, BranchId = branchId }, commandTimeout: 15, cancellationToken: ct);
@@ -388,7 +413,7 @@ public class ReportingStore : IReportingStore
 
     private async Task<IReadOnlyList<StockValueRowRecord>> QueryStockValueRowsAsync(Guid organizationId, Guid? branchId, CancellationToken ct)
     {
-        const string sql = """
+        const string liveSql = """
             SELECT
                 sb.warehouse_id AS "WarehouseId",
                 COALESCE(w.code, '') AS "WarehouseCode",
@@ -410,6 +435,17 @@ public class ReportingStore : IReportingStore
               AND (@BranchId::uuid IS NULL OR w.branch_id = @BranchId)
             ORDER BY w.code ASC, i.code ASC, sb.id ASC
             """;
+        const string mvSql = """
+            SELECT
+                warehouse_id AS "WarehouseId", warehouse_code AS "WarehouseCode", warehouse_name AS "WarehouseName", branch_code AS "BranchCode",
+                item_id AS "ItemId", item_code AS "ItemCode", item_name_th AS "ItemNameTh", item_name_en AS "ItemNameEn",
+                on_hand AS "OnHand", reserved AS "Reserved", available AS "Available", total_value AS "TotalValue"
+            FROM reporting.mv_stock_value
+            WHERE organization_id = @OrgId
+              AND (@BranchId::uuid IS NULL OR branch_id = @BranchId)
+            ORDER BY warehouse_code ASC, item_code ASC, balance_id ASC
+            """;
+        var sql = _mv.Enabled ? mvSql : liveSql;
 
         var conn = await GetOpenConnectionAsync(ct);
         var cmd = new CommandDefinition(sql, new { OrgId = organizationId, BranchId = branchId }, commandTimeout: 15, cancellationToken: ct);
