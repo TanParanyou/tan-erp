@@ -39,6 +39,22 @@ Headers: `Authorization`, `X-Membership-Id`; `POST` สร้างเอกส�
 | SINV อนุมัติ/ปฏิเสธใบที่ติด Hold | `POST /api/v1/supplier-invoices/{id}/approve`, `/reject` `{note}` | `purchase-orders.approve` |
 | SINV อ่าน/รายการ | `GET /api/v1/supplier-invoices[/{id}]?search=&status=&supplierId=&purchaseOrderId=&page=&pageSize=` | `purchase-orders.read` |
 
+### Supplier Item Prices (G-22, 2026-11-01)
+
+ใช้สิทธิ์ `suppliers.read` / `suppliers.manage` เดิม. กฎ `TEST_ONLY` รอ Procurement/Finance ยืนยัน.
+
+| Method | Path | หมายเหตุ |
+| --- | --- | --- |
+| POST | `/api/v1/suppliers/{supplierId}/item-prices` | สร้างราคา (Supplier ต้อง `active`, ช่วงวันที่ห้ามทับกับราคาเดิมของ Supplier+Item เดียวกัน) |
+| PUT | `/api/v1/suppliers/{supplierId}/item-prices/{priceId}` | แก้ราคา, ต้องมี `If-Match` row version, เปลี่ยน Item ไม่ได้ |
+| DELETE | `/api/v1/suppliers/{supplierId}/item-prices/{priceId}` | ลบราคา, ต้องมี `If-Match` |
+| GET | `/api/v1/suppliers/{supplierId}/item-prices` | รายการแบบแบ่งหน้า กรอง `itemId` ได้ |
+| GET | `/api/v1/suppliers/{supplierId}/item-prices/effective?itemId=&onDate=` | ราคาที่มีผลตามวันที่ (default วันนี้ UTC) หรือ `422 SUPPLIER_PRICE_NOT_FOUND` |
+
+`isPreferred`: ต่อ Item มีผู้ขายหลักได้หนึ่งรายในช่วงเวลาซ้อนกัน; ตั้งรายใหม่จะถอดตัวเดิมในธุรกรรมเดียว. Lead time ของ MRP เรียงลำดับ: ผู้ขายหลักใน price list → `MrpItemPlanningParameter.LeadTimeDays` → ค่า default ของรอบ. ใบสั่งซื้อไม่เติมราคาอัตโนมัติฝั่ง Backend; หน้าฟอร์มเรียก `/effective` เพื่อเติมให้ผู้ซื้อแก้ได้.
+
+Errors ใหม่: `SUPPLIER_PRICE_INVALID` (422), `SUPPLIER_PRICE_NOT_FOUND` (422), `SUPPLIER_PRICE_PERIOD_OVERLAP` (409), `SUPPLIER_PRICE_VERSION_CONFLICT` (409). ตาราง `procurement.supplier_item_prices` (migration `AddSupplierItemPrices`).
+
 ## Errors
 
 - `409`: `SUPPLIER_CODE_CONFLICT`, `SUPPLIER_VERSION_CONFLICT`, `SUPPLIER_INVALID_STATE`, `PURCHASE_REQUEST_VERSION_CONFLICT`, `PURCHASE_REQUEST_INVALID_STATE`, `PURCHASE_REQUEST_CONVERSION_INCOMPATIBLE`, `PURCHASE_ORDER_VERSION_CONFLICT`, `PURCHASE_ORDER_INVALID_STATE`, `PURCHASE_ORDER_HAS_RECEIPTS`, `PURCHASE_ORDER_SUPPLIER_INACTIVE`, `PURCHASE_ORDER_PROJECT_NOT_ACTIVE`, `SUPPLIER_INVOICE_VERSION_CONFLICT`, `SUPPLIER_INVOICE_INVALID_STATE`, `SUPPLIER_INVOICE_DUPLICATE_NUMBER`.

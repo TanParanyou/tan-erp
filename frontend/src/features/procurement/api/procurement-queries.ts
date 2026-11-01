@@ -6,6 +6,7 @@ import {
   type ListPurchaseOrdersParams,
   type ListPurchaseRequestsParams,
   type ListSupplierInvoicesParams,
+  type ListSupplierItemPricesParams,
   type ListSuppliersParams,
   type PurchaseOrderAction,
   type PurchaseOrderListResponse,
@@ -16,6 +17,9 @@ import {
   type PurchaseRequestRequest,
   type PurchaseRequestResponse,
   type SupplierInvoiceAction,
+  type SupplierItemPriceListResponse,
+  type SupplierItemPriceRequest,
+  type SupplierItemPriceResponse,
   type SupplierInvoiceListResponse,
   type SupplierInvoiceRequest,
   type SupplierInvoiceResponse,
@@ -55,6 +59,56 @@ export function useSupplierList(params: ListSuppliersParams, enabled = true): Us
     enabled: Boolean(membershipId) && enabled,
     queryFn: async ({ signal }) => apiClient.listSuppliers(await options(undefined, signal), params),
   });
+}
+
+export function useSupplierItemPrices(supplierId: string | undefined, params: ListSupplierItemPricesParams): UseQueryResult<SupplierItemPriceListResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...procurementKey(membershipId, locale), "suppliers", "prices", supplierId, params],
+    enabled: Boolean(membershipId) && Boolean(supplierId),
+    queryFn: async ({ signal }) => apiClient.listSupplierItemPrices(supplierId ?? "", await options(undefined, signal), params),
+  });
+}
+
+/** Resolves the price effective today for a supplier/item pair; null when none is configured. */
+export function useEffectiveSupplierPriceLookup() {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+  return async (supplierId: string, itemId: string): Promise<SupplierItemPriceResponse | null> => {
+    try {
+      return await queryClient.fetchQuery({
+        queryKey: [...procurementKey(membershipId, locale), "suppliers", "prices", supplierId, "effective", itemId],
+        queryFn: async ({ signal }) => apiClient.getEffectiveSupplierItemPrice(supplierId, itemId, await options(undefined, signal)),
+        staleTime: 0,
+      });
+    } catch {
+      return null;
+    }
+  };
+}
+
+export function useSupplierItemPriceMutations(supplierId: string) {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+  const refresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: [...procurementKey(membershipId, locale), "suppliers", "prices", supplierId] });
+  };
+  const create = useMutation({
+    mutationFn: async (input: { payload: SupplierItemPriceRequest }) =>
+      apiClient.createSupplierItemPrice(supplierId, input.payload, await options()),
+    onSuccess: refresh,
+  });
+  const update = useMutation({
+    mutationFn: async (input: { price: SupplierItemPriceResponse; payload: SupplierItemPriceRequest }) =>
+      apiClient.updateSupplierItemPrice(supplierId, input.price.id ?? "", input.price.rowVersion ?? "", input.payload, await options()),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: async (input: { price: SupplierItemPriceResponse }) =>
+      apiClient.deleteSupplierItemPrice(supplierId, input.price.id ?? "", input.price.rowVersion ?? "", await options()),
+    onSuccess: refresh,
+  });
+  return { create, update, remove };
 }
 
 export function useSupplierMutations() {

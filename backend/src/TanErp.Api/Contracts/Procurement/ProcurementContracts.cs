@@ -329,3 +329,14 @@ public sealed record SupplierInvoiceListItemResponse(
     DateTimeOffset CreatedAtUtc);
 
 public sealed record SupplierInvoiceListResponse(IReadOnlyList<SupplierInvoiceListItemResponse> Items, ProcurementPaginationResponse Pagination);
+
+// ===== Supplier item prices =====
+
+public sealed record SupplierItemPriceRequest(
+    Guid ItemId, decimal UnitPrice, decimal MinOrderQuantity, int LeadTimeDays, DateOnly EffectiveFrom, DateOnly? EffectiveTo, bool IsPreferred);
+
+public sealed record SupplierItemPriceResponse(
+    Guid Id, Guid SupplierId, Guid ItemId, string ItemCode, string ItemNameTh, decimal UnitPrice, decimal MinOrderQuantity,
+    int LeadTimeDays, DateOnly EffectiveFrom, DateOnly? EffectiveTo, bool IsPreferred, Guid RowVersion);
+
+public sealed record SupplierItemPriceListResponse(IReadOnlyList<SupplierItemPriceResponse> Items, ProcurementPaginationResponse Pagination);

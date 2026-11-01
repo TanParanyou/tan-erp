@@ -27,4 +27,11 @@
 ## ข้อจำกัดและรายการรอยืนยันทางธุรกิจ (`TEST_ONLY`)
 
 - กฎ `TEST_ONLY` สำหรับการรวม PR ภายในโครงการเดียวกัน (`VQ-PRC-01`), การเปิดยอดค้างรับเมื่อคืนของ (`VQ-PRC-02`), และเกณฑ์ 3-Way Match `0%` qty / `2%` unit price tolerance (`VQ-PRC-03`) บันทึกไว้ใน [Open Validation Questions](../01-business/open-validation-questions.md) รอ Procurement/Finance ยืนยันก่อนเปิดใช้งานจริง.
-- ยังไม่มี Supplier price list/lead time ต่อ Item (อยู่ในขอบเขต `G-14` MRP completion) และภาษีมูลค่าเพิ่ม/หัก ณ ที่จ่าย/ใบลดหนี้ตามรูปแบบกรมสรรพากร (อยู่ในขอบเขต `G-15` Thai Tax).
+- Supplier price list/lead time ต่อ Item มี implementation แล้ว (G-22, 2026-11-01; ดู section ด้านล่าง); ยังไม่มีภาษีมูลค่าเพิ่ม/หัก ณ ที่จ่าย/ใบลดหนี้ตามรูปแบบกรมสรรพากร (อยู่ในขอบเขต `G-15` Thai Tax).
+
+## G-22 Supplier Price List + Lead Time (2026-11-01)
+
+- Backend: `SupplierItemPrice` + `/api/v1/suppliers/{id}/item-prices`, MRP ใช้ lead time ของผู้ขายหลัก, migration `AddSupplierItemPrices` (ตรวจแล้วว่ามีเฉพาะตารางนี้; **ยังไม่ได้ apply กับ DB**).
+- Frontend: Drawer "ราคา / Lead time" ในหน้า Supplier และเติมราคาในฟอร์ม PO จาก `/effective`.
+- ตรวจแล้ว: `dotnet build` (0 warnings/errors), `OpenApiContractTests` ผ่าน 1/1 หลังอัปเดต snapshot, `npx tsc --noEmit` และ `npx eslint` ของไฟล์ที่แก้ ไม่มี error.
+- **ไม่ได้ตรวจ:** ไม่มี test ใหม่ (ตามข้อกำหนดผู้ใช้), query/store ยังไม่เคยรันกับ PostgreSQL จริง, ไม่ได้ตรวจในเบราว์เซอร์, ยังไม่ผ่าน UAT; กฎ `TEST_ONLY` (ช่วงวันที่ไม่ทับ, ผู้ขายหลักหนึ่งราย, ลำดับ lead time) รอ Procurement/Finance ยืนยัน.

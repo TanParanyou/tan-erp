@@ -43,6 +43,40 @@ public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
     }
 }
 
+public class SupplierItemPriceConfiguration : IEntityTypeConfiguration<SupplierItemPrice>
+{
+    public void Configure(EntityTypeBuilder<SupplierItemPrice> builder)
+    {
+        builder.ToTable("supplier_item_prices", "procurement", t =>
+        {
+            t.HasCheckConstraint("ck_supplier_item_prices_amounts", "unit_price >= 0 AND min_order_quantity >= 0");
+            t.HasCheckConstraint("ck_supplier_item_prices_lead_time", "lead_time_days BETWEEN 0 AND 365");
+            t.HasCheckConstraint("ck_supplier_item_prices_period", "effective_to IS NULL OR effective_to >= effective_from");
+        });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.SupplierId).HasColumnName("supplier_id").IsRequired();
+        builder.Property(x => x.ItemId).HasColumnName("item_id").IsRequired();
+        builder.Property(x => x.UnitPrice).HasColumnName("unit_price").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.MinOrderQuantity).HasColumnName("min_order_quantity").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.LeadTimeDays).HasColumnName("lead_time_days").IsRequired();
+        builder.Property(x => x.EffectiveFrom).HasColumnName("effective_from").IsRequired();
+        builder.Property(x => x.EffectiveTo).HasColumnName("effective_to");
+        builder.Property(x => x.IsPreferred).HasColumnName("is_preferred").IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+        builder.Property(x => x.UpdatedByUserId).HasColumnName("updated_by_user_id").IsRequired();
+        builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.HasIndex(x => new { x.OrganizationId, x.ItemId, x.EffectiveFrom });
+        builder.HasIndex(x => new { x.OrganizationId, x.SupplierId, x.ItemId, x.EffectiveFrom }).IsUnique();
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Supplier>().WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Item>().WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.UpdatedByUserId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public class PurchaseOrderConfiguration : IEntityTypeConfiguration<PurchaseOrder>
 {
     public void Configure(EntityTypeBuilder<PurchaseOrder> builder)

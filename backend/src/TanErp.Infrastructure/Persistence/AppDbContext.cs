@@ -47,6 +47,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Surveys.SurveyDesignStyle> SurveyDesignStyles => Set<TanErp.Domain.Surveys.SurveyDesignStyle>();
     public DbSet<TanErp.Domain.Surveys.SurveyMoodTone> SurveyMoodTones => Set<TanErp.Domain.Surveys.SurveyMoodTone>();
     public DbSet<TanErp.Domain.Procurement.Supplier> Suppliers => Set<TanErp.Domain.Procurement.Supplier>();
+    public DbSet<TanErp.Domain.Procurement.SupplierItemPrice> SupplierItemPrices => Set<TanErp.Domain.Procurement.SupplierItemPrice>();
     public DbSet<TanErp.Domain.Procurement.PurchaseRequest> PurchaseRequests => Set<TanErp.Domain.Procurement.PurchaseRequest>();
     public DbSet<TanErp.Domain.Procurement.PurchaseRequestLine> PurchaseRequestLines => Set<TanErp.Domain.Procurement.PurchaseRequestLine>();
     public DbSet<TanErp.Domain.Procurement.PurchaseOrder> PurchaseOrders => Set<TanErp.Domain.Procurement.PurchaseOrder>();

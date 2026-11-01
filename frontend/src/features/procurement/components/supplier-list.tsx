@@ -27,6 +27,7 @@ import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { SupplierRequest, SupplierResponse } from "@/lib/api/api-client";
 import { useSupplierList, useSupplierMutations } from "../api/procurement-queries";
+import { SupplierPriceDrawer } from "./supplier-price-drawer";
 import { isSupplierStatus, procurementErrorCode, SUPPLIER_STATUSES } from "../procurement-status";
 
 interface SupplierFilters extends ListFilterRecord {
@@ -78,6 +79,7 @@ export function SupplierList() {
   const { create, update, setActive } = useSupplierMutations();
 
   const [editing, setEditing] = useState<SupplierResponse | "new" | null>(null);
+  const [pricing, setPricing] = useState<SupplierResponse | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   // One key per dialog session so a retried create replays instead of creating a second supplier.
@@ -180,14 +182,19 @@ export function SupplierList() {
       id: "actions",
       header: t("actions"),
       isAction: true,
-      cell: (_v, row) => canManage ? (
+      cell: (_v, row) => (
         <div className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => setPricing(row)}>{t("prices")}</Button>
+          {canManage && (
+            <>
           <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => openEdit(row)}>{t("edit")}</Button>
           <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={setActive.isPending} onClick={() => void toggle(row)}>
             {row.status === "active" ? t("deactivate") : t("activate")}
           </Button>
+            </>
+          )}
         </div>
-      ) : null,
+      ),
     },
   ];
 
@@ -244,6 +251,8 @@ export function SupplierList() {
           onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
         />
       )}
+
+      <SupplierPriceDrawer supplier={pricing} canManage={canManage} onClose={() => setPricing(null)} />
 
       <Drawer
         isOpen={editing !== null}
