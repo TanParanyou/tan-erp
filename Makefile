@@ -30,7 +30,7 @@ FRONTEND_DIR  := frontend
 MOBILE_DIR    := mobile
 
 .PHONY: help \
-        check-ports kill-ports \
+        check-ports kill-ports tunnel \
         dev dev-setup dev-backend dev-backend-demo dev-frontend dev-env \
         up down stop restart logs ps db-up db-stop \
         db-wait db-migrate db-rollback db-status db-seed seed seed-users seed-quotation-demo db-reset fresh \
@@ -39,7 +39,7 @@ MOBILE_DIR    := mobile
         test test-backend test-frontend test-e2e e2e test-fixtures \
         lint typecheck \
         build clean clean-all deps install open \
-        mobile-dev mobile-ios mobile-analyze
+        mobile-dev mobile-android mobile-emulator mobile-ios mobile-analyze
 
 # -----------------------------------------------------------------
 # 1. แสดงคู่มือและรายการคำสั่งทั้งหมด (Help)
@@ -62,13 +62,16 @@ help:
 	@echo "    make open           - เปิดเบราว์เซอร์ไปยังหน้า Login (http://localhost:$(FE_PORT)/th/login)"
 	@echo ""
 	@echo "  📱 แอปพลิเคชันมือถือ (Mobile / Flutter):"
+	@echo "    make mobile-android - บูต Android Emulator อัตโนมัติ (หากยังไม่เปิด) แล้วรัน Flutter Dev"
+	@echo "    make mobile-emulator- เปิดเฉพาะ Android Emulator ขึ้นมาทำงานในพื้นหลัง"
 	@echo "    make mobile-dev     - รัน Flutter Field App (โหมด Dev พร้อม dev.json)"
 	@echo "    make mobile-ios     - รัน Flutter Field App สำหรับ iOS (Simulator/Device)"
 	@echo "    make mobile-analyze - ตรวจสอบโค้ด Flutter (analyze + custom_lint)"
 	@echo ""
-	@echo "  🔌 การจัดการพอร์ต (Port Management):"
+	@echo "  🔌 การจัดการพอร์ตและการเชื่อมต่อ (Port & Tunnel Management):"
 	@echo "    make check-ports    - ตรวจสอบสถานะของพอร์ต $(FE_PORT), $(BE_PORT), $(DB_PORT)"
 	@echo "    make kill-ports     - ปิด Process ที่ตกค้างบนพอร์ต $(FE_PORT) และ $(BE_PORT)"
+	@echo "    make tunnel         - เปิด Cloudflare Tunnel ให้มือถือหรืออุปกรณ์ภายนอกเข้าใช้งาน Frontend (:$(FE_PORT))"
 	@echo ""
 	@echo "  🐳 จัดการ Docker Containers (Infrastructure):"
 	@echo "    make up             - สตาร์ตคอนเทนเนอร์ PostgreSQL ในโหมด Background"
@@ -135,6 +138,12 @@ kill-ports:
 			echo "พอร์ต $$port ว่างเรียบร้อย"; \
 		fi; \
 	done
+
+# เปิด Cloudflare Tunnel ชั่วคราว (Quick Tunnel) สำหรับ Frontend
+tunnel:
+	@which cloudflared >/dev/null 2>&1 || (echo "❌ ไม่พบคำสั่ง cloudflared กรุณาติดตั้งผ่าน: brew install cloudflared" && exit 1)
+	@echo "🌐 กำลังเปิด Cloudflare Tunnel ไปยัง http://127.0.0.1:$(FE_PORT)..."
+	@cloudflared tunnel --url http://127.0.0.1:$(FE_PORT)
 
 # -----------------------------------------------------------------
 # 3. โครงสร้างพื้นฐาน Docker (Infrastructure)
@@ -238,12 +247,13 @@ dev-setup: up db-wait db-migrate dev-env
 dev-backend:
 	@echo "กำลังรัน Backend API บนพอร์ต $(BE_PORT)..."
 	ASPNETCORE_ENVIRONMENT=Test \
+	Authentication__DevelopmentTokens__Enabled=true \
 	SeedTestData=true \
 	SeedDedicatedEstimateReviewer=$(if $(filter true,$(SEED_DEDICATED_ESTIMATE_REVIEWER)),true,false) \
 	SeedEstimateDemoData=$(if $(filter true,$(SEED_ESTIMATE_DEMO_DATA)),true,false) \
 	SeedItemCatalogDemoData=$(if $(filter true,$(SEED_ITEM_CATALOG_DEMO_DATA)),true,false) \
 	ConnectionStrings__Database=$(DB_CONN) \
-	$(DOTNET) run --no-launch-profile --project $(BACKEND_API) --urls http://localhost:$(BE_PORT)
+	$(DOTNET) run --no-launch-profile --project $(BACKEND_API) --urls "http://0.0.0.0:$(BE_PORT)"
 
 # รัน Backend พร้อม Estimate และ Item Catalog demo fixtures ที่เป็น TEST_ONLY เท่านั้น
 dev-backend-demo:
@@ -362,6 +372,34 @@ clean-all: clean down
 # -----------------------------------------------------------------
 # 9. แอปพลิเคชันมือถือ (Mobile / Flutter)
 # -----------------------------------------------------------------
+ANDROID_SDK_ROOT ?= $(if $(ANDROID_HOME),$(ANDROID_HOME),$(HOME)/Library/Android/sdk)
+ANDROID_EMULATOR ?= $(if $(wildcard $(ANDROID_SDK_ROOT)/emulator/emulator),$(ANDROID_SDK_ROOT)/emulator/emulator,emulator)
+ANDROID_ADB      ?= $(if $(wildcard $(ANDROID_SDK_ROOT)/platform-tools/adb),$(ANDROID_SDK_ROOT)/platform-tools/adb,adb)
+
+# สตาร์ต Android Emulator ขึ้นมาในพื้นหลัง (ถ้ายังไม่มี Emulator ออนไลน์)
+mobile-emulator:
+	@echo "กำลังตรวจสอบ Android Emulator / Device..."
+	@RUNNING_DEVICES=$$($(ANDROID_ADB) devices 2>/dev/null | grep -E "emulator-[0-9]+" | head -n 1); \
+	if [ -n "$$RUNNING_DEVICES" ]; then \
+		echo "✅ พบ Android Emulator ออนไลน์อยู่แล้ว"; \
+	else \
+		AVD_NAME=$$($(ANDROID_EMULATOR) -list-avds 2>/dev/null | head -n 1); \
+		if [ -z "$$AVD_NAME" ]; then \
+			echo "❌ ไม่พบ Android Virtual Device (AVD) ในเครื่อง กรุณาสร้างผ่าน Android Studio Device Manager"; \
+			exit 1; \
+		fi; \
+		echo "📱 กำลังเปิด Android Emulator: $$AVD_NAME ..."; \
+		nohup $(ANDROID_EMULATOR) -avd "$$AVD_NAME" >/dev/null 2>&1 & \
+		echo "⏳ รอให้อุปกรณ์บูตพร้อมใช้งาน..."; \
+		$(ANDROID_ADB) wait-for-device; \
+		echo "✅ Android Emulator พร้อมใช้งาน"; \
+	fi
+
+# สตาร์ต Emulator (ถ้ายังไม่เปิด) แล้วรัน Flutter App ทันที
+mobile-android: mobile-emulator
+	@echo "กำลังรัน Mobile App บน Android..."
+	cd $(MOBILE_DIR) && flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=config/dev.json
+
 # รัน Flutter App ในโหมด Development (Android / Default)
 mobile-dev:
 	@echo "กำลังรัน Mobile App (Dev Flavor)..."
