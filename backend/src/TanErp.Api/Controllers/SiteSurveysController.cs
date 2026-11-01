@@ -109,7 +109,8 @@ public class SiteSurveysController : ControllerBase
                     s.Code,
                     new SurveyLocalizedLabel(s.Name.Thai, s.Name.English ?? s.Code),
                     s.Description?.Thai ?? s.Description?.English,
-                    s.SortOrder)).ToList();
+                    s.SortOrder,
+                    s.ImageFileId)).ToList();
             }
 
             if (dbTones.Count > 0)

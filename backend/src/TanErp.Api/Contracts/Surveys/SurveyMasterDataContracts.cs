@@ -6,13 +6,15 @@ public sealed record CreateSurveyDesignStyleRequest(
     string Code,
     SurveyLocalizedNameContract Name,
     SurveyLocalizedNameContract? Description,
-    int SortOrder = 0);
+    int SortOrder = 0,
+    Guid? ImageFileId = null);
 
 public sealed record UpdateSurveyDesignStyleRequest(
     SurveyLocalizedNameContract Name,
     SurveyLocalizedNameContract? Description,
     int SortOrder,
-    bool IsActive);
+    bool IsActive,
+    Guid? ImageFileId = null);
 
 public sealed record SurveyDesignStyleResponse(
     Guid Id,
@@ -21,7 +23,8 @@ public sealed record SurveyDesignStyleResponse(
     SurveyLocalizedNameContract? Description,
     int SortOrder,
     bool IsActive,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    Guid? ImageFileId = null);
 
 public sealed record CreateSurveyMoodToneRequest(
     string Code,
