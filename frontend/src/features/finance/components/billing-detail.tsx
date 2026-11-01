@@ -80,7 +80,8 @@ function DetailView({ billing }: { billing: BillingResponse }) {
     mutations.releaseRetention.isPending ||
     mutations.createNote.isPending ||
     mutations.approveNote.isPending ||
-    mutations.downloadTaxPdf.isPending;
+    mutations.downloadTaxPdf.isPending ||
+    mutations.downloadETaxXml.isPending;
 
   const [message, setMessage] = useState<string | null>(null);
 
@@ -142,6 +143,23 @@ function DetailView({ billing }: { billing: BillingResponse }) {
       a.remove();
       URL.revokeObjectURL(url);
       toast.success(t("pdfDownloaded"));
+    } catch (err: unknown) {
+      setMessage(describe(err));
+    }
+  }
+
+  async function handleDownloadETaxXml(): Promise<void> {
+    try {
+      const blob = await mutations.downloadETaxXml.mutateAsync({ id: billing.id ?? "" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${billing.taxInvoiceNumber ?? billing.number ?? "tax-document"}-etax-draft.xml`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success(t("etaxXmlDownloaded"));
     } catch (err: unknown) {
       setMessage(describe(err));
     }
@@ -298,6 +316,20 @@ function DetailView({ billing }: { billing: BillingResponse }) {
             >
               {t("downloadTaxPdf")}
             </Button>
+            {billing.taxInvoiceNumber && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="min-h-11"
+                title={t("etaxXmlDraftHint")}
+                isLoading={mutations.downloadETaxXml.isPending}
+                disabled={busy}
+                onClick={() => void handleDownloadETaxXml()}
+              >
+                {t("downloadETaxXml")}
+              </Button>
+            )}
             <StatusBadge label={isBillingStatus(status) ? t(`statuses.${status}`) : "-"} variant={billingStatusVariant(status)} />
           </div>
         }

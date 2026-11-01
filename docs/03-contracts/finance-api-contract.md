@@ -49,3 +49,9 @@
 ## Data (migration `AddFinance`, schema `finance`)
 
 `billing_documents` (checks amounts/status/void; `paid_amount ≤ amount`, void ⇒ ไม่มียอดรับ), `payments` (unique `(org, reference)`; check reversal), `accounting_outbox` (unique `(org, dedupe_key)`; payload jsonb; checks status/kind). Audit: `billing.issued|voided`, `payment.recorded|reversed`, `finance.outbox.dispatched|confirmed|requeued` (ไม่มีเหตุผล/เลขอ้างอิงลูกค้า).
+
+## e-Tax Invoice XML draft (G-26, 2026-11-01)
+
+`GET /api/v1/billings/{id}/tax-document/etax-xml` (สิทธิ์ `billings.read`) คืนไฟล์ `application/xml` ชื่อ `{เลขใบแจ้งหนี้}-etax-draft.xml` สร้างจาก `BillingDocument` + `BillingLine` ตามโครง UN/CEFACT Cross Industry Invoice ของ ETDA Recommendation 3-2560 (type code `T02` ใบกำกับภาษี). `422 ETAX_XML_NOT_AVAILABLE` เมื่อไม่มีเลขที่ใบกำกับภาษี, ไม่มีรายการ, ใบถูกยกเลิก หรือผู้ขายไม่มีเลขผู้เสียภาษี.
+
+**เป็นร่างเท่านั้น — ห้ามใช้ส่งจริง:** ผู้เขียนไม่มี XSD/code list/ตัวอย่างไฟล์ทางการของ ETDA จึง **ไม่ได้ตรวจกับ XSD**; namespace, ชื่อ element, `schemeID="TXID"`, ตำแหน่งรหัสสาขา, guideline id `ER3-2560` และ type code `T02` ทั้งหมดมาจากความจำและมีเครื่องหมาย `UNVERIFIED` ใน `ETaxInvoiceXmlBuilder`. ไฟล์ **ไม่มีลายเซ็นดิจิทัล** (ต้องใช้ใบรับรอง CA) และไม่ส่งเข้ากรมสรรพากรหรือผู้ให้บริการ e-Tax. ไม่ครอบคลุมใบลดหนี้/ใบเพิ่มหนี้และใบเสร็จ. อัตราภาษีแปลงจากสัดส่วน (0.07) เป็นเปอร์เซ็นต์ (7).

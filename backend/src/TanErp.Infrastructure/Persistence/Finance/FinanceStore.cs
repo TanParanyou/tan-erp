@@ -547,7 +547,7 @@ public class FinanceStore : IFinanceStore
                 n.CreatedAtUtc, n.DecidedAtUtc)).ToList());
     }
 
-    public async Task<byte[]?> RenderTaxDocumentPdfAsync(Guid organizationId, Guid billingId, CancellationToken ct = default)
+    private async Task<TaxDocumentPdfModel?> LoadTaxDocumentModelAsync(Guid organizationId, Guid billingId, CancellationToken ct)
     {
         var b = await _db.BillingDocuments.AsNoTracking()
             .Include(x => x.Payments)
@@ -563,13 +563,32 @@ public class FinanceStore : IFinanceStore
 
         var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == project.CustomerId && c.OrganizationId == organizationId, ct);
 
-        var model = new TaxDocumentPdfModel(
+        return new TaxDocumentPdfModel(
             org, branch, project, customer, b,
             b.Lines.OrderBy(l => l.LineNumber).ToList(),
             b.AdjustmentNotes.OrderBy(n => n.CreatedAtUtc).ToList(),
             b.Payments.OrderBy(p => p.RecordedAtUtc).ToList());
+    }
 
-        return QuestPdfTaxDocumentRenderer.Render(model);
+    public async Task<byte[]?> RenderTaxDocumentPdfAsync(Guid organizationId, Guid billingId, CancellationToken ct = default)
+    {
+        var model = await LoadTaxDocumentModelAsync(organizationId, billingId, ct);
+        return model is null ? null : QuestPdfTaxDocumentRenderer.Render(model);
+    }
+
+    public async Task<Result<string>> RenderETaxXmlAsync(Guid organizationId, Guid billingId, CancellationToken ct = default)
+    {
+        var model = await LoadTaxDocumentModelAsync(organizationId, billingId, ct);
+        if (model is null) return Result<string>.Failure(new Error("RESOURCE_NOT_FOUND", "Tax document not found."));
+        if (string.IsNullOrEmpty(model.Billing.TaxInvoiceNumber)
+            || model.Billing.Status == BillingStatus.Voided
+            || string.IsNullOrWhiteSpace(model.Organization.TaxIdentifier)
+            || model.Lines.Count == 0)
+        {
+            return Result<string>.Failure(new Error("ETAX_XML_NOT_AVAILABLE", "The billing needs a tax invoice number, lines and a seller tax identifier, and must not be voided."));
+        }
+
+        return Result<string>.Success(ETaxInvoiceXmlBuilder.Build(model));
     }
 
     public async Task<PagedBillings> ListBillingsAsync(Guid organizationId, BillingListQuery query, CancellationToken ct = default)

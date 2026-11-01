@@ -105,6 +105,7 @@ export function creditOverrideStatusVariant(status: string | null | undefined): 
 }
 
 const KNOWN_ERROR_CODES = [
+  "ETAX_XML_NOT_AVAILABLE",
   "BILLING_VERSION_CONFLICT",
   "BILLING_INVALID_STATE",
   "BILLING_HAS_PAYMENTS",

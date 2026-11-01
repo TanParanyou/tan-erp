@@ -123,7 +123,11 @@ export function useBillingMutations() {
     mutationFn: async (input: { id: string }) =>
       apiClient.downloadBillingTaxDocumentPdf(input.id, await options()),
   });
-  return { create, voidBilling, pay, reverse, releaseRetention, createNote, approveNote, downloadTaxPdf };
+  const downloadETaxXml = useMutation({
+    mutationFn: async (input: { id: string }) =>
+      apiClient.downloadBillingETaxXmlDraft(input.id, await options()),
+  });
+  return { create, voidBilling, pay, reverse, releaseRetention, createNote, approveNote, downloadTaxPdf, downloadETaxXml };
 }
 
 export function useOutboxList(params: ListOutboxParams): UseQueryResult<OutboxListResponse, Error> {

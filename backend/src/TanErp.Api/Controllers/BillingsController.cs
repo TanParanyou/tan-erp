@@ -134,6 +134,21 @@ public class BillingsController : FinanceControllerBase
         return File(pdfResult.Value!, "application/pdf", $"{billingResult.Value!.Number}.pdf");
     }
 
+    [HttpGet("api/v1/billings/{id:guid}/tax-document/etax-xml")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileContentResult))]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> DownloadETaxXml([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var billingResult = await _handler.GetBillingAsync(caller, id, ct);
+        if (billingResult.IsFailure) return Problem(billingResult.Error.Code);
+        var xmlResult = await _handler.RenderETaxXmlAsync(caller, id, ct);
+        if (xmlResult.IsFailure) return Problem(xmlResult.Error.Code);
+        return File(System.Text.Encoding.UTF8.GetBytes(xmlResult.Value!), "application/xml", $"{billingResult.Value!.Number}-etax-draft.xml");
+    }
+
     [HttpPost("api/v1/billings/{id:guid}/payments")]
     [ProducesResponseType<BillingResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]

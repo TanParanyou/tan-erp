@@ -102,6 +102,14 @@ public class FinanceHandler
         return bytes is null ? Fail<byte[]>("RESOURCE_NOT_FOUND", "Tax document not found.") : Result<byte[]>.Success(bytes);
     }
 
+    /// <summary>Draft e-Tax invoice XML; unvalidated against the ETDA XSD and unsigned (see ETaxInvoiceXmlBuilder).</summary>
+    public async Task<Result<string>> RenderETaxXmlAsync(FinanceCaller caller, Guid billingId, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.read", ct);
+        if (access.IsFailure) return Result<string>.Failure(access.Error);
+        return await _store.RenderETaxXmlAsync(access.Value!.OrganizationId, billingId, ct);
+    }
+
     public async Task<Result<BillingProjection>> RecordPaymentAsync(FinanceCaller caller, Guid billingId, string idempotencyKey, PaymentInput? input, CancellationToken ct = default)
     {
         var access = await AccessAsync(caller, "payments.manage", ct);
