@@ -20,4 +20,4 @@ Estimate รับต้นทุนจาก Catalog ได้เฉพาะ�
 
 ## ข้อเสียที่ยอมรับ
 
-ไม่มี API/UI สร้าง Calculation Policy จึงต้องให้ ops สร้างแถว `snapshot` เอง (follow-up); ไม่รองรับ conversion หลายขั้น; Cost tier ใช้ปริมาณหน่วยฐานที่ไม่ปัด; Item Master ยังไม่มี API ปิด/แก้ conversion.
+API สร้าง/เผยแพร่ Calculation Policy มีอยู่แล้ว (`/api/v1/calculation-policies`) และหน้า UI ที่ `/settings/calculation-policies` เพิ่มใน G-24 (2026-11-01) จึงไม่ต้องให้ ops เพิ่มแถวเอง; ไม่รองรับ conversion หลายขั้น; Cost tier ใช้ปริมาณหน่วยฐานที่ไม่ปัด; Item Master ยังไม่มี API ปิด/แก้ conversion.

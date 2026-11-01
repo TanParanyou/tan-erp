@@ -97,6 +97,9 @@ export const PERMISSIONS = {
   QUICK_ESTIMATES_REVIEW: "quick-estimates.review",
   QUICK_ESTIMATES_SHARE: "quick-estimates.share",
   QUICK_ESTIMATES_CONVERT: "quick-estimates.convert",
+  ESTIMATES_READ: "estimates.read",
+  ESTIMATES_UPDATE: "estimates.update",
+  ESTIMATES_APPROVE: "estimates.approve",
 
   // MRP
   MRP_READ: "mrp.read",

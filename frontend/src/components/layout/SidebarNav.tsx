@@ -87,6 +87,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     can(activeMembership, "surveys.create") ||
     can(activeMembership, "surveys.read");
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
+  const hasEstimatesRead = can(activeMembership, "estimates.read");
   const hasSettingsRead =
     can(activeMembership, "document-sequences.read") || can(activeMembership, "organizations.read");
   const hasUsersRead = can(activeMembership, "users.read");
@@ -124,6 +125,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isBranchSettingsActive = pathname.startsWith(`/${locale}/settings/branches`);
   const isRoleSettingsActive = pathname.startsWith(`/${locale}/settings/roles`);
   const isApprovalLimitSettingsActive = pathname.startsWith(`/${locale}/settings/approval-limits`);
+  const isCalculationPoliciesActive = pathname.startsWith(`/${locale}/settings/calculation-policies`);
   const isAuditSettingsActive = pathname.startsWith(`/${locale}/settings/audit`);
   const isItemMasterActive = pathname.startsWith(`/${locale}/item-master`);
 
@@ -444,6 +446,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     isDocumentNumberingActive ||
     isDocumentTemplatesActive ||
     isSurveySettingsActive ||
+    isCalculationPoliciesActive ||
     isAuditSettingsActive;
 
   const settingsItems: NavItemDef[] = useMemo(() => {
@@ -508,6 +511,16 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         permission: hasApprovalLimitsManage,
       });
     }
+    if (hasEstimatesRead) {
+      items.push({
+        id: "calculation-policy-settings",
+        href: `/${locale}/settings/calculation-policies`,
+        label: tShell("calculationPolicies"),
+        icon: <IconFileText size={20} />,
+        isActive: isCalculationPoliciesActive,
+        permission: hasEstimatesRead,
+      });
+    }
     if (hasSettingsRead) {
       items.push({
         id: "doc-numbering",
@@ -565,6 +578,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     isRoleRequestsActive,
     isRoleSettingsActive,
     isApprovalLimitSettingsActive,
+    isCalculationPoliciesActive,
+    hasEstimatesRead,
     isDocumentNumberingActive,
     isDocumentTemplatesActive,
     isSurveySettingsActive,

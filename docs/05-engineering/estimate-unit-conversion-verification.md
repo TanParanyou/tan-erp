@@ -43,7 +43,7 @@
 ## 4. ข้อกำหนดก่อนเปิดใช้ (สำคัญ — switch-on gap)
 
 1. ความสามารถนี้ **ปิดอยู่** จนกว่าจะมี Calculation Policy ที่ effective ของสาขาเป็น `unit_conversion_mode='snapshot'` ตราบนั้นหน่วยที่ไม่ใช่หน่วยฐานยังคืน `ESTIMATE_UNIT_INVALID` เหมือนเดิม
-2. **ไม่มี API หรือ UI สร้าง/publish Calculation Policy** ops ต้องเพิ่มแถว v2 เอง (`version` = v1 + 1, overhead/rounding เท่า v1, `EffectiveFromUtc` = ปลายช่วงของ v1, ปิดช่วง v1 ด้วย `EffectiveTo` เดียวกัน, `unit_conversion_mode='snapshot'`) แล้ว publish ด้วย checker อิสระผ่านโค้ด `CalculationPolicyVersion.Publish` (ต้องคำนวณ `ContentHash`; ห้ามใส่ค่า hash ด้วยมือ)
+2. **Calculation Policy** สร้างฉบับร่างและเผยแพร่ได้ผ่าน API เดิมและหน้า `/settings/calculation-policies` (G-24, 2026-11-01; เผยแพร่ต้องใช้ผู้อนุมัติคนละคนกับผู้สร้าง `estimates.approve`). เปิดโหมด `snapshot` ต้องเผยแพร่นโยบายใหม่และผ่านการตรวจรับก่อนใช้งานจริง.
 3. ต้องไม่มี policy effective ซ้อนกันสองแถวต่อสาขา (จะได้ `ESTIMATE_POLICY_UNAVAILABLE`)
 4. ต้องมี Item Master conversion ที่ active สำหรับ Item ที่จะลอง
 5. apply migration `AddEstimateUnitConversionSnapshot` ในแต่ละ environment (apply กับ local dev database แล้วเท่านั้น)
@@ -111,3 +111,8 @@ E2E (`estimate-item-catalog`, `official-estimate`) ควรรันเอง�
 - Calculation Policy admin API (รอผู้ใช้อนุมัติขอบเขต)
 - การรัน test ทั้งหมด รวม E2E ที่ยังไม่ได้ประเมิน
 - การตรวจในเบราว์เซอร์ และ UAT
+
+## G-24 Calculation Policy UI (2026-11-01)
+
+- พบว่า backend API (`GET/POST /api/v1/calculation-policies`, `POST .../{id}/publish`, รองรับ `unitConversionMode`) มีอยู่แล้ว สิ่งที่ขาดคือ UI; เพิ่มหน้า `/settings/calculation-policies` (รายการ, สร้างฉบับร่าง, เผยแพร่พร้อม Confirmation Modal, เมนู Settings) และสิทธิ์ `estimates.read/update/approve` ใน `PERMISSIONS`.
+- ตรวจแล้ว: `npx tsc --noEmit`, `npx eslint` ของไฟล์ที่แก้ ไม่มี error. **ไม่ได้ตรวจ:** ไม่มี test ใหม่, ไม่ได้ตรวจในเบราว์เซอร์, ไม่ได้แก้ backend/OpenAPI, ยังไม่ผ่าน UAT; ไม่มีการแก้/ยกเลิกนโยบายที่เผยแพร่แล้ว (ออกรุ่นใหม่แทน).
