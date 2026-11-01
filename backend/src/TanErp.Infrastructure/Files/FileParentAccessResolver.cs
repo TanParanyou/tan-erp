@@ -337,6 +337,51 @@ public class FileParentAccessResolver : IFileParentAccessResolver
                 }
             }
 
+            case FileParentTypes.SurveyDesignStyle:
+            {
+                var requiredPerm = operation == FileAccessOperation.Read ? "surveys.read" : "surveys.update";
+                var hasPerm = await HasPermissionAsync(access.MembershipId, requiredPerm, cancellationToken);
+                if (!hasPerm)
+                {
+                    hasPerm = await HasPermissionAsync(access.MembershipId, "settings.manage", cancellationToken);
+                }
+                if (!hasPerm && operation == FileAccessOperation.Read)
+                {
+                    hasPerm = await HasPermissionAsync(access.MembershipId, "organizations.read", cancellationToken);
+                }
+                if (!hasPerm && operation != FileAccessOperation.Read)
+                {
+                    hasPerm = await HasPermissionAsync(access.MembershipId, "organizations.manage", cancellationToken);
+                }
+
+                if (!hasPerm)
+                {
+                    return Result<FileParentAccess>.Failure(
+                        new Error("PERMISSION_DENIED", "Access is denied for the requested operation."));
+                }
+
+                if (parentId.HasValue)
+                {
+                    var exists = await _db.SurveyDesignStyles
+                        .AsNoTracking()
+                        .AnyAsync(s => s.Id == parentId.Value && s.OrganizationId == access.OrganizationId, cancellationToken);
+
+                    if (!exists)
+                    {
+                        return Result<FileParentAccess>.Failure(
+                            new Error("RESOURCE_NOT_FOUND", "Design style not found."));
+                    }
+
+                    return Result<FileParentAccess>.Success(
+                        new FileParentAccess(normalizedParentType, parentId, null, access.OrganizationId));
+                }
+                else
+                {
+                    return Result<FileParentAccess>.Success(
+                        new FileParentAccess(normalizedParentType, null, creationIntentId, access.OrganizationId));
+                }
+            }
+
             default:
                 return await ResolveRegisteredOwnerAsync(access, normalizedParentType, parentId, operation, cancellationToken);
         }

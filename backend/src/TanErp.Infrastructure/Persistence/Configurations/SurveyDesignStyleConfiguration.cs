@@ -41,6 +41,7 @@ public class SurveyDesignStyleConfiguration : IEntityTypeConfiguration<SurveyDes
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+        builder.Property(x => x.ImageFileId).HasColumnName("image_file_id");
 
         builder.HasIndex(x => new { x.OrganizationId, x.Code })
             .IsUnique()
@@ -48,5 +49,12 @@ public class SurveyDesignStyleConfiguration : IEntityTypeConfiguration<SurveyDes
 
         builder.HasIndex(x => new { x.OrganizationId, x.SortOrder })
             .HasDatabaseName("ix_survey_design_styles_org_sort");
+
+        builder.HasIndex(x => x.ImageFileId);
+
+        builder.HasOne<TanErp.Domain.Files.UploadedFile>()
+            .WithMany()
+            .HasForeignKey(x => x.ImageFileId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
