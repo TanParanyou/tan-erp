@@ -50,6 +50,10 @@ public static class ItemResponseMapper
         Name = ToResponse(p.Name),
         Description = p.Description != null ? ToResponse(p.Description) : null,
         TaxCategoryCode = p.TaxCategoryCode,
+        WeightKg = p.PhysicalSpec.WeightKg,
+        LengthMm = p.PhysicalSpec.LengthMm,
+        WidthMm = p.PhysicalSpec.WidthMm,
+        HeightMm = p.PhysicalSpec.HeightMm,
         AvailabilityMode = p.AvailabilityMode,
         Capabilities = new ItemCapabilitiesResponse
         {

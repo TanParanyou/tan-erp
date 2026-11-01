@@ -115,6 +115,7 @@ public class ItemStore : IItemStore
                 access.ActorUserId,
                 now,
                 data.TaxCategoryCode);
+            item.SetPhysicalSpec(data.PhysicalSpec?.WeightKg, data.PhysicalSpec?.LengthMm, data.PhysicalSpec?.WidthMm, data.PhysicalSpec?.HeightMm);
         }
         catch (ItemDomainException ex)
         {
@@ -368,6 +369,7 @@ public class ItemStore : IItemStore
                 access.ActorUserId,
                 now,
                 data.TaxCategoryCode);
+            item.SetPhysicalSpec(data.PhysicalSpec?.WeightKg, data.PhysicalSpec?.LengthMm, data.PhysicalSpec?.WidthMm, data.PhysicalSpec?.HeightMm);
         }
         catch (ItemValidationException ex)
         {
@@ -1834,6 +1836,7 @@ public class ItemStore : IItemStore
             new LocalizedTextDto(item.Name.Thai, item.Name.English),
             item.Description == null ? null : new LocalizedTextDto(item.Description.Thai, item.Description.English),
             item.TaxCategoryCode,
+            new ItemPhysicalSpecDto(item.WeightKg, item.LengthMm, item.WidthMm, item.HeightMm),
             item.AvailabilityMode,
             new ItemCapabilitiesDto(
                 item.Capabilities.CanSell,

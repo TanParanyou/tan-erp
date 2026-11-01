@@ -34,6 +34,10 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
         builder.Property(x => x.BrandId).HasColumnName("brand_id");
         builder.Property(x => x.BaseUnitId).HasColumnName("base_unit_id").IsRequired();
         builder.Property(x => x.TaxCategoryCode).HasColumnName("tax_category_code").HasMaxLength(30);
+        builder.Property(x => x.WeightKg).HasColumnName("weight_kg").HasPrecision(14, 4);
+        builder.Property(x => x.LengthMm).HasColumnName("length_mm").HasPrecision(14, 4);
+        builder.Property(x => x.WidthMm).HasColumnName("width_mm").HasPrecision(14, 4);
+        builder.Property(x => x.HeightMm).HasColumnName("height_mm").HasPrecision(14, 4);
         builder.Property(x => x.AvailabilityMode).HasColumnName("availability_mode").HasMaxLength(32).IsRequired();
         builder.Property(x => x.AttributesSchemaVersion).HasColumnName("attributes_schema_version");
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32).IsRequired();

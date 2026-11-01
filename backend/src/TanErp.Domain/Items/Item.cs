@@ -14,6 +14,10 @@ public class Item : Entity
     public LocalizedText? Description { get; private set; }
     public Guid BaseUnitId { get; private set; }
     public string? TaxCategoryCode { get; private set; }
+    public decimal? WeightKg { get; private set; }
+    public decimal? LengthMm { get; private set; }
+    public decimal? WidthMm { get; private set; }
+    public decimal? HeightMm { get; private set; }
     public string AvailabilityMode { get; private set; } = ItemAvailabilityMode.AllBranches;
     public ItemCapabilities Capabilities { get; private set; } = null!;
     public Dictionary<string, string>? Attributes { get; private set; }
@@ -121,6 +125,7 @@ public class Item : Entity
         }
 
         ValidateAttributes(attributes);
+        ValidateTracking(capabilities);
         var normalizedTaxCategoryCode = NormalizeTaxCategoryCode(taxCategoryCode);
 
         return new Item(
@@ -182,6 +187,7 @@ public class Item : Entity
         }
 
         ValidateAttributes(attributes);
+        ValidateTracking(capabilities);
         var normalizedTaxCategoryCode = NormalizeTaxCategoryCode(taxCategoryCode);
 
         Code = code.Trim();
@@ -283,14 +289,44 @@ public class Item : Entity
         return normalized;
     }
 
+    /// <summary>Sets optional shipping/storage measures per one base unit; each value is null or within (0, MaxPhysicalValue].</summary>
+    public void SetPhysicalSpec(decimal? weightKg, decimal? lengthMm, decimal? widthMm, decimal? heightMm)
+    {
+        foreach (var value in new[] { weightKg, lengthMm, widthMm, heightMm })
+        {
+            if (value is <= 0 or > MaxPhysicalValue)
+            {
+                throw new ItemValidationException("ITEM_PHYSICAL_SPEC_INVALID", "Weight and dimensions must be greater than zero and not exceed the maximum.");
+            }
+        }
+
+        WeightKg = weightKg;
+        LengthMm = lengthMm;
+        WidthMm = widthMm;
+        HeightMm = heightMm;
+    }
+
+    public const decimal MaxPhysicalValue = 1_000_000m;
+
+    private static void ValidateTracking(ItemCapabilities capabilities)
+    {
+        if ((capabilities.TrackLot || capabilities.TrackSerial) && !capabilities.CanStock)
+        {
+            throw new ItemValidationException("ITEM_TRACKING_REQUIRES_STOCK", "Lot or serial tracking requires the item to be stockable.");
+        }
+    }
+
+    private static readonly string[] ReservedAttributeKeys = ["price", "status", "permission", "currency", "unitcost", "cost"];
+
+    public static bool IsReservedAttributeKey(string key) => ReservedAttributeKeys.Contains(key.Trim().ToLowerInvariant());
+
     private static void ValidateAttributes(Dictionary<string, string>? attributes)
     {
         if (attributes is null) return;
 
-        string[] reservedKeys = ["price", "status", "permission", "currency", "unitcost", "cost"];
         foreach (var key in attributes.Keys)
         {
-            if (reservedKeys.Contains(key.Trim().ToLowerInvariant()))
+            if (IsReservedAttributeKey(key))
             {
                 throw new ItemValidationException("ITEM_ATTRIBUTE_RESERVED", $"Attribute key '{key}' is reserved.");
             }

@@ -81,7 +81,8 @@ public class ItemsController : ControllerBase
             request.Aliases?.Select(a => new LocalizedTextDto(a.Thai, a.English)).ToList(),
             request.Attributes,
             request.AttributesSchemaVersion,
-            request.TaxCategoryCode);
+            request.TaxCategoryCode,
+            new ItemPhysicalSpecDto(request.WeightKg, request.LengthMm, request.WidthMm, request.HeightMm));
 
         var result = await _store.CreateItemAsync(data, access, auth.IdempotencyKey, cancellationToken);
         if (result.IsFailure)
@@ -262,7 +263,8 @@ public class ItemsController : ControllerBase
             request.Attributes,
             request.AttributesSchemaVersion,
             request.TaxCategoryCode,
-            request.SelectedBranchIds);
+            request.SelectedBranchIds,
+            new ItemPhysicalSpecDto(request.WeightKg, request.LengthMm, request.WidthMm, request.HeightMm));
 
         var result = await _store.UpdateItemAsync(data, access, cancellationToken);
         if (result.IsFailure)

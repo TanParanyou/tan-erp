@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { ITEM_IMAGE_MAX_BYTES } from "@/features/item-master/item-image-constants";
 
+const optionalMeasure = z.string().trim().refine(
+  (value) => value === "" || (Number.isFinite(Number(value)) && Number(value) > 0 && Number(value) <= 1_000_000),
+  { message: "MEASURE_INVALID" },
+);
+
 export const itemFormSchema = z.object({
   code: z.string().trim().max(50),
   codeMode: z.enum(["generated", "manual"]),
@@ -9,6 +14,10 @@ export const itemFormSchema = z.object({
   brandId: z.string().optional(),
   baseUnitId: z.string().uuid(),
   taxCategoryCode: z.string().trim().max(30).optional(),
+  weightKg: optionalMeasure,
+  lengthMm: optionalMeasure,
+  widthMm: optionalMeasure,
+  heightMm: optionalMeasure,
   name: z.object({ th: z.string().trim().min(1), en: z.string().optional() }),
   description: z.object({ th: z.string().optional(), en: z.string().optional() }),
   availabilityMode: z.enum(["all_branches", "selected_branches"]),

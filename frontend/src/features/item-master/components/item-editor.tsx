@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
@@ -22,7 +22,7 @@ import { ItemAttributesField } from "@/components/forms/ItemAttributesField";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { Alert } from "@/components/ui/Alert";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
-import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
+import { ApiError, AuthenticationRequiredError, MembershipRequiredError, getApiErrorMessage } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import {
   attributePairsToRecord,
@@ -45,6 +45,51 @@ import { uploadVerifiedItemImage } from "@/features/item-master/api/upload-item-
 import { ITEM_IMAGE_MAX_BYTES } from "@/features/item-master/item-image-constants";
 
 type ItemFormTab = "identity" | "details" | "operations";
+type ItemDetail = NonNullable<ReturnType<typeof useItemDetail>["data"]>;
+
+const ITEM_TYPES = ["material", "labor", "service", "subcontract", "other", "product"] as const;
+type ItemType = (typeof ITEM_TYPES)[number];
+
+function isItemType(value: string | null | undefined): value is ItemType {
+  return ITEM_TYPES.some((type) => type === value);
+}
+
+const measureToText = (value: number | null | undefined) => (value === null || value === undefined ? "" : String(value));
+const textToMeasure = (value: string) => (value.trim() === "" ? null : Number(value));
+const MEASURE_FIELDS = ["weightKg", "lengthMm", "widthMm", "heightMm"] as const;
+
+/** Maps a saved item to form values; returns null when the stored item type is not editable here. */
+function itemToFormValues(item: ItemDetail): ItemFormValues | null {
+  if (!isItemType(item.itemType)) return null;
+  return {
+    code: item.code ?? "",
+    codeMode: "manual",
+    itemType: item.itemType,
+    categoryId: item.category?.id ?? "",
+    brandId: item.brand?.id ?? "",
+    baseUnitId: item.baseUnit?.id ?? "",
+    taxCategoryCode: item.taxCategoryCode ?? "",
+    weightKg: measureToText(item.weightKg),
+    lengthMm: measureToText(item.lengthMm),
+    widthMm: measureToText(item.widthMm),
+    heightMm: measureToText(item.heightMm),
+    name: { th: item.name?.thai ?? "", en: item.name?.english ?? "" },
+    description: { th: item.description?.thai ?? "", en: item.description?.english ?? "" },
+    availabilityMode: item.availabilityMode === "selected_branches" ? "selected_branches" : "all_branches",
+    selectedBranchIds: item.branchAvailabilities?.filter((branch) => branch.status === "active").map((branch) => branch.branchId ?? "") ?? [],
+    capabilities: {
+      canSell: item.capabilities?.canSell === true,
+      canCost: item.capabilities?.canCost === true,
+      canPurchase: item.capabilities?.canPurchase === true,
+      canStock: item.capabilities?.canStock === true,
+      canProduce: item.capabilities?.canProduce === true,
+      trackLot: item.capabilities?.trackLot === true,
+      trackSerial: item.capabilities?.trackSerial === true,
+    },
+    attributes: recordToAttributePairs(item.attributes),
+    aliases: [], imageFile: null, imageAltText: "",
+  };
+}
 
 interface ItemEditorProps {
   id: string;
@@ -64,11 +109,16 @@ export function ItemEditor({ id }: ItemEditorProps) {
   const submitInFlightRef = useRef(false);
   const [imageUploadFailed, setImageUploadFailed] = useState(false);
   const [imagePreparing, setImagePreparing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<ItemCategoryResponse | null>(null);
-  const [selectedBrand, setSelectedBrand] = useState<ItemBrandResponse | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  // undefined = untouched, so the saved item's category/brand is shown until the user picks or clears one.
+  const [pickedCategory, setPickedCategory] = useState<ItemCategoryResponse | null | undefined>(undefined);
+  const [pickedBrand, setPickedBrand] = useState<ItemBrandResponse | null | undefined>(undefined);
   const { selectedMembership } = useSelectedMembership();
   const isCreate = id === "create" || id === "add";
   const item = useItemDetail(isCreate ? undefined : id);
+  const selectedCategory = pickedCategory !== undefined ? pickedCategory : (item.data?.category ?? null);
+  const selectedBrand = pickedBrand !== undefined ? pickedBrand : (item.data?.brand ?? null);
+  const savedFormValues = useMemo(() => (item.data ? itemToFormValues(item.data) : null), [item.data]);
   const lookups = useItemMasterLookups();
   const branches = useOrganizationBranches();
   const mutations = useItemMasterMutations();
@@ -79,12 +129,14 @@ export function ItemEditor({ id }: ItemEditorProps) {
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemFormSchema),
     defaultValues: {
-      code: "", codeMode: "generated", itemType: "material", categoryId: "", brandId: "", baseUnitId: "", taxCategoryCode: "",
+      code: "", codeMode: "generated", itemType: "material", categoryId: "", brandId: "", baseUnitId: "", taxCategoryCode: "", weightKg: "", lengthMm: "", widthMm: "", heightMm: "",
       name: { th: "", en: "" }, description: { th: "", en: "" },
       availabilityMode: "all_branches", selectedBranchIds: [],
       capabilities: { canSell: false, canCost: true, canPurchase: true, canStock: false, canProduce: false, trackLot: false, trackSerial: false },
       attributes: [], aliases: [], imageFile: null, imageAltText: "",
     },
+    values: savedFormValues ?? undefined,
+    resetOptions: { keepDirtyValues: true },
   });
   const selectedItemType = useWatch({ control: form.control, name: "itemType" });
   const selectedCategoryId = useWatch({ control: form.control, name: "categoryId" });
@@ -93,40 +145,22 @@ export function ItemEditor({ id }: ItemEditorProps) {
   const tabFieldsMap: Record<ItemFormTab, string[]> = {
     identity: ["code", "codeMode", "itemType", "categoryId", "brandId", "baseUnitId", "name"],
     details: ["description", "aliases", "imageFile", "imageAltText"],
-    operations: ["taxCategoryCode", "availabilityMode", "selectedBranchIds", "capabilities", "attributes"],
+    operations: ["taxCategoryCode", "weightKg", "lengthMm", "widthMm", "heightMm", "availabilityMode", "selectedBranchIds", "capabilities", "attributes"],
   };
   const tabErrors = useFormTabErrors<ItemFormTab, ItemFormValues>({ tabFieldsMap, errors: form.formState.errors, setActiveTab });
 
+  const selectedCodeMode = useWatch({ control: form.control, name: "codeMode" });
+  const selectedAvailabilityMode = useWatch({ control: form.control, name: "availabilityMode" });
+  const selectedBranchIds = useWatch({ control: form.control, name: "selectedBranchIds" });
+  const canStockEnabled = useWatch({ control: form.control, name: "capabilities.canStock" });
+  const hasUnsavedChanges = form.formState.isDirty && !createdItemId;
+
   useEffect(() => {
-    if (!isCreate && item.data) {
-      setSelectedCategory(item.data.category ?? null);
-      setSelectedBrand(item.data.brand ?? null);
-      form.reset({
-        code: item.data.code ?? "",
-        codeMode: "manual",
-        itemType: item.data.itemType === "labor" || item.data.itemType === "material" || item.data.itemType === "other" || item.data.itemType === "product" || item.data.itemType === "service" || item.data.itemType === "subcontract" ? item.data.itemType : "material",
-        categoryId: item.data.category?.id ?? "",
-        brandId: item.data.brand?.id ?? "",
-        baseUnitId: item.data.baseUnit?.id ?? "",
-        taxCategoryCode: item.data.taxCategoryCode ?? "",
-        name: { th: item.data.name?.thai ?? "", en: item.data.name?.english ?? "" },
-        description: { th: item.data.description?.thai ?? "", en: item.data.description?.english ?? "" },
-        availabilityMode: item.data.availabilityMode === "selected_branches" ? "selected_branches" : "all_branches",
-        selectedBranchIds: item.data.branchAvailabilities?.filter((branch) => branch.status === "active").map((branch) => branch.branchId ?? "") ?? [],
-        capabilities: {
-          canSell: item.data.capabilities?.canSell ?? false,
-          canCost: item.data.capabilities?.canCost ?? false,
-          canPurchase: item.data.capabilities?.canPurchase ?? false,
-          canStock: item.data.capabilities?.canStock ?? false,
-          canProduce: item.data.capabilities?.canProduce ?? false,
-          trackLot: item.data.capabilities?.trackLot ?? false,
-          trackSerial: item.data.capabilities?.trackSerial ?? false,
-        },
-        attributes: recordToAttributePairs(item.data.attributes),
-        aliases: [], imageFile: null, imageAltText: "",
-      });
-    }
-  }, [form, isCreate, item.data]);
+    if (!hasUnsavedChanges) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [hasUnsavedChanges]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     if (submitInFlightRef.current) return;
@@ -146,9 +180,13 @@ export function ItemEditor({ id }: ItemEditorProps) {
       description,
       baseUnitId: values.baseUnitId,
       taxCategoryCode: values.taxCategoryCode?.trim() || null,
+      weightKg: textToMeasure(values.weightKg),
+      lengthMm: textToMeasure(values.lengthMm),
+      widthMm: textToMeasure(values.widthMm),
+      heightMm: textToMeasure(values.heightMm),
       availabilityMode: values.availabilityMode,
       selectedBranchIds: values.availabilityMode === "selected_branches" ? values.selectedBranchIds : [],
-      capabilities: values.capabilities,
+      capabilities: { ...values.capabilities, trackLot: values.capabilities.canStock && values.capabilities.trackLot === true, trackSerial: values.capabilities.canStock && values.capabilities.trackSerial === true },
       attributes,
       attributesSchemaVersion: 1,
     };
@@ -197,7 +235,8 @@ export function ItemEditor({ id }: ItemEditorProps) {
   }, tabErrors.handleFormError);
 
   if (!isCreate && item.isLoading) return <section><MonoSpinner label={t("loading")} /></section>;
-  if (!isCreate && item.isError) return <section><Alert variant="danger">{item.error.message}</Alert><Button type="button" variant="outline" onClick={() => { void item.refetch(); }}>{common("actions.retry")}</Button></section>;
+  if (!isCreate && item.isError) return <section><Alert variant="danger">{getApiErrorMessage(item.error, t("loadFailed"))}</Alert><Button type="button" variant="outline" onClick={() => { void item.refetch(); }}>{common("actions.retry")}</Button></section>;
+  if (!isCreate && item.data && !savedFormValues) return <section><Alert variant="danger">{t("itemTypeUnsupported")}</Alert></section>;
   if (lookups.isLoading) return <section><MonoSpinner label={t("loading")} /></section>;
   const saving = form.formState.isSubmitting || mutations.createItem.isPending || mutations.updateItem.isPending || mutations.attachItemImage.isPending || mutations.setBranchAvailability.isPending;
   const fieldsLocked = saving || Boolean(createdItemId);
@@ -215,17 +254,19 @@ export function ItemEditor({ id }: ItemEditorProps) {
       }
       setDeactivationOpen(false);
       toast.success(nextStatus === "active" ? t("itemActivated") : t("itemDeactivated"));
-    } catch {
-      toast.error(t("versionConflict"));
+    } catch (error) {
+      toast.error(error instanceof ApiError && error.code === "ITEM_VERSION_CONFLICT" ? t("versionConflict") : getApiErrorMessage(error, t("statusChangeFailed")));
     }
   };
+  const leave = () => router.push(createdItemId ? `/${locale}/item-master/${createdItemId}` : `/${locale}/item-master`);
+  const handleCancel = () => { if (hasUnsavedChanges) setCancelOpen(true); else leave(); };
   const activeUnits = (lookups.data?.units ?? []).filter((unit) => unit.status === "active");
   const activeTaxCategories = (lookups.data?.taxCategories ?? []).filter((taxCategory) => taxCategory.status === "active");
 
   return (
     <section className="space-y-5 pb-40 sm:pb-28">
-      <PageHeader title={isCreate ? t("createTitle") : t("editTitle")} subtitle={t("editorHelp")} backHref={`/${locale}/item-master`} breadcrumbs={[{ label: t("title"), href: `/${locale}/item-master` }, { label: isCreate ? t("createTitle") : (item.data?.code ?? t("editTitle")) }]} actions={!isCreate && item.data?.status !== "active" && canActivate ? <Button type="button" disabled={statusChanging || !item.data?.rowVersion} isLoading={mutations.activateItem.isPending} onClick={() => { void changeStatus("active"); }}>{t("activate")}</Button> : !isCreate && item.data?.status === "active" && canDeactivate ? <Button type="button" variant="danger" disabled={statusChanging || !item.data?.rowVersion} onClick={() => setDeactivationOpen(true)}>{t("deactivate")}</Button> : null} />
-      {lookups.isError && <Alert variant="danger">{lookups.error.message}</Alert>}
+      <PageHeader title={isCreate ? t("createTitle") : t("editTitle")} subtitle={t("editorHelp")} onBack={handleCancel} backLabel={common("actions.back")} breadcrumbs={[{ label: t("title"), href: `/${locale}/item-master` }, { label: isCreate ? t("createTitle") : (item.data?.code ?? t("editTitle")) }]} actions={!isCreate && item.data?.status !== "active" && canActivate ? <Button type="button" disabled={statusChanging || !item.data?.rowVersion} isLoading={mutations.activateItem.isPending} onClick={() => { void changeStatus("active"); }}>{t("activate")}</Button> : !isCreate && item.data?.status === "active" && canDeactivate ? <Button type="button" variant="danger" disabled={statusChanging || !item.data?.rowVersion} onClick={() => setDeactivationOpen(true)}>{t("deactivate")}</Button> : null} />
+      {lookups.isError && <Alert variant="danger">{getApiErrorMessage(lookups.error, t("loadFailed"))}</Alert>}
       <form onSubmit={(event) => { void onSubmit(event); }} noValidate className="mx-auto max-w-6xl space-y-5">
         <FormTabs ariaLabel={t("formSections")} activeTab={activeTab} onChange={setActiveTab} tabs={[{ id: "identity", label: t("identityTab"), hasError: tabErrors.tabErrorMap.identity }, { id: "details", label: t("detailsTab"), hasError: tabErrors.tabErrorMap.details }, { id: "operations", label: t("operationsTab"), hasError: tabErrors.tabErrorMap.operations }]} />
         <div role="tabpanel" id="tabpanel-identity" aria-labelledby="tab-identity" hidden={activeTab !== "identity"} className={cn("grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]", activeTab !== "identity" && "hidden")}>
@@ -259,10 +300,10 @@ export function ItemEditor({ id }: ItemEditorProps) {
             />
           )} />
           <Controller control={form.control} name="categoryId" render={({ field, fieldState }) => (
-            <CategoryAutocomplete required value={field.value} onChange={field.onChange} selectedOption={selectedCategory} onSelectedOptionChange={setSelectedCategory} itemType={selectedItemType} error={fieldState.error ? t("validationRequired") : undefined} disabled={!canSave || fieldsLocked} />
+            <CategoryAutocomplete required value={field.value} onChange={field.onChange} selectedOption={selectedCategory} onSelectedOptionChange={setPickedCategory} itemType={selectedItemType} error={fieldState.error ? t("validationRequired") : undefined} disabled={!canSave || fieldsLocked} />
           )} />
           <Controller control={form.control} name="brandId" render={({ field }) => (
-            <BrandAutocomplete value={field.value} onChange={field.onChange} selectedOption={selectedBrand} onSelectedOptionChange={setSelectedBrand} disabled={!canSave || fieldsLocked} />
+            <BrandAutocomplete value={field.value} onChange={field.onChange} selectedOption={selectedBrand} onSelectedOptionChange={setPickedBrand} disabled={!canSave || fieldsLocked} />
           )} />
           <Controller control={form.control} name="baseUnitId" render={({ field, fieldState }) => (
             <Select
@@ -287,7 +328,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
             id="item-code"
             label={t("code")}
             value={field.value}
-            mode={form.watch("codeMode")}
+            mode={selectedCodeMode}
             maxLength={50}
             disabled={!canSave || fieldsLocked}
             placeholder={t("codePlaceholder")}
@@ -334,7 +375,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
             placeholder={t("imageAltTextPlaceholder")}
             error={fieldState.error?.message === "IMAGE_ALT_REQUIRED" ? t("imageAltRequired") : fieldState.error ? t("imageAltTooLong") : undefined}
           />} />
-          {imagePreparing && <p role="status" className="text-sm text-erp-text-muted">{t("imagePreparing")}</p>}
+          {imagePreparing && <Alert variant="info">{t("imagePreparing")}</Alert>}
         </FormSection>}
         </div>
         <div role="tabpanel" id="tabpanel-operations" aria-labelledby="tab-operations" hidden={activeTab !== "operations"} className={cn("space-y-5", activeTab !== "operations" && "hidden")}>
@@ -373,7 +414,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
             />
           )} />
           </div>
-          {form.watch("availabilityMode") === "selected_branches" && (
+          {selectedAvailabilityMode === "selected_branches" && (
             <fieldset className="space-y-2">
               <legend className="erp-label">{t("branches")}</legend>
               {(branches.data ?? []).map((branch) => (
@@ -381,7 +422,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
                   key={branch.id}
                   value={branch.id}
                   disabled={!canSave || fieldsLocked}
-                  checked={form.watch("selectedBranchIds").includes(branch.id)}
+                  checked={selectedBranchIds.includes(branch.id)}
                   label={`${branch.code} · ${branch.name}`}
                   onChange={(event) => {
                     const next = new Set(form.getValues("selectedBranchIds"));
@@ -404,17 +445,36 @@ export function ItemEditor({ id }: ItemEditorProps) {
               ["canProduce", "canProduce"],
               ["trackLot", "trackLot"],
               ["trackSerial", "trackSerial"],
-            ] as const).map(([key, label]) => (
+            ] as const).map(([key, label]) => {
+              const capabilityField = form.register(`capabilities.${key}`);
+              return (
               <div key={key} className="flex min-h-11 items-center border border-erp-border bg-erp-surface px-3 has-[:checked]:border-erp-navy has-[:checked]:bg-erp-surface-subtle">
                 <Checkbox
                   label={t(label)}
-                  disabled={!canSave || fieldsLocked || ((key === "trackLot" || key === "trackSerial") && !form.watch("capabilities.canStock"))}
+                  disabled={!canSave || fieldsLocked || ((key === "trackLot" || key === "trackSerial") && !canStockEnabled)}
                   wrapperClassName="mb-0"
-                  {...form.register(`capabilities.${key}`)}
+                  {...capabilityField}
+                  onChange={async (event) => {
+                    await capabilityField.onChange(event);
+                    if (key === "canStock" && !event.target.checked) {
+                      form.setValue("capabilities.trackLot", false, { shouldDirty: true });
+                      form.setValue("capabilities.trackSerial", false, { shouldDirty: true });
+                    }
+                  }}
                 />
               </div>
-            ))}
+              );
+            })}
           </fieldset>
+          </FormSection>
+          <FormSection title={t("physicalSpec")} description={t("physicalSpecHelp")}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {MEASURE_FIELDS.map((key) => (
+                <Controller key={key} control={form.control} name={key} render={({ field, fieldState }) => (
+                  <Input {...field} id={`item-${key}`} type="number" inputMode="decimal" min="0" step="any" label={t(key)} disabled={!canSave || fieldsLocked} placeholder={t("measurePlaceholder")} error={fieldState.error ? t("measureInvalid") : undefined} />
+                )} />
+              ))}
+            </div>
           </FormSection>
           <FormSection title={t("attributes")} description={t("attributesHelp")}>
             <ItemAttributesField
@@ -427,7 +487,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
           </FormSection>
           {branches.isError && <Alert variant="danger">{t("branchesLoadFailed")}</Alert>}
         </div>
-        {(mutations.createItem.isError || mutations.updateItem.isError) && <Alert variant="danger">{t("createFailed")}</Alert>}
+        {(mutations.createItem.isError || mutations.updateItem.isError) && <Alert variant="danger">{getApiErrorMessage(mutations.createItem.error ?? mutations.updateItem.error, t("createFailed"))}</Alert>}
         {imageUploadFailed && <Alert variant="warning" title={t("imageSaveFailed")}>{t("imagePendingRetry")}</Alert>}
         {mutations.setBranchAvailability.isError && <Alert variant="danger">{t("branchSaveFailed")}</Alert>}
         <FormActionBar
@@ -435,14 +495,15 @@ export function ItemEditor({ id }: ItemEditorProps) {
           isLoading={saving}
           isSaveDisabled={!canSave || imagePreparing}
           saveText={imageUploadFailed ? t("retryImageUpload") : t("save")}
-          onCancel={() => router.push(createdItemId ? `/${locale}/item-master/${createdItemId}` : `/${locale}/item-master`)}
+          onCancel={handleCancel}
           actions={!canSave ? <Button type="button" variant="outline" onClick={() => router.push(`/${locale}/item-master`)}>{common("actions.cancel")}</Button> : undefined}
         />
       </form>
       {!isCreate && item.data && <ItemBarcodeMaintenance itemId={id} item={item.data} />}
       {!isCreate && item.data && <ItemAliasMaintenance itemId={id} item={item.data} />}
       {!isCreate && item.data && <ItemImageMaintenance itemId={id} item={item.data} />}
-      {!isCreate && item.data && can(selectedMembership, "cost-records.read") && <CostRecordMaintenance itemId={id} />}
+      {!isCreate && item.data && (can(selectedMembership, "cost-records.read") ? <CostRecordMaintenance itemId={id} /> : <Alert variant="info">{t("costRecordsNoAccess")}</Alert>)}
+      <ConfirmationModal isOpen={cancelOpen} onClose={() => setCancelOpen(false)} onConfirm={leave} title={common("dialog.confirmCancelTitle")} message={common("dialog.confirmCancelDesc")} confirmText={common("actions.confirm")} cancelText={common("actions.cancel")} variant="warning" />
       <ConfirmationModal isOpen={deactivationOpen} onClose={() => { if (!mutations.deactivateItem.isPending) setDeactivationOpen(false); }} onConfirm={() => changeStatus("inactive")} title={t("deactivateTitle")} message={t("deactivateMessage")} confirmText={t("deactivate")} cancelText={common("actions.cancel")} isLoading={mutations.deactivateItem.isPending} />
     </section>
   );

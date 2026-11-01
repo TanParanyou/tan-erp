@@ -30,6 +30,8 @@ public sealed record ItemImageSummaryDto(
     LocalizedTextDto AltText,
     LocalizedTextDto? Caption);
 
+public sealed record ItemPhysicalSpecDto(decimal? WeightKg, decimal? LengthMm, decimal? WidthMm, decimal? HeightMm);
+
 public sealed record ItemDetailProjection(
     Guid Id,
     Guid OrganizationId,
@@ -41,6 +43,7 @@ public sealed record ItemDetailProjection(
     LocalizedTextDto Name,
     LocalizedTextDto? Description,
     string? TaxCategoryCode,
+    ItemPhysicalSpecDto PhysicalSpec,
     string AvailabilityMode,
     ItemCapabilitiesDto Capabilities,
     Dictionary<string, string>? Attributes,

@@ -60,6 +60,15 @@ public sealed class CreateItemRequest
 
     [MaxLength(30)]
     public string? TaxCategoryCode { get; set; }
+
+    [Range(0.0001, 1000000)]
+    public decimal? WeightKg { get; set; }
+    [Range(0.0001, 1000000)]
+    public decimal? LengthMm { get; set; }
+    [Range(0.0001, 1000000)]
+    public decimal? WidthMm { get; set; }
+    [Range(0.0001, 1000000)]
+    public decimal? HeightMm { get; set; }
 }
 
 public sealed class UpdateItemRequest
@@ -98,6 +107,15 @@ public sealed class UpdateItemRequest
 
     [MaxLength(30)]
     public string? TaxCategoryCode { get; set; }
+
+    [Range(0.0001, 1000000)]
+    public decimal? WeightKg { get; set; }
+    [Range(0.0001, 1000000)]
+    public decimal? LengthMm { get; set; }
+    [Range(0.0001, 1000000)]
+    public decimal? WidthMm { get; set; }
+    [Range(0.0001, 1000000)]
+    public decimal? HeightMm { get; set; }
 }
 
 public sealed class DeactivateItemRequest
@@ -208,6 +226,10 @@ public sealed class ItemResponse
     public LocalizedTextResponse Name { get; set; } = new();
     public LocalizedTextResponse? Description { get; set; }
     public string? TaxCategoryCode { get; set; }
+    public decimal? WeightKg { get; set; }
+    public decimal? LengthMm { get; set; }
+    public decimal? WidthMm { get; set; }
+    public decimal? HeightMm { get; set; }
     public string AvailabilityMode { get; set; } = string.Empty;
     public ItemCapabilitiesResponse Capabilities { get; set; } = new();
     public Dictionary<string, string>? Attributes { get; set; }

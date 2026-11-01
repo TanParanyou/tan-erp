@@ -17,7 +17,8 @@ public sealed record CreateItemData(
     IReadOnlyList<LocalizedTextDto>? Aliases,
     Dictionary<string, string>? Attributes,
     int? AttributesSchemaVersion,
-    string? TaxCategoryCode = null);
+    string? TaxCategoryCode = null,
+    ItemPhysicalSpecDto? PhysicalSpec = null);
 
 public sealed record UpdateItemData(
     Guid ItemId,
@@ -34,7 +35,8 @@ public sealed record UpdateItemData(
     Dictionary<string, string>? Attributes,
     int? AttributesSchemaVersion,
     string? TaxCategoryCode = null,
-    IReadOnlyList<Guid>? SelectedBranchIds = null);
+    IReadOnlyList<Guid>? SelectedBranchIds = null,
+    ItemPhysicalSpecDto? PhysicalSpec = null);
 
 public sealed record ItemQuery(
     Guid OrganizationId,
