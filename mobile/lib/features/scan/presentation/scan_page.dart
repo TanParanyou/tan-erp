@@ -248,7 +248,7 @@ class _ScanPageState extends ConsumerState<ScanPage> {
                               SizedBox(height: t.space1 / 2),
                               Text(
                                 item.barcodeValue != null
-                                    ? '${item.code} · ${item.barcodeValue}'
+                                    ? '${item.code}   ${item.barcodeValue}'
                                     : item.code,
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(

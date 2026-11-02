@@ -311,7 +311,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '${area.code} · ${area.name}',
+                  '${area.code} ${area.name}',
                   style: Theme.of(ctx).textTheme.titleMedium,
                 ),
                 SizedBox(height: t.space3),
@@ -734,7 +734,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
           children: [
             Expanded(
               child: Text(
-                '${_record.opportunityCode} · ${_record.opportunityTitle}',
+                '${_record.opportunityCode} ${_record.opportunityTitle}',
                 style: text.titleMedium,
               ),
             ),
@@ -744,9 +744,12 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
         ),
         SizedBox(height: t.space2),
         Text(
-          '${_record.customerName} · '
-          '${_record.siteName.isEmpty ? l10n.todayNoSite : _record.siteName}',
-          style: text.bodyMedium?.copyWith(color: t.textMuted),
+          _record.customerName,
+          style: text.bodyMedium?.copyWith(color: t.textBody),
+        ),
+        Text(
+          _record.siteName.isEmpty ? l10n.todayNoSite : _record.siteName,
+          style: text.bodySmall?.copyWith(color: t.textMuted),
         ),
         SizedBox(height: t.space3),
         ErpTextField(
@@ -1242,7 +1245,7 @@ class _ActiveAreaFocusCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '${area.code} · ${area.name}',
+                '${area.code} ${area.name}',
                 style: text.titleMedium,
               ),
             ),
