@@ -6,13 +6,12 @@ import 'package:tan_erp_field/core/l10n/l10n.dart';
 import 'package:tan_erp_field/core/router/routes.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
-import 'package:tan_erp_field/core/ui/erp_card.dart';
 import 'package:tan_erp_field/core/ui/erp_empty_state.dart';
 import 'package:tan_erp_field/core/ui/erp_icon.dart';
 import 'package:tan_erp_field/core/ui/erp_mono_loading.dart';
 import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
-import 'package:tan_erp_field/core/ui/erp_status_badge.dart';
+import 'package:tan_erp_field/core/ui/erp_task_card.dart';
 import 'package:tan_erp_field/core/ui/erp_text_field.dart';
 import 'package:tan_erp_field/features/survey/domain/field_survey_models.dart';
 import 'package:tan_erp_field/features/survey/presentation/survey_controller.dart';
@@ -59,14 +58,6 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> {
     }).toList();
   }
 
-  static (String, ErpBadgeTone) _badge(AppLocalizations l10n, String status) =>
-      switch (status) {
-        'ready' => (l10n.surveyStatusReady, ErpBadgeTone.success),
-        'scheduled' => (l10n.surveyStatusScheduled, ErpBadgeTone.info),
-        'voided' => (l10n.surveyStatusVoided, ErpBadgeTone.danger),
-        _ => (l10n.surveyStatusDraft, ErpBadgeTone.warning),
-      };
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -96,6 +87,7 @@ class _SurveyListPageState extends ConsumerState<SurveyListPage> {
               label: l10n.surveyListTitle,
               placeholder: l10n.surveySearchPlaceholder,
               textInputAction: TextInputAction.search,
+              showLabel: false,
             ),
           ),
           Expanded(
@@ -163,56 +155,23 @@ class _SurveyListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final t = context.tokens;
-    final text = Theme.of(context).textTheme;
-    final (badgeText, badgeTone) = _SurveyListPageState._badge(
-      l10n,
-      record.status,
-    );
-    final siteText = record.siteName.isEmpty
-        ? l10n.todayNoSite
-        : record.siteName;
-
-    return InkWell(
+    final (label, icon, color) = switch (record.status) {
+      'ready' => (l10n.surveyStatusReady, ErpIcons.checkCircle, t.success),
+      'scheduled' => (l10n.surveyStatusScheduled, ErpIcons.calendar, t.info),
+      'voided' => (l10n.surveyStatusVoided, ErpIcons.alertCircle, t.danger),
+      _ => (l10n.surveyStatusDraft, ErpIcons.ruler, t.warning),
+    };
+    return ErpTaskCard(
+      title: record.opportunityTitle,
+      subtitle: record.customerName,
+      caption: record.siteName.isEmpty ? l10n.todayNoSite : record.siteName,
+      meta:
+          '${record.surveyNumber}   '
+          '${l10n.surveyAreasSection}: ${record.areas.length}',
+      statusIcon: icon,
+      statusColor: color,
+      statusLabel: label,
       onTap: onTap,
-      child: ErpCard(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${record.surveyNumber} · ${record.opportunityTitle}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.titleMedium,
-                ),
-              ),
-              SizedBox(width: t.space2),
-              ErpStatusBadge(label: badgeText, tone: badgeTone),
-            ],
-          ),
-          SizedBox(height: t.space1),
-          Text(
-            '${record.customerName} · $siteText',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: text.bodyMedium?.copyWith(color: t.textMuted),
-          ),
-          SizedBox(height: t.space2),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${l10n.surveyAreasSection}: ${record.areas.length}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodySmall?.copyWith(color: t.textMuted),
-                ),
-              ),
-              ErpIcon(ErpIcons.chevronRight, color: t.textMuted, size: 20),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

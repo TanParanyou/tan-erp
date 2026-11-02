@@ -634,6 +634,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'ยังไม่มีรายการนัดสำรวจในสาขานี้ แตะเพื่อโหลดข้อมูลใหม่';
 
   @override
+  String get todaySelectPrompt => 'เลือกงานจากรายการเพื่อเริ่มสำรวจ';
+
+  @override
   String get todayOpenSurvey => 'เปิดใบสำรวจ';
 
   @override

@@ -1256,6 +1256,12 @@ abstract class AppLocalizations {
   /// **'ยังไม่มีรายการนัดสำรวจในสาขานี้ แตะเพื่อโหลดข้อมูลใหม่'**
   String get todayEmptyBody;
 
+  /// No description provided for @todaySelectPrompt.
+  ///
+  /// In th, this message translates to:
+  /// **'เลือกงานจากรายการเพื่อเริ่มสำรวจ'**
+  String get todaySelectPrompt;
+
   /// No description provided for @todayOpenSurvey.
   ///
   /// In th, this message translates to:

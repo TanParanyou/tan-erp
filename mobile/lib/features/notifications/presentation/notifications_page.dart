@@ -10,6 +10,7 @@ import 'package:tan_erp_field/core/ui/erp_button.dart';
 import 'package:tan_erp_field/core/ui/erp_card.dart';
 import 'package:tan_erp_field/core/ui/erp_confirm_dialog.dart';
 import 'package:tan_erp_field/core/ui/erp_icon.dart';
+import 'package:tan_erp_field/core/ui/erp_mono_loading.dart';
 import 'package:tan_erp_field/core/ui/erp_status_badge.dart';
 import 'package:tan_erp_field/core/ui/erp_text_field.dart';
 import 'package:tan_erp_field/features/notifications/data/notifications_repository.dart';
@@ -154,15 +155,11 @@ class NotificationsPage extends ConsumerWidget {
         title: Text(l10n.notificationsTitle),
         actions: [
           if (state.unreadCount > 0)
-            TextButton(
+            ErpButton(
+              label: l10n.notificationsMarkAllRead,
               onPressed: notifier.markAllRead,
-              child: Text(
-                l10n.notificationsMarkAllRead,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: t.action,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              variant: ErpButtonVariant.ghost,
+              expand: false,
             ),
           IconButton(
             tooltip: l10n.notificationsTitle,
@@ -205,16 +202,7 @@ class NotificationsPage extends ConsumerWidget {
           ),
           Expanded(
             child: state.isLoading
-                ? Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: t.action,
-                      ),
-                    ),
-                  )
+                ? ErpMonoLoading(color: t.action)
                 : RefreshIndicator(
                     color: t.action,
                     onRefresh: notifier.refresh,

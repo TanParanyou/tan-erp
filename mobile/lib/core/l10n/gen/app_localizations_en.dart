@@ -641,6 +641,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'There are no survey tasks in this branch yet. Tap to refresh';
 
   @override
+  String get todaySelectPrompt => 'Select a task to start the survey';
+
+  @override
   String get todayOpenSurvey => 'Open survey';
 
   @override

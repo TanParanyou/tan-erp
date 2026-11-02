@@ -10,6 +10,66 @@ class ErpOption<T> {
   final String? subtitle;
 }
 
+/// Option bottom sheet shared by [ErpSelect] and `ErpSettingRow`.
+Future<T?> showErpOptionSheet<T>(
+  BuildContext context, {
+  required List<ErpOption<T>> options,
+  T? value,
+}) async {
+  final t = context.tokens;
+  final picked = await showModalBottomSheet<T>(
+    context: context,
+    showDragHandle: false,
+    builder: (sheetContext) => SafeArea(
+      child: ListView(
+        shrinkWrap: true,
+        children: [
+          for (final o in options)
+            InkWell(
+              onTap: () => Navigator.of(sheetContext).pop(o.value),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: t.tapTarget),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: t.space4,
+                    vertical: t.space3,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              o.label,
+                              style: Theme.of(sheetContext)
+                                  .textTheme
+                                  .titleMedium,
+                            ),
+                            if (o.subtitle != null)
+                              Text(
+                                o.subtitle!,
+                                style: Theme.of(sheetContext)
+                                    .textTheme
+                                    .bodySmall,
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (o.value == value)
+                        ErpIcon(ErpIcons.check, color: t.action),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+  return picked;
+}
+
 /// Select that opens a bottom sheet (design.md 8.2) instead of a dropdown.
 class ErpSelect<T> extends StatelessWidget {
   const ErpSelect({
@@ -32,56 +92,10 @@ class ErpSelect<T> extends StatelessWidget {
   final bool enabled;
 
   Future<void> _open(BuildContext context) async {
-    final t = context.tokens;
-    final picked = await showModalBottomSheet<T>(
-      context: context,
-      showDragHandle: false,
-      builder: (sheetContext) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            for (final o in options)
-              InkWell(
-                onTap: () => Navigator.of(sheetContext).pop(o.value),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: t.tapTarget),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: t.space4,
-                      vertical: t.space3,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                o.label,
-                                style: Theme.of(sheetContext)
-                                    .textTheme
-                                    .titleMedium,
-                              ),
-                              if (o.subtitle != null)
-                                Text(
-                                  o.subtitle!,
-                                  style: Theme.of(sheetContext)
-                                      .textTheme
-                                      .bodySmall,
-                                ),
-                            ],
-                          ),
-                        ),
-                        if (o.value == value)
-                          ErpIcon(ErpIcons.check, color: t.action),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+    final picked = await showErpOptionSheet<T>(
+      context,
+      options: options,
+      value: value,
     );
     if (picked != null) onChanged(picked);
   }
