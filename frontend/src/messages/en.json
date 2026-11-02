@@ -6233,6 +6233,19 @@
     "roomNameRequired": "Survey area / room name is required",
     "opportunityRequired": "Please select a sales opportunity before saving",
     "cloneReason": "Room added from the field survey page",
+    "checks": {
+      "title": "Review before saving",
+      "description": "Some items may be incomplete. You can save anyway, but the estimate will be incomplete without measurements.",
+      "continue": "Save anyway",
+      "backToEdit": "Back to editing",
+      "warnings": {
+        "noMeasurement": "No saveable measurement (all values are 0)",
+        "widthMissing": "Width is not set",
+        "depthMissing": "Depth is not set",
+        "heightMissing": "Height is not set",
+        "noPhoto": "No photo attached"
+      }
+    },
     "jumpToItem": "Jump to:",
     "unnamedItem": "(Unnamed Item)",
     "roomPlaceholder": "e.g. Master Bedroom, Living Room",

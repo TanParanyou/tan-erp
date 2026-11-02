@@ -12,6 +12,7 @@ import type {
   FieldSurveyFormData,
 } from "../../schemas/field-survey-schema";
 import { resolveFieldSurveyPhotoPurpose, resolveFieldSurveyPhotoTag, resolveGrossAreaSqm, resolveNetAreaSqm } from "../../schemas/field-survey-schema";
+import { evaluateFieldSurveyItems, type FieldSurveyWarning } from "../../schemas/field-survey-checks";
 import {
   useOpportunitySurvey,
   useCreateSiteSurvey,
@@ -87,6 +88,9 @@ export function FieldSurveyWorkspace({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Non-blocking completeness warnings shown in a confirm modal before saving
+  const [pendingWarnings, setPendingWarnings] = useState<FieldSurveyWarning[] | null>(null);
+  const skipWarningsRef = useRef(false);
 
   // Next Action Modal state after save
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
@@ -224,8 +228,10 @@ export function FieldSurveyWorkspace({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const skipWarnings = skipWarningsRef.current;
+    skipWarningsRef.current = false;
     setErrorMessage(null);
     setSaveSuccess(false);
 
@@ -243,6 +249,14 @@ export function FieldSurveyWorkspace({
     if (!onSave && !opportunityId) {
       setErrorMessage(t("opportunityRequired"));
       return;
+    }
+
+    if (!skipWarnings) {
+      const warnings = evaluateFieldSurveyItems(items);
+      if (warnings.length > 0) {
+        setPendingWarnings(warnings);
+        return;
+      }
     }
 
     const payload: FieldSurveyFormData = {
@@ -513,6 +527,24 @@ export function FieldSurveyWorkspace({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleConfirmWarnings = () => {
+    setPendingWarnings(null);
+    skipWarningsRef.current = true;
+    void handleSubmit();
+  };
+
+  const handleReviewWarnings = () => {
+    const warned = pendingWarnings ?? [];
+    setPendingWarnings(null);
+    if (warned.length === 0) return;
+    setCollapsedItemIds((prev) => {
+      const next = new Set(prev);
+      for (const w of warned) next.delete(w.itemId);
+      return next;
+    });
+    window.setTimeout(() => scrollToItem(warned[0].itemId), 0);
   };
 
   const handleStartNextRoom = () => {
@@ -924,6 +956,49 @@ export function FieldSurveyWorkspace({
         </div>
       )}
       </FormSection>
+
+      {/* Completeness warnings: non-blocking, the user may save anyway */}
+      <Modal
+        isOpen={pendingWarnings !== null}
+        onClose={() => setPendingWarnings(null)}
+        size="md"
+        showCloseButton={true}
+        title={t("checks.title")}
+        description={t("checks.description")}
+      >
+        <div className="space-y-4 py-2">
+          <ul className="space-y-2 border border-erp-border bg-erp-surface-subtle p-3.5 text-xs">
+            {pendingWarnings?.map((w) => (
+              <li key={`${w.itemId}-${w.code}`} className="flex gap-2">
+                <span className="shrink-0 font-semibold text-erp-navy">
+                  {t("actions.itemNumber", { number: w.itemIndex + 1 })}
+                </span>
+                <span className="text-erp-text-muted">{t(`checks.warnings.${w.code}`)}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              className="w-full justify-center"
+              onClick={handleConfirmWarnings}
+            >
+              {t("checks.continue")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              className="w-full justify-center"
+              onClick={handleReviewWarnings}
+            >
+              {t("checks.backToEdit")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Next Action Success Modal - Atelier Architectural Navy Sharp */}
       <Modal
