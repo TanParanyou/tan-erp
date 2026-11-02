@@ -6231,6 +6231,8 @@
     "createNewOpportunity": "Create New Opportunity",
     "roomName": "Room / Survey Area",
     "roomNameRequired": "Survey area / room name is required",
+    "opportunityRequired": "Please select a sales opportunity before saving",
+    "cloneReason": "Room added from the field survey page",
     "jumpToItem": "Jump to:",
     "unnamedItem": "(Unnamed Item)",
     "roomPlaceholder": "e.g. Master Bedroom, Living Room",

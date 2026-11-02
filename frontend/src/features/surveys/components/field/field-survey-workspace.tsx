@@ -2,8 +2,9 @@
 
 /* eslint-disable no-restricted-syntax -- token-exempt: fallback design-style swatch palettes are data, not theme colours */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import type {
@@ -15,6 +16,8 @@ import {
   useOpportunitySurvey,
   useCreateSiteSurvey,
   useSurveyReferenceData,
+  useCloneSurveyRevision,
+  opportunitySurveyQueryKey,
 } from "../../api/survey-queries";
 import { useOpportunityDetail } from "@/features/opportunities/api/opportunity-queries";
 import { apiClient } from "@/lib/api/api-client";
@@ -22,6 +25,7 @@ import type {
   UpdateSurveyAreaRequest,
   UpdateSurveyMeasurementRequest,
   UpdateSurveyDraftRequest,
+  SiteSurveyResponse,
 } from "@/lib/api/api-client";
 import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -97,6 +101,10 @@ export function FieldSurveyWorkspace({
   const opportunityQuery = useOpportunityDetail(opportunityId || undefined);
   const surveyQuery = useOpportunitySurvey(opportunityId || undefined);
   const createSurveyMutation = useCreateSiteSurvey(opportunityId);
+  const cloneRevisionMutation = useCloneSurveyRevision(opportunityId, surveyQuery.data?.id ?? "");
+  const queryClient = useQueryClient();
+  // Area saved by a draft whose photo upload failed; a retry replaces it instead of adding another room
+  const partialAreaRef = useRef<{ opportunityId: string; areaId: string; code: string } | null>(null);
   const photoUploader = useDeferredFileUpload({ parentType: "survey-area" });
 
   const categoryOptions = refData?.categories && refData.categories.length > 0
@@ -231,6 +239,12 @@ export function FieldSurveyWorkspace({
       return;
     }
 
+    // Only the real-save path needs an opportunity; onSave callers own their own payload
+    if (!onSave && !opportunityId) {
+      setErrorMessage(t("opportunityRequired"));
+      return;
+    }
+
     const payload: FieldSurveyFormData = {
       opportunityId: opportunityId || "00000000-0000-4000-a000-000000000000",
       roomName: roomName.trim(),
@@ -242,8 +256,13 @@ export function FieldSurveyWorkspace({
     try {
       if (onSave) {
         await onSave(payload);
-      } else if (opportunityId && opportunityId !== "00000000-0000-4000-a000-000000000000") {
+      } else {
         let survey = surveyQuery.data;
+        const surveyQueryKey = opportunitySurveyQueryKey(
+          membershipContext?.selectedMembership?.id,
+          locale === "en" ? "en" : "th",
+          opportunityId
+        );
 
         // If survey does not exist yet, auto-create it for this opportunity
         if (!survey) {
@@ -259,6 +278,16 @@ export function FieldSurveyWorkspace({
             },
             idempotencyKey,
           });
+        }
+
+        // A ready revision is locked, so clone it into a new draft before adding the room
+        if (survey?.currentRevision?.status === "ready") {
+          await cloneRevisionMutation.mutateAsync({
+            payload: { sourceRevisionId: survey.currentRevision.id, reason: t("cloneReason") },
+            idempotencyKey: `clone-revision-${opportunityId}-${Date.now()}`,
+          });
+          await queryClient.invalidateQueries({ queryKey: surveyQueryKey });
+          survey = queryClient.getQueryData<SiteSurveyResponse | null>(surveyQueryKey);
         }
 
         if (!survey?.id || !survey.currentRevision?.id) {
@@ -353,11 +382,12 @@ export function FieldSurveyWorkspace({
         const styleHeader = stylePrefixParts.length > 0 ? `[${stylePrefixParts.join(" | ")}]` : "";
 
         // Build or merge Area for this room
-        const existingAreas = currentRevision.areas || [];
-        const roomCode = `RM-${(existingAreas.length + 1).toString().padStart(2, "0")}`;
+        const partialArea = partialAreaRef.current?.opportunityId === opportunityId ? partialAreaRef.current : null;
+        const existingAreas = (currentRevision.areas || []).filter((ea) => ea.id !== partialArea?.areaId);
+        const roomCode = partialArea?.code ?? `RM-${(existingAreas.length + 1).toString().padStart(2, "0")}`;
         const roomDescription = [styleHeader, surveyorNotes.trim()].filter(Boolean).join("\n") || null;
         const newAreaRequest: UpdateSurveyAreaRequest = {
-          id: null,
+          id: partialArea?.areaId ?? null,
           code: roomCode,
           name: roomName.trim(),
           description: roomDescription,
@@ -419,6 +449,14 @@ export function FieldSurveyWorkspace({
           }
         );
 
+        const createdAreaId = savedRevision.areas?.find((a) => a.code === roomCode)?.id;
+        if (createdAreaId) {
+          partialAreaRef.current = { opportunityId, areaId: createdAreaId, code: roomCode };
+        }
+
+        // Refresh the cached survey so the next room saves against the new rowVersion and area list.
+        await queryClient.invalidateQueries({ queryKey: surveyQueryKey });
+
         // Photos upload only now: the area id exists once the draft is saved.
         const photoFiles = items.flatMap((it) => it.photos).filter((p): p is typeof p & { file: File } => p.file instanceof File);
         if (photoFiles.length > 0) {
@@ -458,9 +496,7 @@ export function FieldSurveyWorkspace({
             );
           }
         }
-      } else {
-        // Fallback simulated save
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        partialAreaRef.current = null;
       }
       setSaveSuccess(true);
       setLastSavedSummary({
@@ -469,6 +505,9 @@ export function FieldSurveyWorkspace({
         photosCount: totalPhotosCount,
       });
       setIsSuccessModalOpen(true);
+      // Items are on the server now; clear them so re-clicking save cannot duplicate the room
+      setItems([]);
+      setCollapsedItemIds(new Set());
     } catch {
       setErrorMessage(t("actions.saveFailed"));
     } finally {

@@ -6231,6 +6231,8 @@
     "createNewOpportunity": "สร้างโอกาสทางการขายใหม่",
     "roomName": "ชื่อห้อง / บริเวณสำรวจ",
     "roomNameRequired": "กรุณาระบุชื่อห้อง / บริเวณสำรวจ",
+    "opportunityRequired": "กรุณาเลือกโอกาสทางการขายก่อนบันทึก",
+    "cloneReason": "เพิ่มห้องจากหน้าสำรวจหน้างาน",
     "jumpToItem": "ข้ามไปยัง:",
     "unnamedItem": "(ยังไม่ได้ระบุชื่อ)",
     "roomPlaceholder": "เช่น ห้องนอนใหญ่ Master Bedroom, โถงรับแขก",
