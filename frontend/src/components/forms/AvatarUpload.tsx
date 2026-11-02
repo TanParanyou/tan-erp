@@ -221,60 +221,57 @@ export function AvatarUpload({
               <IconEye size={13} strokeWidth={2} />
             </div>
 
-            {/* In-Image Action Scrim: Appears on Hover / Focus */}
+            {/* In-Image Action Scrim: Appears on Hover / Focus with Icon-Only Buttons */}
             {!disabled && (
               <div
                 className={cn(
-                  "absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 p-2",
+                  "absolute inset-0 z-20 flex items-center justify-center gap-2 p-2",
                   "bg-erp-navy-950/75 backdrop-blur-[1.5px] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200"
                 )}
               >
-                {/* Fullscreen Preview Button */}
+                {/* Fullscreen Preview Icon Button */}
                 <button
                   type="button"
                   onClick={() => setIsLightboxOpen(true)}
                   aria-label={resolvedPreviewText}
+                  title={resolvedPreviewText}
                   className={cn(
-                    "w-full py-1 px-2 bg-erp-surface/90 hover:bg-white text-erp-navy",
-                    "text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5",
-                    "border border-white/20 transition-transform active:scale-95 cursor-pointer",
+                    "w-8 h-8 flex items-center justify-center bg-erp-surface text-erp-navy hover:bg-white",
+                    "border border-white/30 shadow-xs transition-transform active:scale-95 cursor-pointer",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   )}
                 >
-                  <IconEye size={13} strokeWidth={2} className="shrink-0" />
-                  <span className="truncate">{resolvedPreviewText}</span>
+                  <IconEye size={15} strokeWidth={2} />
                 </button>
 
-                {/* Change / Upload Button */}
+                {/* Change / Upload Icon Button */}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   aria-label={resolvedUploadText}
+                  title={resolvedUploadText}
                   className={cn(
-                    "w-full py-1 px-2 bg-erp-navy hover:bg-erp-navy-hover text-white",
-                    "text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5",
-                    "border border-erp-navy-700 transition-transform active:scale-95 cursor-pointer",
+                    "w-8 h-8 flex items-center justify-center bg-erp-navy hover:bg-erp-navy-hover text-white",
+                    "border border-erp-navy-700 shadow-xs transition-transform active:scale-95 cursor-pointer",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   )}
                 >
-                  <IconCamera size={13} strokeWidth={2} className="shrink-0" />
-                  <span className="truncate">{resolvedUploadText}</span>
+                  <IconCamera size={15} strokeWidth={2} />
                 </button>
 
-                {/* Delete Button */}
+                {/* Delete Icon Button */}
                 <button
                   type="button"
                   onClick={handleRemove}
                   aria-label={resolvedDeleteText}
+                  title={resolvedDeleteText}
                   className={cn(
-                    "w-full py-1 px-2 bg-erp-danger hover:bg-red-700 text-white",
-                    "text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5",
-                    "transition-transform active:scale-95 cursor-pointer",
+                    "w-8 h-8 flex items-center justify-center bg-erp-danger hover:bg-red-700 text-white",
+                    "shadow-xs transition-transform active:scale-95 cursor-pointer",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   )}
                 >
-                  <IconTrash size={13} strokeWidth={2} className="shrink-0" />
-                  <span className="truncate">{resolvedDeleteText}</span>
+                  <IconTrash size={15} strokeWidth={2} />
                 </button>
               </div>
             )}
