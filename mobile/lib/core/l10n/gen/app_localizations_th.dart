@@ -472,6 +472,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get arErrorSessionFailed => 'เปิดกล้อง AR ไม่สำเร็จ กรุณาลองใหม่';
 
   @override
+  String get arErrorNoFloor =>
+      'ไม่พบพื้นห้องในการสแกน กรุณาสแกนใหม่ให้เห็นพื้น';
+
+  @override
   String get arErrorBusy => 'กำลังวัดอยู่แล้ว';
 
   @override
@@ -793,6 +797,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get surveyMeasureByAr => 'AR วัดพื้น';
+
+  @override
+  String get surveyMeasureByRoomScan => 'สแกนห้อง (LiDAR)';
 
   @override
   String get surveyMeasureNotesLabel => 'หมายเหตุค่าวัด';

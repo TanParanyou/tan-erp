@@ -450,6 +450,100 @@ struct ArMeasureResult: Hashable {
   }
 }
 
+/// Texts and colours of the native room scan screen (RoomPlan draws its own
+/// coaching UI; we add only the cancel/done controls).
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct RoomScanRequest: Hashable {
+  var cancel: String
+  var done: String
+  var colors: ArMeasureColors
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> RoomScanRequest? {
+    let cancel = pigeonVar_list[0] as! String
+    let done = pigeonVar_list[1] as! String
+    let colors = pigeonVar_list[2] as! ArMeasureColors
+
+    return RoomScanRequest(
+      cancel: cancel,
+      done: done,
+      colors: colors
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      cancel,
+      done,
+      colors,
+    ]
+  }
+  static func == (lhs: RoomScanRequest, rhs: RoomScanRequest) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsArMeasureApi(lhs.cancel, rhs.cancel) && deepEqualsArMeasureApi(lhs.done, rhs.done) && deepEqualsArMeasureApi(lhs.colors, rhs.colors)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("RoomScanRequest")
+    deepHashArMeasureApi(value: cancel, hasher: &hasher)
+    deepHashArMeasureApi(value: done, hasher: &hasher)
+    deepHashArMeasureApi(value: colors, hasher: &hasher)
+  }
+}
+
+/// Room dimensions from a RoomPlan scan. Width/length are the floor's
+/// bounding box (width ≤ length); height is the tallest wall (null when no
+/// wall was detected).
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct RoomScanResult: Hashable {
+  var floorAreaSqm: Double
+  var widthM: Double
+  var lengthM: Double
+  var ceilingHeightM: Double? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> RoomScanResult? {
+    let floorAreaSqm = pigeonVar_list[0] as! Double
+    let widthM = pigeonVar_list[1] as! Double
+    let lengthM = pigeonVar_list[2] as! Double
+    let ceilingHeightM: Double? = nilOrValue(pigeonVar_list[3])
+
+    return RoomScanResult(
+      floorAreaSqm: floorAreaSqm,
+      widthM: widthM,
+      lengthM: lengthM,
+      ceilingHeightM: ceilingHeightM
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      floorAreaSqm,
+      widthM,
+      lengthM,
+      ceilingHeightM,
+    ]
+  }
+  static func == (lhs: RoomScanResult, rhs: RoomScanResult) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsArMeasureApi(lhs.floorAreaSqm, rhs.floorAreaSqm) && deepEqualsArMeasureApi(lhs.widthM, rhs.widthM) && deepEqualsArMeasureApi(lhs.lengthM, rhs.lengthM) && deepEqualsArMeasureApi(lhs.ceilingHeightM, rhs.ceilingHeightM)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("RoomScanResult")
+    deepHashArMeasureApi(value: floorAreaSqm, hasher: &hasher)
+    deepHashArMeasureApi(value: widthM, hasher: &hasher)
+    deepHashArMeasureApi(value: lengthM, hasher: &hasher)
+    deepHashArMeasureApi(value: ceilingHeightM, hasher: &hasher)
+  }
+}
+
 private class ArMeasureApiPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -467,6 +561,10 @@ private class ArMeasureApiPigeonCodecReader: FlutterStandardReader {
       return ArMeasureRequest.fromList(self.readValue() as! [Any?])
     case 133:
       return ArMeasureResult.fromList(self.readValue() as! [Any?])
+    case 134:
+      return RoomScanRequest.fromList(self.readValue() as! [Any?])
+    case 135:
+      return RoomScanResult.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -489,6 +587,12 @@ private class ArMeasureApiPigeonCodecWriter: FlutterStandardWriter {
       super.writeValue(value.toList())
     } else if let value = value as? ArMeasureResult {
       super.writeByte(133)
+      super.writeValue(value.toList())
+    } else if let value = value as? RoomScanRequest {
+      super.writeByte(134)
+      super.writeValue(value.toList())
+    } else if let value = value as? RoomScanResult {
+      super.writeByte(135)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -560,6 +664,57 @@ class ArMeasureApiSetup {
       }
     } else {
       measureFloorChannel.setMessageHandler(nil)
+    }
+  }
+}
+/// iOS only (RoomPlan, LiDAR, iOS 17+). Android registers no handler, so
+/// calls fail with a channel error and the app treats it as unsupported.
+/// Error codes of [RoomScanApi.scanRoom]: `camera_permission_denied`,
+/// `unavailable`, `session_failed`, `no_floor`, `busy`.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol RoomScanApi {
+  func isSupported() throws -> Bool
+  /// Opens the native room scan. Returns null when the user cancels.
+  func scanRoom(request: RoomScanRequest, completion: @escaping (Result<RoomScanResult?, Error>) -> Void)
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class RoomScanApiSetup {
+  static var codec: FlutterStandardMessageCodec { ArMeasureApiPigeonCodec.shared }
+  /// Sets up an instance of `RoomScanApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: RoomScanApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    let isSupportedChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tan_erp_field.RoomScanApi.isSupported\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      isSupportedChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.isSupported()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      isSupportedChannel.setMessageHandler(nil)
+    }
+    /// Opens the native room scan. Returns null when the user cancels.
+    let scanRoomChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tan_erp_field.RoomScanApi.scanRoom\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      scanRoomChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestArg = args[0] as! RoomScanRequest
+        api.scanRoom(request: requestArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      scanRoomChannel.setMessageHandler(nil)
     }
   }
 }

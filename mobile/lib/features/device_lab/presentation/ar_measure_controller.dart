@@ -7,6 +7,15 @@ final arAvailabilityProvider = FutureProvider<ArAvailability>(
   (ref) => ref.watch(arMeasureRepositoryProvider).checkAvailability(),
 );
 
+/// Unknown may still work: ARCore's install flow gives the final answer.
+/// Null (still checking) counts as not startable.
+bool arCanStart(ArAvailability? availability) => switch (availability) {
+  ArAvailability.supported ||
+  ArAvailability.needsInstall ||
+  ArAvailability.unknown => true,
+  ArAvailability.unsupported || null => false,
+};
+
 @immutable
 class ArMeasureState {
   const ArMeasureState({this.isMeasuring = false, this.result, this.failure});
@@ -21,12 +30,16 @@ class ArMeasureController extends Notifier<ArMeasureState> {
   @override
   ArMeasureState build() => const ArMeasureState();
 
-  Future<void> measure(ArMeasureRequest request) async {
-    if (state.isMeasuring) return;
+  /// Returns this attempt's result only: null when cancelled, failed (see
+  /// [ArMeasureState.failure]) or already measuring. [ArMeasureState.result]
+  /// still keeps the previous result for display.
+  Future<ArMeasureResult?> measure(ArMeasureRequest request) async {
+    if (state.isMeasuring) return null;
     final previous = state.result;
     state = ArMeasureState(isMeasuring: true, result: previous);
+    ArMeasureResult? result;
     try {
-      final result = await ref
+      result = await ref
           .read(arMeasureRepositoryProvider)
           .measureFloor(request);
       state = ArMeasureState(result: result ?? previous);
@@ -35,6 +48,7 @@ class ArMeasureController extends Notifier<ArMeasureState> {
     }
     // ARCore may have been installed or updated during the attempt.
     ref.invalidate(arAvailabilityProvider);
+    return result;
   }
 }
 

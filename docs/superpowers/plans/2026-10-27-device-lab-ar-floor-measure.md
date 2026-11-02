@@ -1,7 +1,8 @@
 # Device Lab: AR Floor Measure (Android, ARCore)
 
 - Status: **Approved by user 2026-10-27** ("อยากลองเล่น feat ความสามารถเฉพาะเครื่องก่อน" → เลือก AR วัดพื้น, ใช้ emulator ไปก่อน)
-- Scope: dev-only "ห้องทดลอง" (Device Lab) ในแอป `mobile/` — **Android เท่านั้น**; iOS พักไว้ตามผู้ใช้ (มีแค่ stub ให้ compile ได้)
+- Update 2026-11-02: ต่อเข้า Survey (วัดพื้นที่เท่านั้น, ซ่อนปุ่มเมื่อเครื่องไม่รองรับ) และ iOS ใช้ ARKit จริงแล้ว (`ios/Runner/ArMeasureViewController.swift`) แทน stub ที่คืนค่าปลอม 3×4 ม.; เพิ่มสแกนห้อง RoomPlan (`ios/Runner/RoomScanViewController.swift`, `lib/native/room_scan/`) บันทึกพื้นที่/กว้าง/ยาว/สูงลง Survey
+- Scope (เดิม): dev-only "ห้องทดลอง" (Device Lab) ในแอป `mobile/` — **Android เท่านั้น**; iOS พักไว้ตามผู้ใช้ (มีแค่ stub ให้ compile ได้)
 - ไม่แตะ Backend / เว็บ; ไม่บันทึกผลลง Survey (ทดลองเท่านั้น); ไม่เขียนและไม่รัน test (ตามผู้ใช้)
 - Related: [Mobile Architecture](../../02-architecture/mobile-architecture.md), [design.md หมวด 8](../../../design.md), [ADR 0030](../../adr/0030-flutter-field-companion-app.md)
 

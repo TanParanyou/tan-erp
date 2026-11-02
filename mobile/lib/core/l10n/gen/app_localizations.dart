@@ -962,6 +962,12 @@ abstract class AppLocalizations {
   /// **'เปิดกล้อง AR ไม่สำเร็จ กรุณาลองใหม่'**
   String get arErrorSessionFailed;
 
+  /// No description provided for @arErrorNoFloor.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่พบพื้นห้องในการสแกน กรุณาสแกนใหม่ให้เห็นพื้น'**
+  String get arErrorNoFloor;
+
   /// No description provided for @arErrorBusy.
   ///
   /// In th, this message translates to:
@@ -1561,6 +1567,12 @@ abstract class AppLocalizations {
   /// In th, this message translates to:
   /// **'AR วัดพื้น'**
   String get surveyMeasureByAr;
+
+  /// No description provided for @surveyMeasureByRoomScan.
+  ///
+  /// In th, this message translates to:
+  /// **'สแกนห้อง (LiDAR)'**
+  String get surveyMeasureByRoomScan;
 
   /// No description provided for @surveyMeasureNotesLabel.
   ///

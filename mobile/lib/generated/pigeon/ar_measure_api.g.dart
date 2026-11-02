@@ -407,6 +407,116 @@ class ArMeasureResult {
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
 
+/// Texts and colours of the native room scan screen (RoomPlan draws its own
+/// coaching UI; we add only the cancel/done controls).
+class RoomScanRequest {
+  RoomScanRequest({
+    required this.cancel,
+    required this.done,
+    required this.colors,
+  });
+
+  String cancel;
+
+  String done;
+
+  ArMeasureColors colors;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      cancel,
+      done,
+      colors,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static RoomScanRequest decode(Object result) {
+    result as List<Object?>;
+    return RoomScanRequest(
+      cancel: result[0]! as String,
+      done: result[1]! as String,
+      colors: result[2]! as ArMeasureColors,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! RoomScanRequest || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(cancel, other.cancel) && _deepEquals(done, other.done) && _deepEquals(colors, other.colors);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
+/// Room dimensions from a RoomPlan scan. Width/length are the floor's
+/// bounding box (width ≤ length); height is the tallest wall (null when no
+/// wall was detected).
+class RoomScanResult {
+  RoomScanResult({
+    required this.floorAreaSqm,
+    required this.widthM,
+    required this.lengthM,
+    this.ceilingHeightM,
+  });
+
+  double floorAreaSqm;
+
+  double widthM;
+
+  double lengthM;
+
+  double? ceilingHeightM;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      floorAreaSqm,
+      widthM,
+      lengthM,
+      ceilingHeightM,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static RoomScanResult decode(Object result) {
+    result as List<Object?>;
+    return RoomScanResult(
+      floorAreaSqm: result[0]! as double,
+      widthM: result[1]! as double,
+      lengthM: result[2]! as double,
+      ceilingHeightM: result[3] as double?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! RoomScanResult || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(floorAreaSqm, other.floorAreaSqm) && _deepEquals(widthM, other.widthM) && _deepEquals(lengthM, other.lengthM) && _deepEquals(ceilingHeightM, other.ceilingHeightM);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -430,6 +540,12 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is ArMeasureResult) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
+    }    else if (value is RoomScanRequest) {
+      buffer.putUint8(134);
+      writeValue(buffer, value.encode());
+    }    else if (value is RoomScanResult) {
+      buffer.putUint8(135);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -449,6 +565,10 @@ class _PigeonCodec extends StandardMessageCodec {
         return ArMeasureRequest.decode(readValue(buffer)!);
       case 133:
         return ArMeasureResult.decode(readValue(buffer)!);
+      case 134:
+        return RoomScanRequest.decode(readValue(buffer)!);
+      case 135:
+        return RoomScanResult.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -508,5 +628,62 @@ class ArMeasureApi {
     )
     ;
     return pigeonVar_replyValue as ArMeasureResult?;
+  }
+}
+
+/// iOS only (RoomPlan, LiDAR, iOS 17+). Android registers no handler, so
+/// calls fail with a channel error and the app treats it as unsupported.
+/// Error codes of [RoomScanApi.scanRoom]: `camera_permission_denied`,
+/// `unavailable`, `session_failed`, `no_floor`, `busy`.
+class RoomScanApi {
+  /// Constructor for [RoomScanApi].  The [binaryMessenger] named argument is
+  /// available for dependency injection.  If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  RoomScanApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+  Future<bool> isSupported() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.tan_erp_field.RoomScanApi.isSupported$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as bool;
+  }
+
+  /// Opens the native room scan. Returns null when the user cancels.
+  Future<RoomScanResult?> scanRoom(RoomScanRequest request) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.tan_erp_field.RoomScanApi.scanRoom$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[request]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as RoomScanResult?;
   }
 }

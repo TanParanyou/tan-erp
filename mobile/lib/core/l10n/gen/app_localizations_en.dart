@@ -478,6 +478,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not start the AR camera. Please try again';
 
   @override
+  String get arErrorNoFloor =>
+      'No floor was found in the scan. Please scan again with the floor in view';
+
+  @override
   String get arErrorBusy => 'A measurement is already running';
 
   @override
@@ -800,6 +804,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get surveyMeasureByAr => 'AR floor';
+
+  @override
+  String get surveyMeasureByRoomScan => 'Room scan (LiDAR)';
 
   @override
   String get surveyMeasureNotesLabel => 'Measurement notes';
