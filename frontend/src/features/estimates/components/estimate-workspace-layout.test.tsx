@@ -9,9 +9,15 @@ const mocks = vi.hoisted(() => ({ update: vi.fn(), calculate: vi.fn(), confirm: 
 vi.mock("../api/estimate-queries", () => ({
   useUpdateEstimateDraft: () => ({ isPending: false, mutateAsync: mocks.update }),
   useCalculateEstimate: () => ({ isPending: false, mutateAsync: mocks.calculate }),
+  useEstimateHistory: () => ({ data: undefined, isLoading: false, isError: false }),
 }));
 vi.mock("@/hooks/useToast", () => ({ useToast: () => ({ toast: { success: mocks.success, error: mocks.error } }) }));
 vi.mock("@/hooks/useConfirm", () => ({ useConfirm: () => ({ confirm: mocks.confirm, ConfirmDialog: () => null }) }));
+// The workspace keys its local BOQ draft by membership, so it needs a selected membership
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({ selectedMembership: { id: "membership-test", permissions: [] } }),
+  useOptionalSelectedMembership: () => ({ selectedMembership: { id: "membership-test", permissions: [] } }),
+}));
 vi.mock("./estimate-template-modal", () => ({ EstimateTemplateModal: () => null }));
 const catalogItem: CatalogItemModel = {
   id: "catalog-item", code: "MAT-1", name: { thai: "วัสดุจากคลัง", english: "Catalog material" }, itemType: "material", costComponentType: "material",
