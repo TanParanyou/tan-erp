@@ -240,6 +240,8 @@ import 'package:tan_erp_api/src/model/estimate_review_queue_response.dart';
 import 'package:tan_erp_api/src/model/estimate_review_queue_reviewer_response.dart';
 import 'package:tan_erp_api/src/model/estimate_review_readiness_reason_response.dart';
 import 'package:tan_erp_api/src/model/estimate_review_revision_diff_response.dart';
+import 'package:tan_erp_api/src/model/estimate_revision_line_response.dart';
+import 'package:tan_erp_api/src/model/estimate_revision_lines_response.dart';
 import 'package:tan_erp_api/src/model/estimate_revision_response.dart';
 import 'package:tan_erp_api/src/model/estimate_revision_summary_response.dart';
 import 'package:tan_erp_api/src/model/estimate_section_response.dart';
@@ -895,6 +897,8 @@ part 'serializers.g.dart';
   EstimateReviewQueueReviewerResponse,
   EstimateReviewReadinessReasonResponse,
   EstimateReviewRevisionDiffResponse,
+  EstimateRevisionLineResponse,
+  EstimateRevisionLinesResponse,
   EstimateRevisionResponse,
   EstimateRevisionSummaryResponse,
   EstimateSectionResponse,
@@ -1909,6 +1913,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ProjectListItemResponse)]),
         () => ListBuilder<ProjectListItemResponse>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(EstimateRevisionLineResponse)]),
+        () => ListBuilder<EstimateRevisionLineResponse>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PurchaseRequestListItemResponse)]),

@@ -233,6 +233,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(EstimateReviewQueueReviewerResponse.serializer)
       ..add(EstimateReviewReadinessReasonResponse.serializer)
       ..add(EstimateReviewRevisionDiffResponse.serializer)
+      ..add(EstimateRevisionLineResponse.serializer)
+      ..add(EstimateRevisionLinesResponse.serializer)
       ..add(EstimateRevisionResponse.serializer)
       ..add(EstimateRevisionSummaryResponse.serializer)
       ..add(EstimateSectionResponse.serializer)
@@ -907,6 +909,10 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList,
               const [const FullType(EstimateReviewCostEvidenceResponse)]),
           () => ListBuilder<EstimateReviewCostEvidenceResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(EstimateRevisionLineResponse)]),
+          () => ListBuilder<EstimateRevisionLineResponse>())
       ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(EstimateRevisionSummaryResponse)]),

@@ -304,6 +304,8 @@ export 'package:tan_erp_api/src/model/estimate_review_queue_response.dart';
 export 'package:tan_erp_api/src/model/estimate_review_queue_reviewer_response.dart';
 export 'package:tan_erp_api/src/model/estimate_review_readiness_reason_response.dart';
 export 'package:tan_erp_api/src/model/estimate_review_revision_diff_response.dart';
+export 'package:tan_erp_api/src/model/estimate_revision_line_response.dart';
+export 'package:tan_erp_api/src/model/estimate_revision_lines_response.dart';
 export 'package:tan_erp_api/src/model/estimate_revision_response.dart';
 export 'package:tan_erp_api/src/model/estimate_revision_summary_response.dart';
 export 'package:tan_erp_api/src/model/estimate_section_response.dart';
