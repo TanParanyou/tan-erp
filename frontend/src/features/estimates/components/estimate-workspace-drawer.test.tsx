@@ -59,8 +59,9 @@ vi.mock("@/hooks/useKeyboardShortcut", () => ({
 
 vi.mock("./estimate-item-catalog-modal", () => ({ EstimateItemCatalogModal: () => null }));
 
+// The discount inputs are passed to the HUD as a slot, so the stub must render it
 vi.mock("./estimate-workspace-hud", () => ({
-  EstimateWorkspaceHud: () => null,
+  EstimateWorkspaceHud: ({ discountSlot }: { discountSlot?: React.ReactNode }) => <>{discountSlot}</>,
 }));
 
 vi.mock("./estimate-section-card", async () => {

@@ -79,7 +79,9 @@ describe("workspace BOQ and inspector regression", () => {
   it("keeps the selected item and its entered values when reordered", async () => {
     renderWorkspace(); choose("WORK-B");
     fireEvent.change(screen.getByRole("textbox", { name: "รายละเอียดงาน" }), { target: { value: "ย้ายขึ้นพร้อมข้อมูล" } });
-    fireEvent.click(screen.getByRole("button", { name: /เลื่อนขึ้น/ }));
+    // Section and first-item move-up buttons are disabled; only the second work item can move up
+    const [moveUp] = screen.getAllByRole("button", { name: /เลื่อนขึ้น/ }).filter((button) => !(button as HTMLButtonElement).disabled);
+    fireEvent.click(moveUp);
     expect(screen.getByRole("textbox", { name: "รายละเอียดงาน" })).toHaveValue("ย้ายขึ้นพร้อมข้อมูล");
     tab("ต้นทุน");
     expect(screen.getByRole("textbox", { name: "รายละเอียดต้นทุน" })).toHaveValue("ต้นทุนสอง");
@@ -110,8 +112,8 @@ describe("workspace BOQ and inspector regression", () => {
 
   it("keeps quick cost presets and selects a remaining item after confirmed deletion", async () => {
     renderWorkspace(); choose("WORK-B"); tab("ต้นทุน");
-    const preset = screen.getByRole("button", { name: /ไม้อัด HMR/ });
-    fireEvent.click(preset);
+    // Quick cost presets are a select now (option value = preset id), not buttons
+    fireEvent.change(screen.getByRole("combobox", { name: "เลือกด่วน:" }), { target: { value: "hmr" } });
     expect(screen.getAllByRole("spinbutton", { name: "ต้นทุนต่อหน่วย" })).toHaveLength(2);
     fireEvent.click(screen.getAllByRole("button", { name: "ลบรายการ" })[0]);
     await waitFor(() => expect(screen.getByRole("textbox", { name: "รายละเอียดงาน" })).toHaveValue("งานหนึ่ง"));
