@@ -542,6 +542,18 @@ Routes ใต้ Opportunity เดียวกับ Mark Ready (ไม่ใ�
 - Snapshot hash `v3:<sha256>` (template v2) ครอบคลุมข้อมูลเดิมทั้งหมด + checklist + evidence manifest (fileId, content SHA-256, kind, caption, sortOrder); template v1 ยังใช้ `v2:` ตามเดิม.
 - Clone คัดลอก checklist/evidence (ID ใหม่ ไฟล์เดิม).
 
+## Survey Reference Data — ช่วงค่าที่สมเหตุสมผล (2026-11-02)
+
+`GET /api/v1/surveys/reference-data` คืน `measurementTypes[]` ที่มี `minValue` และ `maxValue` (nullable, หน่วยตาม `unitCode`; ของ `box` คือต่อหนึ่งมิติ) ใช้ให้ client แสดง **คำเตือนที่ไม่บล็อก** เมื่อค่าอยู่นอกช่วง เช่น กรอกเมตรแทนมิลลิเมตร ค่าเหล่านี้ **ไม่ใช่ validation ของ Backend** และ client ต้องข้ามการตรวจเมื่อเป็น `null`
+
+| `code` | `unitCode` | `minValue` | `maxValue` |
+| --- | --- | --- | --- |
+| `box` | `mm` | 10 | 12000 |
+| `area` | `sqm` | 0.1 | 500 |
+| `custom` | `mm` | 10 | 30000 |
+
+> `TEST_ONLY`: ค่าเป็น placeholder ที่ทีมพัฒนาตั้งไว้ รอ Survey Owner ยืนยัน ก่อนใช้งานจริง
+
 ## Concurrency, Retry and Privacy
 
 - Draft Patch ใช้ ETag; ค่าเก่าคืน `*_VERSION_CONFLICT` โดยไม่ Merge อัตโนมัติ

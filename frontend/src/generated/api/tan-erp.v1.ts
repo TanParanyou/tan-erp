@@ -25239,6 +25239,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/surveys/narrative/polish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PolishSurveyNarrativeRequest"];
+                    "text/json": components["schemas"]["PolishSurveyNarrativeRequest"];
+                    "application/*+json": components["schemas"]["PolishSurveyNarrativeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PolishSurveyNarrativeResponse"];
+                        "application/json": components["schemas"]["PolishSurveyNarrativeResponse"];
+                        "text/json": components["schemas"]["PolishSurveyNarrativeResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Bad Gateway */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/surveys/assigned": {
         parameters: {
             query?: never;
@@ -33321,6 +33419,14 @@ export interface components {
             permitted?: boolean;
             summary?: components["schemas"]["PipelineSummaryMetricsResponse"];
         };
+        PolishSurveyNarrativeRequest: {
+            text?: string | null;
+            language?: string | null;
+        };
+        PolishSurveyNarrativeResponse: {
+            text?: string | null;
+            provider?: string | null;
+        };
         PreviewDocumentSequenceRequest: {
             prefix?: string | null;
             formatPattern?: string | null;
@@ -35537,6 +35643,10 @@ export interface components {
             unitCode?: string | null;
             /** Format: int32 */
             sortOrder?: number;
+            /** Format: double */
+            minValue?: number | null;
+            /** Format: double */
+            maxValue?: number | null;
         };
         SurveyMoodToneOptionResponse: {
             code?: string | null;
@@ -35572,6 +35682,7 @@ export interface components {
             measurementTypes?: components["schemas"]["SurveyMeasurementTypeOptionResponse"][] | null;
             designStyles?: components["schemas"]["SurveyDesignStyleOptionResponse"][] | null;
             moodTones?: components["schemas"]["SurveyMoodToneOptionResponse"][] | null;
+            narrativeAssistEnabled?: boolean;
         };
         SurveyTemplateVersionListResponse: {
             items?: components["schemas"]["SurveyTemplateVersionResponse"][] | null;

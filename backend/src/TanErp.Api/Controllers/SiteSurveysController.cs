@@ -47,6 +47,7 @@ public class SiteSurveysController : ControllerBase
     [ProducesResponseType<SurveyReferenceDataResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReferenceData(
         [FromServices] TanErp.Application.Surveys.MasterData.ISurveyMasterDataStore masterStore,
+        [FromServices] TanErp.Application.Surveys.Narrative.ISurveyNarrativeProvider narrativeProvider,
         CancellationToken cancellationToken)
     {
         var categories = new List<SurveyCategoryOptionResponse>
@@ -69,11 +70,12 @@ public class SiteSurveysController : ControllerBase
             new(EvidenceKind.Other, new SurveyLocalizedLabel("อื่นๆ", "Other"), "Miscellaneous reference photo", 6)
         };
 
+        // TEST_ONLY: plausibility bounds are developer-chosen placeholders pending Survey Owner sign-off.
         var measurementTypes = new List<SurveyMeasurementTypeOptionResponse>
         {
-            new("box", new SurveyLocalizedLabel("กล่อง 3 มิติ (กว้าง × ลึก × สูง)", "3D Box (W × D × H)"), "mm", 1),
-            new("area", new SurveyLocalizedLabel("พื้นที่ผิว (ตร.ม. พร้อมหักช่องเปิด)", "Surface Area (sqm)"), "sqm", 2),
-            new("custom", new SurveyLocalizedLabel("จุดวัดเฉพาะ (หลืบม่าน/ระยะเสา/ระยะฝ้า)", "Custom Measurement Points"), "mm", 3)
+            new("box", new SurveyLocalizedLabel("กล่อง 3 มิติ (กว้าง × ลึก × สูง)", "3D Box (W × D × H)"), "mm", 1, 10m, 12000m),
+            new("area", new SurveyLocalizedLabel("พื้นที่ผิว (ตร.ม. พร้อมหักช่องเปิด)", "Surface Area (sqm)"), "sqm", 2, 0.1m, 500m),
+            new("custom", new SurveyLocalizedLabel("จุดวัดเฉพาะ (หลืบม่าน/ระยะเสา/ระยะฝ้า)", "Custom Measurement Points"), "mm", 3, 10m, 30000m)
         };
 
         var designStyles = new List<SurveyDesignStyleOptionResponse>
@@ -127,7 +129,42 @@ public class SiteSurveysController : ControllerBase
 
         Response.Headers.CacheControl = "public, max-age=3600";
 
-        return Ok(new SurveyReferenceDataResponse(categories, photoTags, measurementTypes, designStyles, moodTones));
+        return Ok(new SurveyReferenceDataResponse(categories, photoTags, measurementTypes, designStyles, moodTones, narrativeProvider.IsEnabled));
+    }
+
+    [HttpPost("/api/v1/surveys/narrative/polish")]
+    [ProducesResponseType<PolishSurveyNarrativeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> PolishNarrative(
+        [FromBody] PolishSurveyNarrativeRequest request,
+        [FromServices] TanErp.Application.Surveys.Narrative.PolishSurveyNarrative.PolishSurveyNarrativeHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var result = await handler.Handle(
+            new TanErp.Application.Surveys.Narrative.PolishSurveyNarrative.PolishSurveyNarrativeCommand(
+                request.Text,
+                request.Language,
+                auth.FirebaseUid,
+                auth.MembershipId),
+            cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        return Ok(new PolishSurveyNarrativeResponse(result.Value!.Text, result.Value.Provider));
     }
 
     [HttpGet("/api/v1/surveys/assigned")]

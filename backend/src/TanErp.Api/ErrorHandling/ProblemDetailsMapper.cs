@@ -91,6 +91,8 @@ public static class ProblemDetailsMapper
         "SURVEY_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
         "SURVEY_INVALID_STATE" => StatusCodes.Status409Conflict,
         "SURVEY_DRAFT_EXISTS" => StatusCodes.Status409Conflict,
+        "SURVEY_NARRATIVE_DISABLED" => StatusCodes.Status422UnprocessableEntity,
+        "SURVEY_NARRATIVE_PROVIDER_FAILED" => StatusCodes.Status502BadGateway,
         "SURVEY_TEMPLATE_UNAVAILABLE" => StatusCodes.Status409Conflict,
         "SURVEY_TEMPLATE_NOT_EFFECTIVE" => StatusCodes.Status409Conflict,
         "SURVEY_TEMPLATE_CODE_EXISTS" => StatusCodes.Status409Conflict,

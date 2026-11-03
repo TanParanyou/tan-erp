@@ -14,11 +14,17 @@ public sealed record SurveyPhotoTagOptionResponse(
     string? Description,
     int SortOrder);
 
+/// <summary>
+/// MinValue/MaxValue bound a plausible single measurement in <paramref name="UnitCode"/> (per dimension for box).
+/// They only drive non-blocking warnings in clients; they are not validation limits.
+/// </summary>
 public sealed record SurveyMeasurementTypeOptionResponse(
     string Code,
     SurveyLocalizedLabel Name,
     string UnitCode,
-    int SortOrder);
+    int SortOrder,
+    decimal? MinValue = null,
+    decimal? MaxValue = null);
 
 public sealed record SurveyDesignStyleOptionResponse(
     string Code,
@@ -40,4 +46,5 @@ public sealed record SurveyReferenceDataResponse(
     IReadOnlyList<SurveyPhotoTagOptionResponse> PhotoTags,
     IReadOnlyList<SurveyMeasurementTypeOptionResponse> MeasurementTypes,
     IReadOnlyList<SurveyDesignStyleOptionResponse> DesignStyles,
-    IReadOnlyList<SurveyMoodToneOptionResponse> MoodTones);
+    IReadOnlyList<SurveyMoodToneOptionResponse> MoodTones,
+    bool NarrativeAssistEnabled = false);
