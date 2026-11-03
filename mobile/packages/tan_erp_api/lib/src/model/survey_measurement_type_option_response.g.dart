@@ -16,6 +16,10 @@ class _$SurveyMeasurementTypeOptionResponse
   final String? unitCode;
   @override
   final int? sortOrder;
+  @override
+  final double? minValue;
+  @override
+  final double? maxValue;
 
   factory _$SurveyMeasurementTypeOptionResponse(
           [void Function(SurveyMeasurementTypeOptionResponseBuilder)?
@@ -23,7 +27,12 @@ class _$SurveyMeasurementTypeOptionResponse
       (SurveyMeasurementTypeOptionResponseBuilder()..update(updates))._build();
 
   _$SurveyMeasurementTypeOptionResponse._(
-      {this.code, this.name, this.unitCode, this.sortOrder})
+      {this.code,
+      this.name,
+      this.unitCode,
+      this.sortOrder,
+      this.minValue,
+      this.maxValue})
       : super._();
   @override
   SurveyMeasurementTypeOptionResponse rebuild(
@@ -41,7 +50,9 @@ class _$SurveyMeasurementTypeOptionResponse
         code == other.code &&
         name == other.name &&
         unitCode == other.unitCode &&
-        sortOrder == other.sortOrder;
+        sortOrder == other.sortOrder &&
+        minValue == other.minValue &&
+        maxValue == other.maxValue;
   }
 
   @override
@@ -51,6 +62,8 @@ class _$SurveyMeasurementTypeOptionResponse
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, unitCode.hashCode);
     _$hash = $jc(_$hash, sortOrder.hashCode);
+    _$hash = $jc(_$hash, minValue.hashCode);
+    _$hash = $jc(_$hash, maxValue.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -61,7 +74,9 @@ class _$SurveyMeasurementTypeOptionResponse
           ..add('code', code)
           ..add('name', name)
           ..add('unitCode', unitCode)
-          ..add('sortOrder', sortOrder))
+          ..add('sortOrder', sortOrder)
+          ..add('minValue', minValue)
+          ..add('maxValue', maxValue))
         .toString();
   }
 }
@@ -89,6 +104,14 @@ class SurveyMeasurementTypeOptionResponseBuilder
   int? get sortOrder => _$this._sortOrder;
   set sortOrder(int? sortOrder) => _$this._sortOrder = sortOrder;
 
+  double? _minValue;
+  double? get minValue => _$this._minValue;
+  set minValue(double? minValue) => _$this._minValue = minValue;
+
+  double? _maxValue;
+  double? get maxValue => _$this._maxValue;
+  set maxValue(double? maxValue) => _$this._maxValue = maxValue;
+
   SurveyMeasurementTypeOptionResponseBuilder() {
     SurveyMeasurementTypeOptionResponse._defaults(this);
   }
@@ -100,6 +123,8 @@ class SurveyMeasurementTypeOptionResponseBuilder
       _name = $v.name?.toBuilder();
       _unitCode = $v.unitCode;
       _sortOrder = $v.sortOrder;
+      _minValue = $v.minValue;
+      _maxValue = $v.maxValue;
       _$v = null;
     }
     return this;
@@ -128,6 +153,8 @@ class SurveyMeasurementTypeOptionResponseBuilder
             name: _name?.build(),
             unitCode: unitCode,
             sortOrder: sortOrder,
+            minValue: minValue,
+            maxValue: maxValue,
           );
     } catch (_) {
       late String _$failedField;

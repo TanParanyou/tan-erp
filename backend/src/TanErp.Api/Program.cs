@@ -342,6 +342,7 @@ builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateReviewQueueRead
 builder.Services.AddScoped<TanErp.Application.Items.ICostResolver, TanErp.Infrastructure.Persistence.Items.CostResolver>();
 builder.Services.AddScoped<TanErp.Application.Items.IUnitConversionResolver, TanErp.Infrastructure.Persistence.Items.UnitConversionResolver>();
 builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateUnitOptionsReader, TanErp.Infrastructure.Persistence.Estimates.EstimateUnitOptionsReader>();
+builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateHistoryReader, TanErp.Infrastructure.Persistence.Estimates.EstimateHistoryReader>();
 builder.Services.AddScoped<TanErp.Application.Items.Catalog.IEstimateCatalogReader, TanErp.Infrastructure.Persistence.Items.EstimateCatalogReader>();
 
 // File Service (reusable across modules)

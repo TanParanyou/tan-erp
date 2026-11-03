@@ -16,6 +16,8 @@ part 'survey_measurement_type_option_response.g.dart';
 /// * [name] 
 /// * [unitCode] 
 /// * [sortOrder] 
+/// * [minValue] 
+/// * [maxValue] 
 @BuiltValue()
 abstract class SurveyMeasurementTypeOptionResponse implements Built<SurveyMeasurementTypeOptionResponse, SurveyMeasurementTypeOptionResponseBuilder> {
   @BuiltValueField(wireName: r'code')
@@ -29,6 +31,12 @@ abstract class SurveyMeasurementTypeOptionResponse implements Built<SurveyMeasur
 
   @BuiltValueField(wireName: r'sortOrder')
   int? get sortOrder;
+
+  @BuiltValueField(wireName: r'minValue')
+  double? get minValue;
+
+  @BuiltValueField(wireName: r'maxValue')
+  double? get maxValue;
 
   SurveyMeasurementTypeOptionResponse._();
 
@@ -79,6 +87,20 @@ class _$SurveyMeasurementTypeOptionResponseSerializer implements PrimitiveSerial
       yield serializers.serialize(
         object.sortOrder,
         specifiedType: const FullType(int),
+      );
+    }
+    if (object.minValue != null) {
+      yield r'minValue';
+      yield serializers.serialize(
+        object.minValue,
+        specifiedType: const FullType.nullable(double),
+      );
+    }
+    if (object.maxValue != null) {
+      yield r'maxValue';
+      yield serializers.serialize(
+        object.maxValue,
+        specifiedType: const FullType.nullable(double),
       );
     }
   }
@@ -135,6 +157,22 @@ class _$SurveyMeasurementTypeOptionResponseSerializer implements PrimitiveSerial
           ) as int?;
           if (valueDes == null) continue;
           result.sortOrder = valueDes;
+          break;
+        case r'minValue':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.minValue = valueDes;
+          break;
+        case r'maxValue':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.maxValue = valueDes;
           break;
         default:
           unhandled.add(key);

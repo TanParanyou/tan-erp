@@ -17,6 +17,8 @@ class _$SurveyReferenceDataResponse extends SurveyReferenceDataResponse {
   final BuiltList<SurveyDesignStyleOptionResponse>? designStyles;
   @override
   final BuiltList<SurveyMoodToneOptionResponse>? moodTones;
+  @override
+  final bool? narrativeAssistEnabled;
 
   factory _$SurveyReferenceDataResponse(
           [void Function(SurveyReferenceDataResponseBuilder)? updates]) =>
@@ -27,7 +29,8 @@ class _$SurveyReferenceDataResponse extends SurveyReferenceDataResponse {
       this.photoTags,
       this.measurementTypes,
       this.designStyles,
-      this.moodTones})
+      this.moodTones,
+      this.narrativeAssistEnabled})
       : super._();
   @override
   SurveyReferenceDataResponse rebuild(
@@ -46,7 +49,8 @@ class _$SurveyReferenceDataResponse extends SurveyReferenceDataResponse {
         photoTags == other.photoTags &&
         measurementTypes == other.measurementTypes &&
         designStyles == other.designStyles &&
-        moodTones == other.moodTones;
+        moodTones == other.moodTones &&
+        narrativeAssistEnabled == other.narrativeAssistEnabled;
   }
 
   @override
@@ -57,6 +61,7 @@ class _$SurveyReferenceDataResponse extends SurveyReferenceDataResponse {
     _$hash = $jc(_$hash, measurementTypes.hashCode);
     _$hash = $jc(_$hash, designStyles.hashCode);
     _$hash = $jc(_$hash, moodTones.hashCode);
+    _$hash = $jc(_$hash, narrativeAssistEnabled.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -68,7 +73,8 @@ class _$SurveyReferenceDataResponse extends SurveyReferenceDataResponse {
           ..add('photoTags', photoTags)
           ..add('measurementTypes', measurementTypes)
           ..add('designStyles', designStyles)
-          ..add('moodTones', moodTones))
+          ..add('moodTones', moodTones)
+          ..add('narrativeAssistEnabled', narrativeAssistEnabled))
         .toString();
   }
 }
@@ -112,6 +118,11 @@ class SurveyReferenceDataResponseBuilder
   set moodTones(ListBuilder<SurveyMoodToneOptionResponse>? moodTones) =>
       _$this._moodTones = moodTones;
 
+  bool? _narrativeAssistEnabled;
+  bool? get narrativeAssistEnabled => _$this._narrativeAssistEnabled;
+  set narrativeAssistEnabled(bool? narrativeAssistEnabled) =>
+      _$this._narrativeAssistEnabled = narrativeAssistEnabled;
+
   SurveyReferenceDataResponseBuilder() {
     SurveyReferenceDataResponse._defaults(this);
   }
@@ -124,6 +135,7 @@ class SurveyReferenceDataResponseBuilder
       _measurementTypes = $v.measurementTypes?.toBuilder();
       _designStyles = $v.designStyles?.toBuilder();
       _moodTones = $v.moodTones?.toBuilder();
+      _narrativeAssistEnabled = $v.narrativeAssistEnabled;
       _$v = null;
     }
     return this;
@@ -152,6 +164,7 @@ class SurveyReferenceDataResponseBuilder
             measurementTypes: _measurementTypes?.build(),
             designStyles: _designStyles?.build(),
             moodTones: _moodTones?.build(),
+            narrativeAssistEnabled: narrativeAssistEnabled,
           );
     } catch (_) {
       late String _$failedField;

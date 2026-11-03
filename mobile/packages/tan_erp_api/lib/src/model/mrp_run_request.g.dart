@@ -17,6 +17,8 @@ class _$MrpRunRequest extends MrpRunRequest {
   final bool? includeOpenWorkOrders;
   @override
   final BuiltList<MrpDemandRequest>? demands;
+  @override
+  final BuiltList<String>? projectIds;
 
   factory _$MrpRunRequest([void Function(MrpRunRequestBuilder)? updates]) =>
       (MrpRunRequestBuilder()..update(updates))._build();
@@ -26,7 +28,8 @@ class _$MrpRunRequest extends MrpRunRequest {
       this.purchaseLeadTimeDays,
       this.productionLeadTimeDays,
       this.includeOpenWorkOrders,
-      this.demands})
+      this.demands,
+      this.projectIds})
       : super._();
   @override
   MrpRunRequest rebuild(void Function(MrpRunRequestBuilder) updates) =>
@@ -43,7 +46,8 @@ class _$MrpRunRequest extends MrpRunRequest {
         purchaseLeadTimeDays == other.purchaseLeadTimeDays &&
         productionLeadTimeDays == other.productionLeadTimeDays &&
         includeOpenWorkOrders == other.includeOpenWorkOrders &&
-        demands == other.demands;
+        demands == other.demands &&
+        projectIds == other.projectIds;
   }
 
   @override
@@ -54,6 +58,7 @@ class _$MrpRunRequest extends MrpRunRequest {
     _$hash = $jc(_$hash, productionLeadTimeDays.hashCode);
     _$hash = $jc(_$hash, includeOpenWorkOrders.hashCode);
     _$hash = $jc(_$hash, demands.hashCode);
+    _$hash = $jc(_$hash, projectIds.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -65,7 +70,8 @@ class _$MrpRunRequest extends MrpRunRequest {
           ..add('purchaseLeadTimeDays', purchaseLeadTimeDays)
           ..add('productionLeadTimeDays', productionLeadTimeDays)
           ..add('includeOpenWorkOrders', includeOpenWorkOrders)
-          ..add('demands', demands))
+          ..add('demands', demands)
+          ..add('projectIds', projectIds))
         .toString();
   }
 }
@@ -99,6 +105,12 @@ class MrpRunRequestBuilder
   set demands(ListBuilder<MrpDemandRequest>? demands) =>
       _$this._demands = demands;
 
+  ListBuilder<String>? _projectIds;
+  ListBuilder<String> get projectIds =>
+      _$this._projectIds ??= ListBuilder<String>();
+  set projectIds(ListBuilder<String>? projectIds) =>
+      _$this._projectIds = projectIds;
+
   MrpRunRequestBuilder() {
     MrpRunRequest._defaults(this);
   }
@@ -111,6 +123,7 @@ class MrpRunRequestBuilder
       _productionLeadTimeDays = $v.productionLeadTimeDays;
       _includeOpenWorkOrders = $v.includeOpenWorkOrders;
       _demands = $v.demands?.toBuilder();
+      _projectIds = $v.projectIds?.toBuilder();
       _$v = null;
     }
     return this;
@@ -139,12 +152,15 @@ class MrpRunRequestBuilder
             productionLeadTimeDays: productionLeadTimeDays,
             includeOpenWorkOrders: includeOpenWorkOrders,
             demands: _demands?.build(),
+            projectIds: _projectIds?.build(),
           );
     } catch (_) {
       late String _$failedField;
       try {
         _$failedField = 'demands';
         _demands?.build();
+        _$failedField = 'projectIds';
+        _projectIds?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'MrpRunRequest', _$failedField, e.toString());

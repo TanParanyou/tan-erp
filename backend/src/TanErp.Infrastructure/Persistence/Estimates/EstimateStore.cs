@@ -264,7 +264,27 @@ public class EstimateStore : IEstimateStore
                         .ThenInclude(w => w.CostComponents.OrderBy(c => c.SortOrder))
             .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.Id == estimateId, cancellationToken);
 
-        return estimate is null ? null : MapToDetailProjection(estimate);
+        return estimate is null ? null : await WithLastReturnAsync(MapToDetailProjection(estimate), cancellationToken);
+    }
+
+    /// <summary>Attaches the latest reviewer return decision while the current revision is in the returned status.</summary>
+    private async Task<EstimateDetailProjection> WithLastReturnAsync(EstimateDetailProjection detail, CancellationToken cancellationToken)
+    {
+        var revision = detail.CurrentRevision;
+        if (revision is null || revision.Status != EstimateRevisionStatus.Returned)
+            return detail;
+
+        var lastReturn = await (from decision in _db.EstimateApprovalDecisions.AsNoTracking()
+            join request in _db.EstimateApprovalRequests.AsNoTracking() on decision.EstimateApprovalRequestId equals request.Id
+            join user in _db.Users.AsNoTracking() on decision.ReviewerUserId equals user.Id
+            where decision.OrganizationId == detail.OrganizationId && request.EstimateRevisionId == revision.Id &&
+                  decision.Decision == EstimateApprovalStepStatus.Returned
+            orderby decision.DecidedAtUtc descending
+            select new EstimateReturnProjection(
+                decision.ReasonCode ?? string.Empty, decision.Note ?? string.Empty, decision.DecidedAtUtc, user.Id, user.DisplayName))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return lastReturn is null ? detail : detail with { CurrentRevision = revision with { LastReturn = lastReturn } };
     }
 
     public async Task<EstimateDetailProjection?> GetByOpportunityIdAsync(
@@ -280,7 +300,7 @@ public class EstimateStore : IEstimateStore
                         .ThenInclude(w => w.CostComponents.OrderBy(c => c.SortOrder))
             .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.OpportunityId == opportunityId, cancellationToken);
 
-        return estimate is null ? null : MapToDetailProjection(estimate);
+        return estimate is null ? null : await WithLastReturnAsync(MapToDetailProjection(estimate), cancellationToken);
     }
 
     public async Task<IReadOnlyList<EstimateCalculationSnapshotProjection>> GetCalculationSnapshotsAsync(

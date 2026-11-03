@@ -28,6 +28,14 @@ class _$ItemResponse extends ItemResponse {
   @override
   final String? taxCategoryCode;
   @override
+  final double? weightKg;
+  @override
+  final double? lengthMm;
+  @override
+  final double? widthMm;
+  @override
+  final double? heightMm;
+  @override
   final String? availabilityMode;
   @override
   final ItemCapabilitiesResponse? capabilities;
@@ -82,6 +90,10 @@ class _$ItemResponse extends ItemResponse {
       this.name,
       this.description,
       this.taxCategoryCode,
+      this.weightKg,
+      this.lengthMm,
+      this.widthMm,
+      this.heightMm,
       this.availabilityMode,
       this.capabilities,
       this.attributes,
@@ -124,6 +136,10 @@ class _$ItemResponse extends ItemResponse {
         name == other.name &&
         description == other.description &&
         taxCategoryCode == other.taxCategoryCode &&
+        weightKg == other.weightKg &&
+        lengthMm == other.lengthMm &&
+        widthMm == other.widthMm &&
+        heightMm == other.heightMm &&
         availabilityMode == other.availabilityMode &&
         capabilities == other.capabilities &&
         attributes == other.attributes &&
@@ -159,6 +175,10 @@ class _$ItemResponse extends ItemResponse {
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, taxCategoryCode.hashCode);
+    _$hash = $jc(_$hash, weightKg.hashCode);
+    _$hash = $jc(_$hash, lengthMm.hashCode);
+    _$hash = $jc(_$hash, widthMm.hashCode);
+    _$hash = $jc(_$hash, heightMm.hashCode);
     _$hash = $jc(_$hash, availabilityMode.hashCode);
     _$hash = $jc(_$hash, capabilities.hashCode);
     _$hash = $jc(_$hash, attributes.hashCode);
@@ -196,6 +216,10 @@ class _$ItemResponse extends ItemResponse {
           ..add('name', name)
           ..add('description', description)
           ..add('taxCategoryCode', taxCategoryCode)
+          ..add('weightKg', weightKg)
+          ..add('lengthMm', lengthMm)
+          ..add('widthMm', widthMm)
+          ..add('heightMm', heightMm)
           ..add('availabilityMode', availabilityMode)
           ..add('capabilities', capabilities)
           ..add('attributes', attributes)
@@ -273,6 +297,22 @@ class ItemResponseBuilder
   String? get taxCategoryCode => _$this._taxCategoryCode;
   set taxCategoryCode(String? taxCategoryCode) =>
       _$this._taxCategoryCode = taxCategoryCode;
+
+  double? _weightKg;
+  double? get weightKg => _$this._weightKg;
+  set weightKg(double? weightKg) => _$this._weightKg = weightKg;
+
+  double? _lengthMm;
+  double? get lengthMm => _$this._lengthMm;
+  set lengthMm(double? lengthMm) => _$this._lengthMm = lengthMm;
+
+  double? _widthMm;
+  double? get widthMm => _$this._widthMm;
+  set widthMm(double? widthMm) => _$this._widthMm = widthMm;
+
+  double? _heightMm;
+  double? get heightMm => _$this._heightMm;
+  set heightMm(double? heightMm) => _$this._heightMm = heightMm;
 
   String? _availabilityMode;
   String? get availabilityMode => _$this._availabilityMode;
@@ -396,6 +436,10 @@ class ItemResponseBuilder
       _name = $v.name?.toBuilder();
       _description = $v.description?.toBuilder();
       _taxCategoryCode = $v.taxCategoryCode;
+      _weightKg = $v.weightKg;
+      _lengthMm = $v.lengthMm;
+      _widthMm = $v.widthMm;
+      _heightMm = $v.heightMm;
       _availabilityMode = $v.availabilityMode;
       _capabilities = $v.capabilities?.toBuilder();
       _attributes = $v.attributes?.toBuilder();
@@ -449,6 +493,10 @@ class ItemResponseBuilder
             name: _name?.build(),
             description: _description?.build(),
             taxCategoryCode: taxCategoryCode,
+            weightKg: weightKg,
+            lengthMm: lengthMm,
+            widthMm: widthMm,
+            heightMm: heightMm,
             availabilityMode: availabilityMode,
             capabilities: _capabilities?.build(),
             attributes: _attributes?.build(),

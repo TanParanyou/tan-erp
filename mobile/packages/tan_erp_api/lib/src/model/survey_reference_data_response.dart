@@ -22,6 +22,7 @@ part 'survey_reference_data_response.g.dart';
 /// * [measurementTypes] 
 /// * [designStyles] 
 /// * [moodTones] 
+/// * [narrativeAssistEnabled] 
 @BuiltValue()
 abstract class SurveyReferenceDataResponse implements Built<SurveyReferenceDataResponse, SurveyReferenceDataResponseBuilder> {
   @BuiltValueField(wireName: r'categories')
@@ -38,6 +39,9 @@ abstract class SurveyReferenceDataResponse implements Built<SurveyReferenceDataR
 
   @BuiltValueField(wireName: r'moodTones')
   BuiltList<SurveyMoodToneOptionResponse>? get moodTones;
+
+  @BuiltValueField(wireName: r'narrativeAssistEnabled')
+  bool? get narrativeAssistEnabled;
 
   SurveyReferenceDataResponse._();
 
@@ -95,6 +99,13 @@ class _$SurveyReferenceDataResponseSerializer implements PrimitiveSerializer<Sur
       yield serializers.serialize(
         object.moodTones,
         specifiedType: const FullType.nullable(BuiltList, [FullType(SurveyMoodToneOptionResponse)]),
+      );
+    }
+    if (object.narrativeAssistEnabled != null) {
+      yield r'narrativeAssistEnabled';
+      yield serializers.serialize(
+        object.narrativeAssistEnabled,
+        specifiedType: const FullType(bool),
       );
     }
   }
@@ -159,6 +170,14 @@ class _$SurveyReferenceDataResponseSerializer implements PrimitiveSerializer<Sur
           ) as BuiltList<SurveyMoodToneOptionResponse>?;
           if (valueDes == null) continue;
           result.moodTones.replace(valueDes);
+          break;
+        case r'narrativeAssistEnabled':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.narrativeAssistEnabled = valueDes;
           break;
         default:
           unhandled.add(key);

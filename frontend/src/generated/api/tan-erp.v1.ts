@@ -9243,6 +9243,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/estimates/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EstimateHistoryResponse"];
+                        "application/json": components["schemas"]["EstimateHistoryResponse"];
+                        "text/json": components["schemas"]["EstimateHistoryResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/estimates/review-queue": {
         parameters: {
             query?: never;
@@ -31755,6 +31827,11 @@ export interface components {
         EnableTwoFactorRequest: {
             code?: string | null;
         };
+        EstimateActorResponse: {
+            /** Format: uuid */
+            id: string;
+            displayName: string;
+        };
         EstimateCalculationSnapshotResponse: {
             /** Format: uuid */
             id?: string;
@@ -31879,12 +31956,34 @@ export interface components {
             updatedAtUtc?: string;
             currentRevision?: components["schemas"]["EstimateRevisionResponse"];
         };
+        EstimateHistoryEventResponse: {
+            /** Format: date-time */
+            occurredAtUtc: string;
+            action: string;
+            actor: components["schemas"]["EstimateActorResponse"];
+        };
+        EstimateHistoryResponse: {
+            revisions: components["schemas"]["EstimateRevisionSummaryResponse"][];
+            events: components["schemas"]["EstimateHistoryEventResponse"][];
+        };
         EstimateReadinessReasonResponse: {
             code?: string | null;
             targetType?: string | null;
             /** Format: uuid */
             targetId?: string | null;
             targetField?: string | null;
+        };
+        EstimateReturnResponse: {
+            reasonCode: string;
+            note: string;
+            /** Format: date-time */
+            returnedAtUtc: string;
+            returnedBy: components["schemas"]["EstimateReturnReviewerResponse"];
+        };
+        EstimateReturnReviewerResponse: {
+            /** Format: uuid */
+            id: string;
+            displayName: string;
         };
         EstimateReviewApprovalThresholdsResponse: {
             /** Format: double */
@@ -32100,6 +32199,27 @@ export interface components {
             sections?: components["schemas"]["EstimateSectionResponse"][] | null;
             readiness?: string | null;
             readinessReasons?: components["schemas"]["EstimateReadinessReasonResponse"][] | null;
+            lastReturn?: components["schemas"]["EstimateReturnResponse"];
+        };
+        EstimateRevisionSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            revisionNo: number;
+            status: string;
+            currency: string;
+            /** Format: double */
+            netCost: number;
+            /** Format: double */
+            netBeforeTax: number;
+            /** Format: double */
+            grandTotal: number;
+            /** Format: double */
+            marginRate: number;
+            /** Format: date-time */
+            createdAtUtc: string;
+            /** Format: date-time */
+            updatedAtUtc: string;
         };
         EstimateSectionResponse: {
             /** Format: uuid */

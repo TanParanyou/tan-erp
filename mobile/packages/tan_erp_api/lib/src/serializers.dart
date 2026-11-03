@@ -214,13 +214,18 @@ import 'package:tan_erp_api/src/model/effective_add_on_response.dart';
 import 'package:tan_erp_api/src/model/effective_option_response.dart';
 import 'package:tan_erp_api/src/model/effective_template_response.dart';
 import 'package:tan_erp_api/src/model/enable_two_factor_request.dart';
+import 'package:tan_erp_api/src/model/estimate_actor_response.dart';
 import 'package:tan_erp_api/src/model/estimate_calculation_snapshot_response.dart';
 import 'package:tan_erp_api/src/model/estimate_catalog_item_response.dart';
 import 'package:tan_erp_api/src/model/estimate_catalog_response.dart';
 import 'package:tan_erp_api/src/model/estimate_conversion_snapshot_response.dart';
 import 'package:tan_erp_api/src/model/estimate_cost_component_response.dart';
 import 'package:tan_erp_api/src/model/estimate_detail_response.dart';
+import 'package:tan_erp_api/src/model/estimate_history_event_response.dart';
+import 'package:tan_erp_api/src/model/estimate_history_response.dart';
 import 'package:tan_erp_api/src/model/estimate_readiness_reason_response.dart';
+import 'package:tan_erp_api/src/model/estimate_return_response.dart';
+import 'package:tan_erp_api/src/model/estimate_return_reviewer_response.dart';
 import 'package:tan_erp_api/src/model/estimate_review_approval_thresholds_response.dart';
 import 'package:tan_erp_api/src/model/estimate_review_approval_trigger_response.dart';
 import 'package:tan_erp_api/src/model/estimate_review_cost_evidence_response.dart';
@@ -236,6 +241,7 @@ import 'package:tan_erp_api/src/model/estimate_review_queue_reviewer_response.da
 import 'package:tan_erp_api/src/model/estimate_review_readiness_reason_response.dart';
 import 'package:tan_erp_api/src/model/estimate_review_revision_diff_response.dart';
 import 'package:tan_erp_api/src/model/estimate_revision_response.dart';
+import 'package:tan_erp_api/src/model/estimate_revision_summary_response.dart';
 import 'package:tan_erp_api/src/model/estimate_section_response.dart';
 import 'package:tan_erp_api/src/model/estimate_unit_option_response.dart';
 import 'package:tan_erp_api/src/model/estimate_unit_options_response.dart';
@@ -354,6 +360,8 @@ import 'package:tan_erp_api/src/model/pipeline_report_response.dart';
 import 'package:tan_erp_api/src/model/pipeline_stage_metrics_response.dart';
 import 'package:tan_erp_api/src/model/pipeline_summary_metrics_response.dart';
 import 'package:tan_erp_api/src/model/pipeline_summary_metrics_response_report_section_response.dart';
+import 'package:tan_erp_api/src/model/polish_survey_narrative_request.dart';
+import 'package:tan_erp_api/src/model/polish_survey_narrative_response.dart';
 import 'package:tan_erp_api/src/model/preview_document_sequence_request.dart';
 import 'package:tan_erp_api/src/model/preview_document_sequence_response.dart';
 import 'package:tan_erp_api/src/model/preview_item_import_request.dart';
@@ -541,6 +549,9 @@ import 'package:tan_erp_api/src/model/supplier_invoice_list_response.dart';
 import 'package:tan_erp_api/src/model/supplier_invoice_order_ref_response.dart';
 import 'package:tan_erp_api/src/model/supplier_invoice_request.dart';
 import 'package:tan_erp_api/src/model/supplier_invoice_response.dart';
+import 'package:tan_erp_api/src/model/supplier_item_price_list_response.dart';
+import 'package:tan_erp_api/src/model/supplier_item_price_request.dart';
+import 'package:tan_erp_api/src/model/supplier_item_price_response.dart';
 import 'package:tan_erp_api/src/model/supplier_list_response.dart';
 import 'package:tan_erp_api/src/model/supplier_request.dart';
 import 'package:tan_erp_api/src/model/supplier_response.dart';
@@ -858,13 +869,18 @@ part 'serializers.g.dart';
   EffectiveOptionResponse,
   EffectiveTemplateResponse,
   EnableTwoFactorRequest,
+  EstimateActorResponse,
   EstimateCalculationSnapshotResponse,
   EstimateCatalogItemResponse,
   EstimateCatalogResponse,
   EstimateConversionSnapshotResponse,
   EstimateCostComponentResponse,
   EstimateDetailResponse,
+  EstimateHistoryEventResponse,
+  EstimateHistoryResponse,
   EstimateReadinessReasonResponse,
+  EstimateReturnResponse,
+  EstimateReturnReviewerResponse,
   EstimateReviewApprovalThresholdsResponse,
   EstimateReviewApprovalTriggerResponse,
   EstimateReviewCostEvidenceResponse,
@@ -880,6 +896,7 @@ part 'serializers.g.dart';
   EstimateReviewReadinessReasonResponse,
   EstimateReviewRevisionDiffResponse,
   EstimateRevisionResponse,
+  EstimateRevisionSummaryResponse,
   EstimateSectionResponse,
   EstimateUnitOptionResponse,
   EstimateUnitOptionsResponse,
@@ -998,6 +1015,8 @@ part 'serializers.g.dart';
   PipelineStageMetricsResponse,
   PipelineSummaryMetricsResponse,
   PipelineSummaryMetricsResponseReportSectionResponse,
+  PolishSurveyNarrativeRequest,
+  PolishSurveyNarrativeResponse,
   PreviewDocumentSequenceRequest,
   PreviewDocumentSequenceResponse,
   PreviewItemImportRequest,
@@ -1185,6 +1204,9 @@ part 'serializers.g.dart';
   SupplierInvoiceOrderRefResponse,
   SupplierInvoiceRequest,
   SupplierInvoiceResponse,
+  SupplierItemPriceListResponse,
+  SupplierItemPriceRequest,
+  SupplierItemPriceResponse,
   SupplierListResponse,
   SupplierRequest,
   SupplierResponse,
@@ -1685,6 +1707,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<StockSerialResponse>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(EstimateHistoryEventResponse)]),
+        () => ListBuilder<EstimateHistoryEventResponse>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(WorkOrderMaterialLineRequest)]),
         () => ListBuilder<WorkOrderMaterialLineRequest>(),
       )
@@ -1875,6 +1901,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(RoleGrantResponse)]),
         () => ListBuilder<RoleGrantResponse>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(EstimateRevisionSummaryResponse)]),
+        () => ListBuilder<EstimateRevisionSummaryResponse>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ProjectListItemResponse)]),
@@ -2111,6 +2141,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ProjectBudgetReportRowResponse)]),
         () => ListBuilder<ProjectBudgetReportRowResponse>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(SupplierItemPriceResponse)]),
+        () => ListBuilder<SupplierItemPriceResponse>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(BranchResponse)]),

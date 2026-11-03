@@ -14,6 +14,8 @@ import 'package:tan_erp_api/src/model/assigned_survey_sync_list_response.dart';
 import 'package:tan_erp_api/src/model/clone_survey_revision_request.dart';
 import 'package:tan_erp_api/src/model/create_site_survey_request.dart';
 import 'package:tan_erp_api/src/model/mark_survey_ready_request.dart';
+import 'package:tan_erp_api/src/model/polish_survey_narrative_request.dart';
+import 'package:tan_erp_api/src/model/polish_survey_narrative_response.dart';
 import 'package:tan_erp_api/src/model/site_survey_response.dart';
 import 'package:tan_erp_api/src/model/site_survey_revision_response.dart';
 import 'package:tan_erp_api/src/model/survey_reference_data_response.dart';
@@ -716,6 +718,107 @@ class SiteSurveysApi {
     }
 
     return Response<AssignedSurveySyncListResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// apiV1SurveysNarrativePolishPost
+  /// 
+  ///
+  /// Parameters:
+  /// * [polishSurveyNarrativeRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [PolishSurveyNarrativeResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<PolishSurveyNarrativeResponse>> apiV1SurveysNarrativePolishPost({ 
+    PolishSurveyNarrativeRequest? polishSurveyNarrativeRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/api/v1/surveys/narrative/polish';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'Bearer',
+            'name': 'Bearer',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      const _type = FullType(PolishSurveyNarrativeRequest);
+      _bodyData = polishSurveyNarrativeRequest == null ? null : _serializers.serialize(polishSurveyNarrativeRequest, specifiedType: _type);
+
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    PolishSurveyNarrativeResponse? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(PolishSurveyNarrativeResponse),
+      ) as PolishSurveyNarrativeResponse;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<PolishSurveyNarrativeResponse>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
