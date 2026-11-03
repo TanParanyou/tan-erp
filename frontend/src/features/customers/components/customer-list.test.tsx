@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import thMessages from "@/messages/th.json";
+import { ToastProvider } from "@/hooks/useToast";
 import { CustomerList } from "./customer-list";
 
 vi.mock("next/navigation", () => ({
@@ -17,7 +18,10 @@ vi.mock("@/lib/membership/selected-membership-context", () => ({
     selectedMembership: {
       id: "membership-a",
       organization: { id: "org-a", name: "Org A" },
-      permissions: [{ key: "customers.create", scope: "organization", scopeId: "org-a" }],
+      permissions: [
+        { key: "customers.create", scope: "organization", scopeId: "org-a" },
+        { key: "customers.deactivate", scope: "organization", scopeId: "org-a" },
+      ],
     },
   }),
 }));
@@ -95,7 +99,9 @@ describe("CustomerList canonical labels", () => {
     render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="th" messages={thMessages}>
-          <CustomerList />
+          <ToastProvider>
+            <CustomerList />
+          </ToastProvider>
         </NextIntlClientProvider>
       </QueryClientProvider>,
     );
@@ -108,12 +114,29 @@ describe("CustomerList canonical labels", () => {
     render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="th" messages={thMessages}>
-          <CustomerList />
+          <ToastProvider>
+            <CustomerList />
+          </ToastProvider>
         </NextIntlClientProvider>
       </QueryClientProvider>,
     );
 
     expect(screen.getAllByText("บุคคลธรรมดา").length).toBeGreaterThan(0);
     expect(screen.getAllByText("ใช้งานอยู่").length).toBeGreaterThan(0);
+  });
+
+  it("renders deactivate action button for active customer when user has permission", () => {
+    render(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <ToastProvider>
+            <CustomerList />
+          </ToastProvider>
+        </NextIntlClientProvider>
+      </QueryClientProvider>,
+    );
+
+    const deactivateButtons = screen.getAllByRole("button", { name: "ปิดใช้งานลูกค้า" });
+    expect(deactivateButtons.length).toBe(1);
   });
 });

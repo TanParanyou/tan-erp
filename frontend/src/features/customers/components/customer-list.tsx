@@ -1,19 +1,17 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { useCustomerList } from "../api/customer-queries";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCustomerList, customerQueryRootKey } from "../api/customer-queries";
 import { getCustomerQueryErrorMessage } from "../customer-errors";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { BulkActionToolbar, BulkActionButton } from "@/components/ui/BulkActionToolbar";
+import { BulkActionToolbar } from "@/components/ui/BulkActionToolbar";
 import { ListToolbar } from "@/components/ui/ListToolbar";
 import { ActiveFilterChips, type ActiveFilterChipItem } from "@/components/ui/ActiveFilterChips";
 import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
@@ -22,15 +20,14 @@ import { TableEntityCell } from "@/components/ui/TableEntityCell";
 import { ListSearchInput } from "@/components/ui/ListSearchInput";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
+import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
 import { CustomerQuickViewDrawer } from "./customer-quick-view-drawer";
 import {
-  IconSearch,
   IconPlus,
-  IconAlertCircle,
   IconEye,
   IconEdit,
-  IconDownload,
-  IconClose,
+  IconLock,
 } from "@/components/common/Icons";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -42,6 +39,8 @@ import type { ExportColumn } from "@/lib/export/export-types";
 import { ExportDropdown } from "@/components/ui/ExportDropdown";
 import { apiClient, type CustomerListItemResponse } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
+import { useToast } from "@/hooks/useToast";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 
 interface CustomerFilters extends ListFilterRecord {
   status?: string;
@@ -54,6 +53,9 @@ export function CustomerList() {
   const locale = useLocale();
   const router = useRouter();
   const { selectedMembership } = useSelectedMembership();
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Full URL-synced List State Hook
   const listState = useListState<CustomerFilters>({
@@ -69,6 +71,11 @@ export function CustomerList() {
   // Quick View Drawer State
   const [quickViewCustomerId, setQuickViewCustomerId] = useState<string | null>(null);
 
+  // Deactivate Customer Modal State
+  const [deactivatingCustomer, setDeactivatingCustomer] = useState<CustomerListItemResponse | null>(null);
+  const [deactivateReason, setDeactivateReason] = useState("");
+  const [isDeactivating, setIsDeactivating] = useState(false);
+
   // Row Selection Hook
   const {
     selectedIds,
@@ -81,6 +88,56 @@ export function CustomerList() {
   const canCreate =
     can(selectedMembership, "customers.create") &&
     can(selectedMembership, "customer-contacts.manage");
+
+  const canDeactivate = can(selectedMembership, "customers.deactivate");
+
+  const handleDeactivate = async () => {
+    if (!deactivatingCustomer?.id || !deactivateReason.trim()) return;
+    const token = await getAuthToken();
+    const membershipId = selectedMembership?.id;
+    if (!token || !membershipId) {
+      toast.error(!token ? t("errors.authenticationRequired") : t("errors.membershipRequired"));
+      return;
+    }
+
+    setIsDeactivating(true);
+    try {
+      // Fetch fresh customer details to get the exact rowVersion for If-Match
+      const customerDetail = await apiClient.getCustomer(deactivatingCustomer.id, {
+        token,
+        membershipId,
+        locale: locale === "en" ? "en" : "th",
+      });
+
+      if (!customerDetail.rowVersion) {
+        throw new Error(t("errors.saveUnexpected"));
+      }
+
+      await apiClient.deactivateCustomer(
+        deactivatingCustomer.id,
+        { reason: deactivateReason.trim() },
+        {
+          token,
+          membershipId,
+          ifMatch: customerDetail.rowVersion,
+          idempotencyKey: crypto.randomUUID(),
+          locale: locale === "en" ? "en" : "th",
+        }
+      );
+
+      setDeactivatingCustomer(null);
+      setDeactivateReason("");
+      toast.success(t("deactivateSuccess"));
+      await queryClient.invalidateQueries({
+        queryKey: customerQueryRootKey(membershipId, locale === "en" ? "en" : "th"),
+      });
+      await refetch();
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, t("errors.saveUnexpected")));
+    } finally {
+      setIsDeactivating(false);
+    }
+  };
 
   const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
     const key = getCustomerTypeLabelKey(value);
@@ -293,26 +350,40 @@ export function CustomerList() {
       {
         id: "actions",
         header: tCommon("fields.actions"),
-        className: "w-[100px]",
+        className: "w-[120px]",
         sticky: "right",
         isAction: true,
-        cell: (_value: unknown, customer: CustomerListItemResponse) => (
-          <TableActionGroup>
-            <TableAction
-              icon={<IconEye size={15} />}
-              label={t("quickView")}
-              onClick={() => setQuickViewCustomerId(customer.id ?? null)}
-            />
-            <TableAction
-              icon={<IconEdit size={15} />}
-              label={tCommon("actions.edit")}
-              href={`/${locale}/customers/${customer.id}`}
-            />
-          </TableActionGroup>
-        ),
+        cell: (_value: unknown, customer: CustomerListItemResponse) => {
+          const isCustomerActive = customer.status === "active";
+          return (
+            <TableActionGroup>
+              <TableAction
+                icon={<IconEye size={15} />}
+                label={t("quickView")}
+                onClick={() => setQuickViewCustomerId(customer.id ?? null)}
+              />
+              <TableAction
+                icon={<IconEdit size={15} />}
+                label={tCommon("actions.edit")}
+                href={`/${locale}/customers/${customer.id}`}
+              />
+              {canDeactivate && isCustomerActive && (
+                <TableAction
+                  icon={<IconLock size={15} />}
+                  label={t("deactivateAction")}
+                  variant="danger"
+                  onClick={() => {
+                    setDeactivatingCustomer(customer);
+                    setDeactivateReason("");
+                  }}
+                />
+              )}
+            </TableActionGroup>
+          );
+        },
       },
     ],
-    [locale, t, tCommon]
+    [canDeactivate, locale, t, tCommon]
   );
 
   const isZeroCustomers =
@@ -470,6 +541,51 @@ export function CustomerList() {
         isOpen={Boolean(quickViewCustomerId)}
         onClose={() => setQuickViewCustomerId(null)}
       />
+
+      {/* Deactivate Customer Modal */}
+      <Modal
+        isOpen={Boolean(deactivatingCustomer)}
+        onClose={() => {
+          if (!isDeactivating) {
+            setDeactivatingCustomer(null);
+            setDeactivateReason("");
+          }
+        }}
+        title={t("deactivateModalTitle")}
+        description={t("deactivateModalDesc")}
+        closeDisabled={isDeactivating}
+      >
+        <div className="flex flex-col gap-5 p-5">
+          <Input
+            label={t("deactivateReason")}
+            required
+            maxLength={500}
+            placeholder={t("deactivateReasonPlaceholder")}
+            value={deactivateReason}
+            onChange={(event) => setDeactivateReason(event.target.value)}
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              disabled={isDeactivating}
+              onClick={() => {
+                setDeactivatingCustomer(null);
+                setDeactivateReason("");
+              }}
+            >
+              {tCommon("actions.cancel")}
+            </Button>
+            <Button
+              variant="danger"
+              isLoading={isDeactivating}
+              disabled={isDeactivating || !deactivateReason.trim()}
+              onClick={() => void handleDeactivate()}
+            >
+              {tCommon("actions.confirm")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
