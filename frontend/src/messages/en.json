@@ -6232,7 +6232,41 @@
     "roomName": "Room / Survey Area",
     "roomNameRequired": "Survey area / room name is required",
     "opportunityRequired": "Please select a sales opportunity before saving",
+    "opportunityIncomplete": "This opportunity has no primary site or owner yet. Please add them before creating a survey.",
     "cloneReason": "Room added from the field survey page",
+    "narrative": {
+      "polishButton": "Polish with AI",
+      "polishing": "Polishing…",
+      "undo": "Undo",
+      "privacyNote": "The text, with contact details removed, is sent to an external AI service. Always review the result before saving.",
+      "failed": "Could not polish the text. Please try again later."
+    },
+    "voice": {
+      "start": "Speak measurements",
+      "listening": "Listening… tap to stop",
+      "privacyNote": "Audio is processed by your browser's service (e.g. Google or Apple), not by the ERP server.",
+      "confirmTitle": "Review before applying",
+      "apply": "Use these values",
+      "cancel": "Cancel",
+      "titleLabel": "Name: {value}",
+      "width": "Width {value} mm",
+      "depth": "Depth {value} mm",
+      "height": "Height {value} mm",
+      "errors": {
+        "micDenied": "Microphone access was denied. Please allow it in your browser.",
+        "noSpeech": "No speech was detected. Please try again.",
+        "languageUnsupported": "This browser does not support speech recognition for the selected language.",
+        "network": "An internet connection is required for speech recognition.",
+        "noMatch": "No dimension with an explicit unit was found. Try saying \"width 2.4 meters height 2.6 meters\".",
+        "generic": "Speech recognition failed. Please try again."
+      }
+    },
+    "draft": {
+      "foundTitle": "Unsaved draft found",
+      "foundDesc": "Autosaved in this browser on {date} (removed when you sign out). Restore it to continue, or discard it to start over.",
+      "restore": "Restore draft",
+      "discard": "Discard draft"
+    },
     "summary": {
       "draftButton": "Draft summary from items",
       "header": "Items in this room ({count})",
@@ -6256,7 +6290,12 @@
         "widthMissing": "Width is not set",
         "depthMissing": "Depth is not set",
         "heightMissing": "Height is not set",
-        "noPhoto": "No photo attached"
+        "noPhoto": "No photo attached",
+        "widthOutOfRange": "Width is outside the plausible range ({min}–{max} mm). Please check the unit.",
+        "depthOutOfRange": "Depth is outside the plausible range ({min}–{max} mm). Please check the unit.",
+        "heightOutOfRange": "Height is outside the plausible range ({min}–{max} mm). Please check the unit.",
+        "areaOutOfRange": "Net area is outside the plausible range ({min}–{max} sqm). Please check the unit.",
+        "customOutOfRange": "A custom measurement point is outside the plausible range ({min}–{max} mm). Please check the unit."
       }
     },
     "jumpToItem": "Jump to:",

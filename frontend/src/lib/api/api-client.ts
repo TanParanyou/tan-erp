@@ -48,6 +48,8 @@ export type OpportunityWorkImageResponse = components["schemas"]["OpportunityWor
 export type OpportunityMetricsResponse = components["schemas"]["OpportunityMetricsResponse"];
 
 export type SiteSurveyResponse = components["schemas"]["SiteSurveyResponse"];
+export type PolishSurveyNarrativeRequest = components["schemas"]["PolishSurveyNarrativeRequest"];
+export type PolishSurveyNarrativeResponse = components["schemas"]["PolishSurveyNarrativeResponse"];
 export type SiteSurveyRevisionResponse = components["schemas"]["SiteSurveyRevisionResponse"];
 export type SiteSurveyAreaResponse = components["schemas"]["SiteSurveyAreaResponse"];
 export type SiteSurveyMeasurementResponse = components["schemas"]["SiteSurveyMeasurementResponse"];
@@ -1255,6 +1257,18 @@ export class ApiClient {
       `/api/v1/survey-template-versions/${encodeURIComponent(code)}/retire`,
       "POST",
       options
+    );
+  }
+
+  async polishSurveyNarrative(
+    payload: PolishSurveyNarrativeRequest,
+    options: RequestOptions
+  ): Promise<PolishSurveyNarrativeResponse> {
+    return this.request<PolishSurveyNarrativeResponse>(
+      "/api/v1/surveys/narrative/polish",
+      "POST",
+      options,
+      payload
     );
   }
 
