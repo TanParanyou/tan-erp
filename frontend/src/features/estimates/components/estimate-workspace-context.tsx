@@ -18,6 +18,8 @@ export interface EstimateWorkspaceContextValue {
   detailTab: WorkspaceDetailTab;
   setDetailTab: (tab: WorkspaceDetailTab) => void;
   moveWorkItem: (workKey: string, targetSectionKey: string) => void;
+  /** View-only session: the revision is not editable (submitted, approved, quoted...) or the user cannot edit. */
+  readOnly: boolean;
 }
 
 export const EstimateWorkspaceContext = createContext<EstimateWorkspaceContextValue | null>(null);

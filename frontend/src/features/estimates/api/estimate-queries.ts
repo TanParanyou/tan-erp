@@ -3,6 +3,7 @@ import {
   apiClient,
   type EstimateDetailResponse,
   type EstimateHistoryResponse,
+  type EstimateRevisionLinesResponse,
   type EstimateRevisionResponse,
   type CreateEstimateDraftRequest,
   type UpdateEstimateDraftRequest,
@@ -77,6 +78,31 @@ export function useEstimateHistory(estimateId: string | null | undefined, enable
       if (!estimateId) throw new Error("Estimate id is required");
       return apiClient.getEstimateHistory(estimateId, { token, membershipId, locale: normalizedLocale, signal });
     },
+    staleTime: 0,
+  });
+}
+
+export function useEstimateRevisionLines(
+  estimateId: string | null | undefined,
+  revisionId: string | null | undefined,
+  enabled: boolean
+): UseQueryResult<EstimateRevisionLinesResponse, Error> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery({
+    queryKey: ["business", membershipId, normalizedLocale, "estimates", "history", estimateId, "lines", revisionId] as const,
+    enabled: enabled && Boolean(membershipId && estimateId && revisionId),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      if (!estimateId || !revisionId) throw new Error("Estimate and revision ids are required");
+      return apiClient.getEstimateRevisionLines(estimateId, revisionId, { token, membershipId, locale: normalizedLocale, signal });
+    },
+    // A revision's lines never change once it is superseded, but a draft revision still can.
     staleTime: 0,
   });
 }

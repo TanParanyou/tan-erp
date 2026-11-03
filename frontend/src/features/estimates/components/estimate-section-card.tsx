@@ -44,10 +44,14 @@ interface EstimateSectionCardProps {
   isLastSection?: boolean;
 }
 
+const BOQ_ROW_PAGE_SIZE = 100;
+
 export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpanded = true, branchId, onRemoveSection, onMoveSection, isFirstSection = false, isLastSection = false }: EstimateSectionCardProps) {
   const t = useTranslations("estimates");
   const { confirm, ConfirmDialog } = useConfirm();
   const workspace = useEstimateWorkspace();
+  const readOnly = workspace?.readOnly ?? false;
+  const [rowLimit, setRowLimit] = useState(BOQ_ROW_PAGE_SIZE);
   const [isExpanded, setIsExpanded] = useState(isInitiallyExpanded);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
@@ -136,6 +140,10 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
   if (!currentSection) return null;
   const visible = currentSection.workItems.map((work, index) => ({ work, index })).filter(({ work }) => workspaceWorkMatches(currentSection, work, workspace?.searchQuery ?? "", workspace?.filterMode ?? "all"));
   // Bulk actions only touch rows the user can currently see, never rows hidden by the filter.
+  // Large BOQs render in pages of rows; the selected row is always included so it never disappears behind "show more".
+  const selectedVisibleIndex = visible.findIndex(({ work }) => work.uiKey === workspace?.selectedKey);
+  const renderedRows = visible.slice(0, Math.max(rowLimit, selectedVisibleIndex + 1));
+  const hiddenRowCount = visible.length - renderedRows.length;
   const visibleKeys = visible.flatMap(({ work }) => (work.uiKey ? [work.uiKey] : []));
   const selectedKeys = checkedKeys.filter((key) => visibleKeys.includes(key));
   const allChecked = visibleKeys.length > 0 && selectedKeys.length === visibleKeys.length;
@@ -191,7 +199,7 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
             icon={<IconChevronDown size={18} className={isExpanded ? "" : "-rotate-90"} />}
             className="shrink-0 h-11 w-11"
           />
-          <div className="w-28 shrink-0">
+          <div inert={readOnly} className="w-28 shrink-0">
             <Controller
               control={control}
               name={`sections.${sectionIndex}.code`}
@@ -208,7 +216,7 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
               )}
             />
           </div>
-          <div className="w-full min-w-0 sm:w-auto sm:flex-1 [&>.erp-form-group]:mb-0">
+          <div inert={readOnly} className="w-full min-w-0 sm:w-auto sm:flex-1 [&>.erp-form-group]:mb-0">
             <MultiLangInput
               id={`section-name-${sectionIndex}`}
               label={t("workspace.sectionName")}
@@ -224,10 +232,11 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="mr-auto break-words text-xs font-bold font-mono text-erp-navy" ><span className="mr-1 font-sans font-normal text-erp-text-muted">{t("sectionSubtotal")}</span>{formatFinancialNumber(sectionSummary.totalSellingPrice)} {currency} <span className="text-xs">({formatPercentRate(sectionSummary.marginRate, 1)})</span></span>
-          {onMoveSection && <>
+          {!readOnly && onMoveSection && <>
             <Tooltip content={t("moveUp")} position="bottom"><Button size="icon" variant="ghost" disabled={isFirstSection} onClick={() => onMoveSection(sectionIndex, -1)} aria-label={t("moveUp")} icon={<IconArrowUp size={16} />} /></Tooltip>
             <Tooltip content={t("moveDown")} position="bottom"><Button size="icon" variant="ghost" disabled={isLastSection} onClick={() => onMoveSection(sectionIndex, 1)} aria-label={t("moveDown")} icon={<IconArrowDown size={16} />} /></Tooltip>
           </>}
+          {!readOnly && <>
           <Tooltip content={t("importExcel")} position="bottom"><Button size="icon" variant="outline" onClick={() => setIsImportOpen(true)} aria-label={t("importExcel")} icon={<IconUpload size={16} />} /></Tooltip>
           <Tooltip content={t("quickTemplatesDesc")} position="bottom"><Button size="icon" variant="outline" onClick={() => setIsTemplateModalOpen(true)} aria-label={t("insertTemplate")} icon={<IconFileText size={16} />} /></Tooltip>
           <Tooltip content={t("addWorkItem")} position="bottom"><Button size="icon" variant="outline" onClick={handleAddWorkItem} aria-label={t("addWorkItem")} icon={<IconPlus size={16} />} /></Tooltip>
@@ -239,11 +248,12 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
           )}
           {selectedKeys.length > 0 && <Button size="sm" variant="danger" onClick={handleRequestRemoveSelected} icon={<IconTrash size={16} />}>{t("removeSelectedWorkItems", { count: selectedKeys.length })}</Button>}
           <Tooltip content={t("removeSection")} position="bottom"><Button variant="ghost" size="icon" onClick={handleRequestRemoveSection} aria-label={t("removeSection")} icon={<IconTrash size={16} />} /></Tooltip>
+          </>}
         </div>
       </div>
       <div className={isExpanded ? "overflow-auto" : "hidden"}>
         {fields.length === 0 ? (
-          <div className="p-5 text-center"><Button size="sm" variant="primary" onClick={handleAddWorkItem} icon={<IconPlus size={16} />}>{t("addWorkItem")}</Button></div>
+          <div className="p-5 text-center">{!readOnly && <Button size="sm" variant="primary" onClick={handleAddWorkItem} icon={<IconPlus size={16} />}>{t("addWorkItem")}</Button>}</div>
         ) : (
           <Table wrapperClassName="min-w-[620px]" className="text-xs">
             <TableCaption className="sr-only">
@@ -268,7 +278,7 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
               </TableRow>
             </TableHeader>
             <TableBody>
-              {visible.map(({ work, index }) => {
+              {renderedRows.map(({ work }) => {
                 const summary = calculateWorkItemSummary(work);
                 const selected = workspace?.selectedKey === work.uiKey;
                 return (
@@ -327,6 +337,13 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
                   </TableRow>
                 );
               })}
+              {hiddenRowCount > 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="px-2 py-2 text-center">
+                    <Button size="sm" variant="outline" onClick={() => setRowLimit((limit) => limit + BOQ_ROW_PAGE_SIZE)}>{t("showMoreRows", { count: hiddenRowCount })}</Button>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         )}

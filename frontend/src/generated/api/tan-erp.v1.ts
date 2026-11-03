@@ -9315,6 +9315,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/estimates/{id}/history/revisions/{revisionId}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    revisionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EstimateRevisionLinesResponse"];
+                        "application/json": components["schemas"]["EstimateRevisionLinesResponse"];
+                        "text/json": components["schemas"]["EstimateRevisionLinesResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/estimates/review-queue": {
         parameters: {
             query?: never;
@@ -32152,6 +32225,21 @@ export interface components {
             removedWorkItems?: number;
             /** Format: int32 */
             changedWorkItems?: number;
+        };
+        EstimateRevisionLineResponse: {
+            sectionCode: string;
+            workItemCode: string;
+            descriptionTh: string;
+            /** Format: double */
+            quantity: number;
+            unitCode: string;
+            /** Format: double */
+            totalCost: number;
+            /** Format: double */
+            totalSellingPrice: number;
+        };
+        EstimateRevisionLinesResponse: {
+            lines: components["schemas"]["EstimateRevisionLineResponse"][];
         };
         EstimateRevisionResponse: {
             /** Format: uuid */
