@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient, type UseQueryResult, type UseMut
 import {
   apiClient,
   type EstimateDetailResponse,
+  type EstimateHistoryResponse,
   type EstimateRevisionResponse,
   type CreateEstimateDraftRequest,
   type UpdateEstimateDraftRequest,
@@ -50,6 +51,34 @@ export function quotationDocumentQueryKey(
   documentLocale: "th" | "en"
 ): readonly ["business", string | null | undefined, "th" | "en", "estimates", "quotation-document", string | null | undefined, "th" | "en"] {
   return ["business", membershipId, locale, "estimates", "quotation-document", estimateId, documentLocale] as const;
+}
+
+export function estimateHistoryQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  estimateId: string | null | undefined
+) {
+  return ["business", membershipId, locale, "estimates", "history", estimateId] as const;
+}
+
+export function useEstimateHistory(estimateId: string | null | undefined, enabled: boolean): UseQueryResult<EstimateHistoryResponse, Error> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery({
+    queryKey: estimateHistoryQueryKey(membershipId, normalizedLocale, estimateId),
+    enabled: enabled && Boolean(membershipId && estimateId),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      if (!estimateId) throw new Error("Estimate id is required");
+      return apiClient.getEstimateHistory(estimateId, { token, membershipId, locale: normalizedLocale, signal });
+    },
+    staleTime: 0,
+  });
 }
 
 export const estimateReviewQueueQueryKey = (

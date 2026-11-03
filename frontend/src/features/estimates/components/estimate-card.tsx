@@ -20,6 +20,7 @@ import {
   formatFinancialNumber,
   formatPercentRate,
 } from "../utils/estimate-formatters";
+import { marginTone, MARGIN_TEXT_CLASS } from "../utils/estimate-margin-tone";
 
 interface EstimateCardProps {
   estimate: EstimateDetailResponse | null;
@@ -285,8 +286,8 @@ export function EstimateCard({
           </div>
           <div>
             <span className="text-xs text-erp-text-muted block">{t("marginRate")}</span>
-            <span className="font-mono font-bold text-emerald-600">
-              {formatPercentRate(currentRevision?.marginRate)}
+            <span className={`font-mono font-bold ${MARGIN_TEXT_CLASS[marginTone((currentRevision?.marginRate ?? 0) * 100, currentRevision?.marginAmount ?? 0)]}`}>
+              {formatPercentRate((currentRevision?.marginRate ?? 0) * 100)}
             </span>
           </div>
         </div>

@@ -9,15 +9,17 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { FormSection } from "@/components/forms/FormSection";
 import { FormTabs, useFormTabErrors } from "@/components/forms/FormTabs";
 import { MultiLangInput } from "@/components/forms/MultiLangInput";
-import { IconTrash, IconCopy } from "@/components/common/Icons";
+import { IconTrash, IconCopy, IconArrowUp, IconArrowDown } from "@/components/common/Icons";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useEstimateOptions } from "../options/estimate-options";
 import type { EstimateWorkspaceFormData, WorkItemFormData } from "../schemas/estimate-workspace-schema";
 import { calculateWorkItemSummary } from "../utils/estimate-calculations";
 import { formatFinancialNumber, formatSignedFinancialAmount, formatPercentRate } from "../utils/estimate-formatters";
+import { marginTone, MARGIN_TEXT_CLASS } from "../utils/estimate-margin-tone";
 import { EstimateCostComponentTable } from "./estimate-cost-component-table";
 import { useEstimateWorkspace } from "./estimate-workspace-context";
 import { workspaceWorkMatches } from "../utils/estimate-workspace-filter";
@@ -38,9 +40,12 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
   const { control, getValues, setValue, formState: { errors } } = useFormContext<EstimateWorkspaceFormData>();
   const path = `sections.${sectionIndex}.workItems.${itemIndex}` as const;
   const currentItem = useWatch({ control, name: path });
+  const allSections = useWatch({ control, name: "sections" });
   const itemCalc = calculateWorkItemSummary(currentItem ?? {});
   const itemErrors: FieldErrors<WorkItemFormData> = errors.sections?.[sectionIndex]?.workItems?.[itemIndex] ?? {};
-  const [activeTab, setActiveTab] = useState<DetailTab>("info");
+  const [localTab, setLocalTab] = useState<DetailTab>("info");
+  const activeTab = workspace?.detailTab ?? localTab;
+  const setActiveTab = workspace?.setDetailTab ?? setLocalTab;
   const scope = `work-${sectionIndex}-${itemIndex}`;
   const { tabErrorMap } = useFormTabErrors<DetailTab, WorkItemFormData>({
     tabFieldsMap: { info: ["code", "descriptionTh", "descriptionEn", "quantity", "unitCode", "overrideReasonCode", "overrideReason"], cost: ["costComponents"], pricing: ["sellingRuleType", "sellingRuleValue", "sellingRuleReasonCode"] },
@@ -73,10 +78,10 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
       {hiddenByFilter && <Alert variant="info">{t("workspace.selectedOutsideFilter")}</Alert>}
       <FormSection title={currentItem.descriptionTh || t("itemDesc")} description={currentItem.code} className="!border-0 !p-3 !gap-2" headerClassName="pb-2 [&_h2]:text-sm sm:flex-row sm:items-start [&>div:first-child]:flex-1 [&_h2]:whitespace-normal [&_h2]:break-words [&_h2]:normal-case" headerAction={
         <div className="flex flex-wrap gap-1">
-          {onMoveUp && <Button variant="ghost" size="icon" disabled={isFirst} onClick={() => onMoveUp(itemIndex)} aria-label={t("moveUp")}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 15l-6-6-6 6" /></svg></Button>}
-          {onMoveDown && <Button variant="ghost" size="icon" disabled={isLast} onClick={() => onMoveDown(itemIndex)} aria-label={t("moveDown")}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg></Button>}
-          <Button variant="ghost" size="icon" onClick={() => onDuplicateItem(itemIndex)} aria-label={t("duplicateWorkItem")} icon={<IconCopy size={16} />} />
-          <Button variant="ghost" size="icon" onClick={handleRequestRemove} aria-label={t("removeWorkItem")} icon={<IconTrash size={16} />} />
+          {onMoveUp && <Tooltip content={t("moveUp")} position="bottom"><Button variant="ghost" size="icon" disabled={isFirst} onClick={() => onMoveUp(itemIndex)} aria-label={t("moveUp")} icon={<IconArrowUp size={16} />} /></Tooltip>}
+          {onMoveDown && <Tooltip content={t("moveDown")} position="bottom"><Button variant="ghost" size="icon" disabled={isLast} onClick={() => onMoveDown(itemIndex)} aria-label={t("moveDown")} icon={<IconArrowDown size={16} />} /></Tooltip>}
+          <Tooltip content={t("duplicateWorkItem")} position="bottom"><Button variant="ghost" size="icon" onClick={() => onDuplicateItem(itemIndex)} aria-label={t("duplicateWorkItem")} icon={<IconCopy size={16} />} /></Tooltip>
+          <Tooltip content={t("removeWorkItem")} position="bottom"><Button variant="ghost" size="icon" onClick={handleRequestRemove} aria-label={t("removeWorkItem")} icon={<IconTrash size={16} />} /></Tooltip>
         </div>
       }>
         <div className="flex flex-wrap justify-between items-center gap-3"><span className="text-xs text-erp-text-muted">{t("totalCost")}</span><span className="font-mono text-base font-bold text-erp-navy">{formatFinancialNumber(itemCalc.totalCost)} {currency}</span></div>
@@ -90,6 +95,11 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
             setValue(`${path}.descriptionTh`, value.th ?? "", { shouldDirty: true, shouldValidate: true });
             setValue(`${path}.descriptionEn`, value.en ?? "", { shouldDirty: true, shouldValidate: true });
           }} placeholder={{ th: t("itemDescPlaceholder"), en: t("workspace.descriptionPlaceholderEn") }} />
+          {workspace && allSections.length > 1 && currentItem.uiKey && (
+            <Select id={`${scope}-section`} label={t("workItemSection")} value={allSections.find((section) => section.workItems.some((work) => work.uiKey === currentItem.uiKey))?.uiKey ?? ""}
+              options={allSections.flatMap((section) => (section.uiKey ? [{ value: section.uiKey, label: `${section.code} · ${section.nameTh}` }] : []))}
+              onChange={(event) => workspace.moveWorkItem(currentItem.uiKey ?? "", event.target.value)} wrapperClassName="mb-0" />
+          )}
           <div className="grid grid-cols-2 gap-3">
             <Controller control={control} name={`${path}.quantity`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-quantity`} type="number" min="0.001" step="any" label={t("quantity")} placeholder={t("quantityPlaceholder")} onChange={(e) => field.onChange(Number(e.target.value))} error={fieldState.error ? t("workspace.quantityInvalid") : undefined} wrapperClassName="mb-0" />} />
             <Controller control={control} name={`${path}.unitCode`} render={({ field }) => <Input {...field} id={`${scope}-unitCode`} label={t("unitCode")} placeholder={t("unitCodePlaceholder")} list={`units-${scope}`} wrapperClassName="mb-0" />} />
@@ -115,6 +125,7 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
             </div>
           </div>
           {!currentItem.itemId && <div className="grid gap-3 border-t border-erp-border pt-3 sm:grid-cols-2">
+            <p className="text-xs text-erp-warning-text sm:col-span-2">{t("customWorkItemNotice")}</p>
             <Controller control={control} name={`${path}.overrideReasonCode`} render={({ field, fieldState }) => <Input {...field} value={field.value ?? ""} id={`${scope}-overrideReasonCode`} label={t("customWorkItemReasonCode")} placeholder={t("customWorkItemReasonCodePlaceholder")} error={fieldState.error ? t("customWorkItemReasonCodeRequired") : undefined} wrapperClassName="mb-0" />} />
             <Controller control={control} name={`${path}.overrideReason`} render={({ field, fieldState }) => <Textarea {...field} value={field.value ?? ""} id={`${scope}-overrideReason`} label={t("customWorkItemReason")} placeholder={t("customWorkItemReasonPlaceholder")} error={fieldState.error ? t("customWorkItemReasonRequired") : undefined} rows={2} />} />
           </div>}
@@ -129,7 +140,7 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
           <dl className="grid grid-cols-2 gap-2 border-t border-erp-border pt-3 text-xs">
             <dt className="text-erp-text-muted">{t("unitSellingPrice")}</dt><dd className="text-right font-mono font-bold">{formatFinancialNumber(itemCalc.unitSellingPrice)} {currency}</dd>
             <dt className="text-erp-text-muted">{t("totalSellingPrice")}</dt><dd className="text-right font-mono font-bold text-erp-navy">{formatFinancialNumber(itemCalc.totalSellingPrice)} {currency}</dd>
-            <dt className="text-erp-text-muted">{t("grossProfit")}</dt><dd className={cn("text-right font-mono", itemCalc.grossProfit < 0 ? "text-erp-danger" : "text-erp-success")}>{formatSignedFinancialAmount(itemCalc.grossProfit)} {currency} ({formatPercentRate(itemCalc.marginRate, 1)})</dd>
+            <dt className="text-erp-text-muted">{t("grossProfit")}</dt><dd className={cn("text-right font-mono", MARGIN_TEXT_CLASS[marginTone(itemCalc.marginRate, itemCalc.grossProfit)])}>{formatSignedFinancialAmount(itemCalc.grossProfit)} {currency} ({formatPercentRate(itemCalc.marginRate, 1)})</dd>
           </dl>
         </div>
       </div>
