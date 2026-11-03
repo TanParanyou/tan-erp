@@ -648,12 +648,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todaySelectPrompt => 'Select a task to start the survey';
 
   @override
-  String get todayOpenSurvey => 'Open survey';
-
-  @override
-  String get todayStartSurvey => 'Start field survey';
-
-  @override
   String get todayStageQualified => 'Qualified';
 
   @override

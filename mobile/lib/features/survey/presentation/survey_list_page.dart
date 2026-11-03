@@ -165,9 +165,7 @@ class _SurveyListCard extends StatelessWidget {
       title: record.opportunityTitle,
       subtitle: record.customerName,
       caption: record.siteName.isEmpty ? l10n.todayNoSite : record.siteName,
-      meta:
-          '${record.surveyNumber}   '
-          '${l10n.surveyAreasSection}: ${record.areas.length}',
+      meta: record.surveyNumber,
       statusIcon: icon,
       statusColor: color,
       statusLabel: label,

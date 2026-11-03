@@ -1268,18 +1268,6 @@ abstract class AppLocalizations {
   /// **'เลือกงานจากรายการเพื่อเริ่มสำรวจ'**
   String get todaySelectPrompt;
 
-  /// No description provided for @todayOpenSurvey.
-  ///
-  /// In th, this message translates to:
-  /// **'เปิดใบสำรวจ'**
-  String get todayOpenSurvey;
-
-  /// No description provided for @todayStartSurvey.
-  ///
-  /// In th, this message translates to:
-  /// **'เริ่มสำรวจหน้างาน'**
-  String get todayStartSurvey;
-
   /// No description provided for @todayStageQualified.
   ///
   /// In th, this message translates to:

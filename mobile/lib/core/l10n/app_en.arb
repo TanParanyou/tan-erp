@@ -243,8 +243,6 @@
   "todayEmptyTitle": "No surveys scheduled today",
   "todayEmptyBody": "There are no survey tasks in this branch yet. Tap to refresh",
   "todaySelectPrompt": "Select a task to start the survey",
-  "todayOpenSurvey": "Open survey",
-  "todayStartSurvey": "Start field survey",
   "todayStageQualified": "Qualified",
   "todayStageSurveying": "Surveying",
   "todayStageEstimating": "Estimating",

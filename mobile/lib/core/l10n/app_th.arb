@@ -243,8 +243,6 @@
   "todayEmptyTitle": "ไม่มีงานสำรวจวันนี้",
   "todayEmptyBody": "ยังไม่มีรายการนัดสำรวจในสาขานี้ แตะเพื่อโหลดข้อมูลใหม่",
   "todaySelectPrompt": "เลือกงานจากรายการเพื่อเริ่มสำรวจ",
-  "todayOpenSurvey": "เปิดใบสำรวจ",
-  "todayStartSurvey": "เริ่มสำรวจหน้างาน",
   "todayStageQualified": "ผ่านคัดกรอง",
   "todayStageSurveying": "กำลังสำรวจ",
   "todayStageEstimating": "กำลังประเมินราคา",

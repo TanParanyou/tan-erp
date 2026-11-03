@@ -641,12 +641,6 @@ class AppLocalizationsTh extends AppLocalizations {
   String get todaySelectPrompt => 'เลือกงานจากรายการเพื่อเริ่มสำรวจ';
 
   @override
-  String get todayOpenSurvey => 'เปิดใบสำรวจ';
-
-  @override
-  String get todayStartSurvey => 'เริ่มสำรวจหน้างาน';
-
-  @override
   String get todayStageQualified => 'ผ่านคัดกรอง';
 
   @override
