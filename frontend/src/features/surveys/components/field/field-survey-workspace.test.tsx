@@ -45,6 +45,7 @@ vi.mock("next-intl", () => ({
       "actions.saveFailed": "ไม่สามารถบันทึกข้อมูลสำรวจได้ กรุณาลองใหม่อีกครั้ง",
       "actions.sendToEstimator": "ส่งให้ทีมประเมินราคา (BOQ)",
       "actions.deleteItem": "ลบรายการนี้",
+      "checks.continue": "บันทึกต่อ",
       "actions.itemNumber": `รายการที่ ${params?.number ?? ""}`,
       "dimensions.boxSummary": `${params?.w} × ${params?.d} × ${params?.h} มม.`,
       "dimensions.areaSummary": `พื้นที่ ${params?.area} ตร.ม.`,
@@ -71,9 +72,33 @@ vi.mock("next-intl", () => ({
   useLocale: () => "th",
 }));
 
+vi.mock("@tanstack/react-query", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-query")>()),
+  useQueryClient: () => ({ invalidateQueries: vi.fn(), getQueryData: vi.fn() }),
+}));
+
 vi.mock("../../api/survey-queries", () => ({
   useSurveyReferenceData: () => ({
-    data: undefined,
+    data: {
+      measurementTypes: [],
+      designStyles: [
+        {
+          code: "modern_luxury",
+          name: { thai: "โมเดิร์น ลักชูรี่ (Modern Luxury)", english: "Modern Luxury" },
+          description: "",
+          imageFileId: null,
+          imageFileIds: null,
+        },
+      ],
+      moodTones: [
+        {
+          code: "warm_earthy",
+          name: { thai: "วอร์มโทน (Warm & Earthy)", english: "Warm & Earthy" },
+          description: "",
+          colorPalette: [],
+        },
+      ],
+    },
     isLoading: false,
   }),
   useOpportunitySurvey: () => ({
@@ -84,6 +109,15 @@ vi.mock("../../api/survey-queries", () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
+  useCloneSurveyRevision: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  usePolishSurveyNarrative: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  opportunitySurveyQueryKey: () => ["survey"],
 }));
 
 vi.mock("@/features/opportunities/api/opportunity-queries", () => ({
@@ -207,6 +241,10 @@ describe("FieldSurveyWorkspace Component", () => {
     const deleteBtn = screen.getByRole("button", { name: "ลบรายการนี้" });
     fireEvent.click(deleteBtn);
 
+    // Deleting now asks for confirmation; the confirm button reuses the same label and renders last
+    const deleteButtons = screen.getAllByRole("button", { name: "ลบรายการนี้" });
+    fireEvent.click(deleteButtons[deleteButtons.length - 1]);
+
     expect(screen.getByText("ยังไม่มีรายการสั่งทำ")).toBeDefined();
   });
 
@@ -227,6 +265,9 @@ describe("FieldSurveyWorkspace Component", () => {
 
     const saveBtn = screen.getByRole("button", { name: "บันทึกข้อมูลสำรวจ" });
     fireEvent.click(saveBtn);
+
+    // The item has no dimensions or photos, so the completeness warning must be confirmed first
+    fireEvent.click(await screen.findByRole("button", { name: "บันทึกต่อ" }));
 
     await waitFor(() => {
       expect(onSave).toHaveBeenCalled();
@@ -251,6 +292,7 @@ describe("FieldSurveyWorkspace Component", () => {
     // Submit
     const saveBtn = screen.getByRole("button", { name: "บันทึกข้อมูลสำรวจ" });
     fireEvent.click(saveBtn);
+    fireEvent.click(await screen.findByRole("button", { name: "บันทึกต่อ" }));
 
     // Modal should appear
     await waitFor(() => {
@@ -290,6 +332,7 @@ describe("FieldSurveyWorkspace Component", () => {
 
     const saveBtn = screen.getByRole("button", { name: "บันทึกข้อมูลสำรวจ" });
     fireEvent.click(saveBtn);
+    fireEvent.click(await screen.findByRole("button", { name: "บันทึกต่อ" }));
 
     await waitFor(() => {
       expect(screen.getByText("บันทึกข้อมูลสำรวจเรียบร้อยแล้ว")).toBeDefined();
@@ -332,6 +375,7 @@ describe("FieldSurveyWorkspace Component", () => {
 
     const saveBtn = screen.getByRole("button", { name: "บันทึกข้อมูลสำรวจ" });
     fireEvent.click(saveBtn);
+    fireEvent.click(await screen.findByRole("button", { name: "บันทึกต่อ" }));
 
     await waitFor(() => {
       expect(screen.getByText("ไม่สามารถบันทึกข้อมูลสำรวจได้ กรุณาลองใหม่อีกครั้ง")).toBeDefined();
