@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
+import 'package:tan_erp_field/core/ui/erp_content_frame.dart';
 import 'package:tan_erp_field/core/ui/erp_icon.dart';
 import 'package:tan_erp_field/core/ui/erp_sync_banner.dart';
 
@@ -17,6 +18,7 @@ class ErpNavShell extends StatelessWidget {
     required this.selectedIndex,
     required this.onSelected,
     required this.child,
+    this.fullWidth = false,
     super.key,
   });
 
@@ -26,6 +28,9 @@ class ErpNavShell extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelected;
   final Widget child;
+
+  /// Skip the tablet content-width cap (for master-detail tabs).
+  final bool fullWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +43,7 @@ class ErpNavShell extends StatelessWidget {
     final bodyWithBanner = Column(
       children: [
         const ErpSyncBanner(),
-        Expanded(child: child),
+        Expanded(child: fullWidth ? child : ErpContentFrame(child: child)),
       ],
     );
 

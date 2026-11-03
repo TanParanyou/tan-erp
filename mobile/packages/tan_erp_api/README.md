@@ -134,6 +134,7 @@ Class | Method | HTTP request | Description
 [*BillingsApi*](doc/BillingsApi.md) | [**apiV1BillingsIdPaymentsPaymentIdReversePost**](doc/BillingsApi.md#apiv1billingsidpaymentspaymentidreversepost) | **POST** /api/v1/billings/{id}/payments/{paymentId}/reverse | 
 [*BillingsApi*](doc/BillingsApi.md) | [**apiV1BillingsIdPaymentsPost**](doc/BillingsApi.md#apiv1billingsidpaymentspost) | **POST** /api/v1/billings/{id}/payments | 
 [*BillingsApi*](doc/BillingsApi.md) | [**apiV1BillingsIdReleaseRetentionPost**](doc/BillingsApi.md#apiv1billingsidreleaseretentionpost) | **POST** /api/v1/billings/{id}/release-retention | 
+[*BillingsApi*](doc/BillingsApi.md) | [**apiV1BillingsIdTaxDocumentEtaxXmlGet**](doc/BillingsApi.md#apiv1billingsidtaxdocumentetaxxmlget) | **GET** /api/v1/billings/{id}/tax-document/etax-xml | 
 [*BillingsApi*](doc/BillingsApi.md) | [**apiV1BillingsIdTaxDocumentPdfGet**](doc/BillingsApi.md#apiv1billingsidtaxdocumentpdfget) | **GET** /api/v1/billings/{id}/tax-document/pdf | 
 [*BillingsApi*](doc/BillingsApi.md) | [**apiV1BillingsIdVoidPost**](doc/BillingsApi.md#apiv1billingsidvoidpost) | **POST** /api/v1/billings/{id}/void | 
 [*BillingsApi*](doc/BillingsApi.md) | [**apiV1BillingsPost**](doc/BillingsApi.md#apiv1billingspost) | **POST** /api/v1/billings | 
@@ -215,6 +216,7 @@ Class | Method | HTTP request | Description
 [*DocumentTemplatesApi*](doc/DocumentTemplatesApi.md) | [**apiV1SettingsDocumentTemplatesPost**](doc/DocumentTemplatesApi.md#apiv1settingsdocumenttemplatespost) | **POST** /api/v1/settings/document-templates | 
 [*EstimateCatalogApi*](doc/EstimateCatalogApi.md) | [**apiV1EstimateCatalogItemsGet**](doc/EstimateCatalogApi.md#apiv1estimatecatalogitemsget) | **GET** /api/v1/estimate-catalog/items | 
 [*EstimateCatalogApi*](doc/EstimateCatalogApi.md) | [**apiV1EstimateCatalogItemsItemIdUnitsGet**](doc/EstimateCatalogApi.md#apiv1estimatecatalogitemsitemidunitsget) | **GET** /api/v1/estimate-catalog/items/{itemId}/units | 
+[*EstimateHistoryApi*](doc/EstimateHistoryApi.md) | [**apiV1EstimatesIdHistoryGet**](doc/EstimateHistoryApi.md#apiv1estimatesidhistoryget) | **GET** /api/v1/estimates/{id}/history | 
 [*EstimateReviewQueueApi*](doc/EstimateReviewQueueApi.md) | [**apiV1EstimatesReviewQueueGet**](doc/EstimateReviewQueueApi.md#apiv1estimatesreviewqueueget) | **GET** /api/v1/estimates/review-queue | 
 [*EstimatesApi*](doc/EstimatesApi.md) | [**apiV1EstimatesIdCancelPost**](doc/EstimatesApi.md#apiv1estimatesidcancelpost) | **POST** /api/v1/estimates/{id}/cancel | 
 [*EstimatesApi*](doc/EstimatesApi.md) | [**apiV1EstimatesIdGet**](doc/EstimatesApi.md#apiv1estimatesidget) | **GET** /api/v1/estimates/{id} | 
@@ -452,6 +454,7 @@ Class | Method | HTTP request | Description
 [*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1OpportunitiesOpportunityIdSurveysSurveyIdRevisionsRevisionIdMarkReadyPost**](doc/SiteSurveysApi.md#apiv1opportunitiesopportunityidsurveyssurveyidrevisionsrevisionidmarkreadypost) | **POST** /api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions/{revisionId}/mark-ready | 
 [*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1OpportunitiesOpportunityIdSurveysSurveyIdRevisionsRevisionIdVoidPost**](doc/SiteSurveysApi.md#apiv1opportunitiesopportunityidsurveyssurveyidrevisionsrevisionidvoidpost) | **POST** /api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions/{revisionId}/void | 
 [*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1SurveysAssignedGet**](doc/SiteSurveysApi.md#apiv1surveysassignedget) | **GET** /api/v1/surveys/assigned | 
+[*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1SurveysNarrativePolishPost**](doc/SiteSurveysApi.md#apiv1surveysnarrativepolishpost) | **POST** /api/v1/surveys/narrative/polish | 
 [*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1SurveysReferenceDataGet**](doc/SiteSurveysApi.md#apiv1surveysreferencedataget) | **GET** /api/v1/surveys/reference-data | 
 [*SitesApi*](doc/SitesApi.md) | [**apiV1CustomersCustomerIdSitesGet**](doc/SitesApi.md#apiv1customerscustomeridsitesget) | **GET** /api/v1/customers/{customerId}/sites | 
 [*SitesApi*](doc/SitesApi.md) | [**apiV1CustomersCustomerIdSitesPost**](doc/SitesApi.md#apiv1customerscustomeridsitespost) | **POST** /api/v1/customers/{customerId}/sites | 
@@ -466,6 +469,11 @@ Class | Method | HTTP request | Description
 [*SupplierInvoicesApi*](doc/SupplierInvoicesApi.md) | [**apiV1SupplierInvoicesIdSubmitPost**](doc/SupplierInvoicesApi.md#apiv1supplierinvoicesidsubmitpost) | **POST** /api/v1/supplier-invoices/{id}/submit | 
 [*SupplierInvoicesApi*](doc/SupplierInvoicesApi.md) | [**apiV1SupplierInvoicesIdVoidPost**](doc/SupplierInvoicesApi.md#apiv1supplierinvoicesidvoidpost) | **POST** /api/v1/supplier-invoices/{id}/void | 
 [*SupplierInvoicesApi*](doc/SupplierInvoicesApi.md) | [**apiV1SupplierInvoicesPost**](doc/SupplierInvoicesApi.md#apiv1supplierinvoicespost) | **POST** /api/v1/supplier-invoices | 
+[*SupplierItemPricesApi*](doc/SupplierItemPricesApi.md) | [**apiV1SuppliersSupplierIdItemPricesEffectiveGet**](doc/SupplierItemPricesApi.md#apiv1supplierssupplieriditempriceseffectiveget) | **GET** /api/v1/suppliers/{supplierId}/item-prices/effective | 
+[*SupplierItemPricesApi*](doc/SupplierItemPricesApi.md) | [**apiV1SuppliersSupplierIdItemPricesGet**](doc/SupplierItemPricesApi.md#apiv1supplierssupplieriditempricesget) | **GET** /api/v1/suppliers/{supplierId}/item-prices | 
+[*SupplierItemPricesApi*](doc/SupplierItemPricesApi.md) | [**apiV1SuppliersSupplierIdItemPricesPost**](doc/SupplierItemPricesApi.md#apiv1supplierssupplieriditempricespost) | **POST** /api/v1/suppliers/{supplierId}/item-prices | 
+[*SupplierItemPricesApi*](doc/SupplierItemPricesApi.md) | [**apiV1SuppliersSupplierIdItemPricesPriceIdDelete**](doc/SupplierItemPricesApi.md#apiv1supplierssupplieriditempricespriceiddelete) | **DELETE** /api/v1/suppliers/{supplierId}/item-prices/{priceId} | 
+[*SupplierItemPricesApi*](doc/SupplierItemPricesApi.md) | [**apiV1SuppliersSupplierIdItemPricesPriceIdPut**](doc/SupplierItemPricesApi.md#apiv1supplierssupplieriditempricespriceidput) | **PUT** /api/v1/suppliers/{supplierId}/item-prices/{priceId} | 
 [*SuppliersApi*](doc/SuppliersApi.md) | [**apiV1SuppliersGet**](doc/SuppliersApi.md#apiv1suppliersget) | **GET** /api/v1/suppliers | 
 [*SuppliersApi*](doc/SuppliersApi.md) | [**apiV1SuppliersIdActivatePost**](doc/SuppliersApi.md#apiv1suppliersidactivatepost) | **POST** /api/v1/suppliers/{id}/activate | 
 [*SuppliersApi*](doc/SuppliersApi.md) | [**apiV1SuppliersIdDeactivatePost**](doc/SuppliersApi.md#apiv1suppliersiddeactivatepost) | **POST** /api/v1/suppliers/{id}/deactivate | 
@@ -716,13 +724,18 @@ Class | Method | HTTP request | Description
  - [EffectiveOptionResponse](doc/EffectiveOptionResponse.md)
  - [EffectiveTemplateResponse](doc/EffectiveTemplateResponse.md)
  - [EnableTwoFactorRequest](doc/EnableTwoFactorRequest.md)
+ - [EstimateActorResponse](doc/EstimateActorResponse.md)
  - [EstimateCalculationSnapshotResponse](doc/EstimateCalculationSnapshotResponse.md)
  - [EstimateCatalogItemResponse](doc/EstimateCatalogItemResponse.md)
  - [EstimateCatalogResponse](doc/EstimateCatalogResponse.md)
  - [EstimateConversionSnapshotResponse](doc/EstimateConversionSnapshotResponse.md)
  - [EstimateCostComponentResponse](doc/EstimateCostComponentResponse.md)
  - [EstimateDetailResponse](doc/EstimateDetailResponse.md)
+ - [EstimateHistoryEventResponse](doc/EstimateHistoryEventResponse.md)
+ - [EstimateHistoryResponse](doc/EstimateHistoryResponse.md)
  - [EstimateReadinessReasonResponse](doc/EstimateReadinessReasonResponse.md)
+ - [EstimateReturnResponse](doc/EstimateReturnResponse.md)
+ - [EstimateReturnReviewerResponse](doc/EstimateReturnReviewerResponse.md)
  - [EstimateReviewApprovalThresholdsResponse](doc/EstimateReviewApprovalThresholdsResponse.md)
  - [EstimateReviewApprovalTriggerResponse](doc/EstimateReviewApprovalTriggerResponse.md)
  - [EstimateReviewCostEvidenceResponse](doc/EstimateReviewCostEvidenceResponse.md)
@@ -738,6 +751,7 @@ Class | Method | HTTP request | Description
  - [EstimateReviewReadinessReasonResponse](doc/EstimateReviewReadinessReasonResponse.md)
  - [EstimateReviewRevisionDiffResponse](doc/EstimateReviewRevisionDiffResponse.md)
  - [EstimateRevisionResponse](doc/EstimateRevisionResponse.md)
+ - [EstimateRevisionSummaryResponse](doc/EstimateRevisionSummaryResponse.md)
  - [EstimateSectionResponse](doc/EstimateSectionResponse.md)
  - [EstimateUnitOptionResponse](doc/EstimateUnitOptionResponse.md)
  - [EstimateUnitOptionsResponse](doc/EstimateUnitOptionsResponse.md)
@@ -856,6 +870,8 @@ Class | Method | HTTP request | Description
  - [PipelineStageMetricsResponse](doc/PipelineStageMetricsResponse.md)
  - [PipelineSummaryMetricsResponse](doc/PipelineSummaryMetricsResponse.md)
  - [PipelineSummaryMetricsResponseReportSectionResponse](doc/PipelineSummaryMetricsResponseReportSectionResponse.md)
+ - [PolishSurveyNarrativeRequest](doc/PolishSurveyNarrativeRequest.md)
+ - [PolishSurveyNarrativeResponse](doc/PolishSurveyNarrativeResponse.md)
  - [PreviewDocumentSequenceRequest](doc/PreviewDocumentSequenceRequest.md)
  - [PreviewDocumentSequenceResponse](doc/PreviewDocumentSequenceResponse.md)
  - [PreviewItemImportRequest](doc/PreviewItemImportRequest.md)
@@ -1043,6 +1059,9 @@ Class | Method | HTTP request | Description
  - [SupplierInvoiceOrderRefResponse](doc/SupplierInvoiceOrderRefResponse.md)
  - [SupplierInvoiceRequest](doc/SupplierInvoiceRequest.md)
  - [SupplierInvoiceResponse](doc/SupplierInvoiceResponse.md)
+ - [SupplierItemPriceListResponse](doc/SupplierItemPriceListResponse.md)
+ - [SupplierItemPriceRequest](doc/SupplierItemPriceRequest.md)
+ - [SupplierItemPriceResponse](doc/SupplierItemPriceResponse.md)
  - [SupplierListResponse](doc/SupplierListResponse.md)
  - [SupplierRequest](doc/SupplierRequest.md)
  - [SupplierResponse](doc/SupplierResponse.md)

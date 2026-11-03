@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 
+export type WorkspaceDetailTab = "info" | "cost" | "pricing";
 export interface WorkspaceTarget { sectionKey: string; workKey: string; mode?: "costs" | "workItem" }
 export interface EstimateWorkspaceContextValue {
   selectedKey: string | null;
@@ -12,7 +13,11 @@ export interface EstimateWorkspaceContextValue {
   openCatalog: (target: WorkspaceTarget) => void;
   catalogTarget: WorkspaceTarget | null;
   focusTargetId?: string;
-  errorTarget: { key: string; tab: "info" | "cost" | "pricing"; attempt: number } | null;
+  errorTarget: { key: string; tab: WorkspaceDetailTab; attempt: number } | null;
+  /** Shared so the chosen tab survives moving between work items, since only the selected card is mounted. */
+  detailTab: WorkspaceDetailTab;
+  setDetailTab: (tab: WorkspaceDetailTab) => void;
+  moveWorkItem: (workKey: string, targetSectionKey: string) => void;
 }
 
 export const EstimateWorkspaceContext = createContext<EstimateWorkspaceContextValue | null>(null);

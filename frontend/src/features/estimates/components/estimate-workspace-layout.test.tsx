@@ -9,9 +9,15 @@ const mocks = vi.hoisted(() => ({ update: vi.fn(), calculate: vi.fn(), confirm: 
 vi.mock("../api/estimate-queries", () => ({
   useUpdateEstimateDraft: () => ({ isPending: false, mutateAsync: mocks.update }),
   useCalculateEstimate: () => ({ isPending: false, mutateAsync: mocks.calculate }),
+  useEstimateHistory: () => ({ data: undefined, isLoading: false, isError: false }),
 }));
 vi.mock("@/hooks/useToast", () => ({ useToast: () => ({ toast: { success: mocks.success, error: mocks.error } }) }));
 vi.mock("@/hooks/useConfirm", () => ({ useConfirm: () => ({ confirm: mocks.confirm, ConfirmDialog: () => null }) }));
+// The workspace keys its local BOQ draft by membership, so it needs a selected membership
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({ selectedMembership: { id: "membership-test", permissions: [] } }),
+  useOptionalSelectedMembership: () => ({ selectedMembership: { id: "membership-test", permissions: [] } }),
+}));
 vi.mock("./estimate-template-modal", () => ({ EstimateTemplateModal: () => null }));
 const catalogItem: CatalogItemModel = {
   id: "catalog-item", code: "MAT-1", name: { thai: "วัสดุจากคลัง", english: "Catalog material" }, itemType: "material", costComponentType: "material",
@@ -73,7 +79,9 @@ describe("workspace BOQ and inspector regression", () => {
   it("keeps the selected item and its entered values when reordered", async () => {
     renderWorkspace(); choose("WORK-B");
     fireEvent.change(screen.getByRole("textbox", { name: "รายละเอียดงาน" }), { target: { value: "ย้ายขึ้นพร้อมข้อมูล" } });
-    fireEvent.click(screen.getByRole("button", { name: /เลื่อนขึ้น/ }));
+    // Section and first-item move-up buttons are disabled; only the second work item can move up
+    const [moveUp] = screen.getAllByRole("button", { name: /เลื่อนขึ้น/ }).filter((button) => !(button as HTMLButtonElement).disabled);
+    fireEvent.click(moveUp);
     expect(screen.getByRole("textbox", { name: "รายละเอียดงาน" })).toHaveValue("ย้ายขึ้นพร้อมข้อมูล");
     tab("ต้นทุน");
     expect(screen.getByRole("textbox", { name: "รายละเอียดต้นทุน" })).toHaveValue("ต้นทุนสอง");
@@ -104,10 +112,13 @@ describe("workspace BOQ and inspector regression", () => {
 
   it("keeps quick cost presets and selects a remaining item after confirmed deletion", async () => {
     renderWorkspace(); choose("WORK-B"); tab("ต้นทุน");
-    const preset = screen.getByRole("button", { name: /ไม้อัด HMR/ });
-    fireEvent.click(preset);
+    // Quick cost presets are a select now (option value = preset id), not buttons
+    fireEvent.change(screen.getByRole("combobox", { name: "เลือกด่วน:" }), { target: { value: "hmr" } });
     expect(screen.getAllByRole("spinbutton", { name: "ต้นทุนต่อหน่วย" })).toHaveLength(2);
     fireEvent.click(screen.getAllByRole("button", { name: "ลบรายการ" })[0]);
+    // The inspector stays on the cost tab after deleting, so return to the info tab to read the selected item
+    await waitFor(() => expect(mocks.confirm).toHaveBeenCalled());
+    tab("ข้อมูลรายการ");
     await waitFor(() => expect(screen.getByRole("textbox", { name: "รายละเอียดงาน" })).toHaveValue("งานหนึ่ง"));
     expect(mocks.confirm).toHaveBeenCalled();
   });

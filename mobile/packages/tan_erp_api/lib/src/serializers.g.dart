@@ -207,13 +207,18 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(EffectiveOptionResponse.serializer)
       ..add(EffectiveTemplateResponse.serializer)
       ..add(EnableTwoFactorRequest.serializer)
+      ..add(EstimateActorResponse.serializer)
       ..add(EstimateCalculationSnapshotResponse.serializer)
       ..add(EstimateCatalogItemResponse.serializer)
       ..add(EstimateCatalogResponse.serializer)
       ..add(EstimateConversionSnapshotResponse.serializer)
       ..add(EstimateCostComponentResponse.serializer)
       ..add(EstimateDetailResponse.serializer)
+      ..add(EstimateHistoryEventResponse.serializer)
+      ..add(EstimateHistoryResponse.serializer)
       ..add(EstimateReadinessReasonResponse.serializer)
+      ..add(EstimateReturnResponse.serializer)
+      ..add(EstimateReturnReviewerResponse.serializer)
       ..add(EstimateReviewApprovalThresholdsResponse.serializer)
       ..add(EstimateReviewApprovalTriggerResponse.serializer)
       ..add(EstimateReviewCostEvidenceResponse.serializer)
@@ -229,6 +234,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(EstimateReviewReadinessReasonResponse.serializer)
       ..add(EstimateReviewRevisionDiffResponse.serializer)
       ..add(EstimateRevisionResponse.serializer)
+      ..add(EstimateRevisionSummaryResponse.serializer)
       ..add(EstimateSectionResponse.serializer)
       ..add(EstimateUnitOptionResponse.serializer)
       ..add(EstimateUnitOptionsResponse.serializer)
@@ -347,6 +353,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PipelineStageMetricsResponse.serializer)
       ..add(PipelineSummaryMetricsResponse.serializer)
       ..add(PipelineSummaryMetricsResponseReportSectionResponse.serializer)
+      ..add(PolishSurveyNarrativeRequest.serializer)
+      ..add(PolishSurveyNarrativeResponse.serializer)
       ..add(PreviewDocumentSequenceRequest.serializer)
       ..add(PreviewDocumentSequenceResponse.serializer)
       ..add(PreviewItemImportRequest.serializer)
@@ -534,6 +542,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(SupplierInvoiceOrderRefResponse.serializer)
       ..add(SupplierInvoiceRequest.serializer)
       ..add(SupplierInvoiceResponse.serializer)
+      ..add(SupplierItemPriceListResponse.serializer)
+      ..add(SupplierItemPriceRequest.serializer)
+      ..add(SupplierItemPriceResponse.serializer)
       ..add(SupplierListResponse.serializer)
       ..add(SupplierRequest.serializer)
       ..add(SupplierResponse.serializer)
@@ -897,6 +908,14 @@ Serializers _$serializers = (Serializers().toBuilder()
               const [const FullType(EstimateReviewCostEvidenceResponse)]),
           () => ListBuilder<EstimateReviewCostEvidenceResponse>())
       ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(EstimateRevisionSummaryResponse)]),
+          () => ListBuilder<EstimateRevisionSummaryResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(EstimateHistoryEventResponse)]),
+          () => ListBuilder<EstimateHistoryEventResponse>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(EstimateSectionResponse)]),
           () => ListBuilder<EstimateSectionResponse>())
@@ -998,6 +1017,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(MrpDemandRequest)]),
           () => ListBuilder<MrpDemandRequest>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(MrpPlanningParameterResponse)]),
@@ -1465,6 +1487,10 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList,
               const [const FullType(SupplierInvoiceListItemResponse)]),
           () => ListBuilder<SupplierInvoiceListItemResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(SupplierItemPriceResponse)]),
+          () => ListBuilder<SupplierItemPriceResponse>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(SupplierResponse)]),
           () => ListBuilder<SupplierResponse>())

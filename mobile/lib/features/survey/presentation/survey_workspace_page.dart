@@ -25,13 +25,17 @@ import 'package:tan_erp_field/core/ui/erp_select.dart';
 import 'package:tan_erp_field/core/ui/erp_status_badge.dart';
 import 'package:tan_erp_field/core/ui/erp_text_field.dart';
 import 'package:tan_erp_field/features/device_lab/data/ar_measure_repository.dart';
+import 'package:tan_erp_field/features/device_lab/domain/ar_measure_failure.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/ar_measure_controller.dart';
+import 'package:tan_erp_field/features/device_lab/presentation/ar_measure_failure_message.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/photo_area_controller.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/photo_area_page.dart';
 import 'package:tan_erp_field/features/quick_estimate/presentation/quick_estimate_page.dart';
+import 'package:tan_erp_field/features/survey/domain/field_survey_checks.dart';
 import 'package:tan_erp_field/features/survey/domain/field_survey_models.dart';
 import 'package:tan_erp_field/features/survey/presentation/survey_controller.dart';
 import 'package:tan_erp_field/native/laser_meter/laser_meter_service.dart';
+import 'package:tan_erp_field/native/room_scan/room_scan_service.dart';
 import 'package:uuid/uuid.dart';
 
 /// Field survey workspace for recording areas and dimensions on site.
@@ -77,6 +81,35 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
   FieldSurveyRecord _currentRecord() => _record.copyWith(
     scopeSummary: (_scopeControl.value ?? '').trim(),
   );
+
+  /// Warns about incomplete areas first; the user may still save.
+  Future<void> _confirmAndSave() async {
+    if (_saving || _isReadOnly) return;
+    final warnings = evaluateFieldSurvey(_currentRecord());
+    if (warnings.isEmpty) {
+      await _saveDraft();
+      return;
+    }
+    final l10n = context.l10n;
+    final lines = warnings.map(
+      (w) => l10n.surveyCheckLine(
+        '${w.area.code} ${w.area.name}',
+        switch (w.code) {
+          FieldSurveyWarningCode.noMeasurement => l10n.surveyCheckNoMeasurement,
+          FieldSurveyWarningCode.zeroValue => l10n.surveyCheckZeroValue,
+          FieldSurveyWarningCode.noPhoto => l10n.surveyCheckNoPhoto,
+        },
+      ),
+    );
+    await showErpConfirmDialog(
+      context,
+      title: l10n.surveyCheckTitle,
+      message: lines.join('\n'),
+      confirmLabel: l10n.surveyCheckSaveAnyway,
+      cancelLabel: l10n.surveyCheckReview,
+      onConfirm: _saveDraft,
+    );
+  }
 
   Future<void> _saveDraft() async {
     if (_saving || _isReadOnly) return;
@@ -311,7 +344,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '${area.code} · ${area.name}',
+                  '${area.code} ${area.name}',
                   style: Theme.of(ctx).textTheme.titleMedium,
                 ),
                 SizedBox(height: t.space3),
@@ -348,7 +381,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
                           selectedType = v;
                           selectedUnit = switch (v) {
                             'area' => 'sqm',
-                            'count' => 'pcs',
+                            'count' => 'unit',
                             _ => 'm',
                           };
                         }),
@@ -364,7 +397,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
                           ErpOption(value: 'sqm', label: l10n.surveyUnitSqm),
                           ErpOption(value: 'm', label: l10n.surveyUnitM),
                           ErpOption(value: 'mm', label: l10n.surveyUnitMm),
-                          ErpOption(value: 'pcs', label: l10n.surveyUnitPcs),
+                          ErpOption(value: 'unit', label: l10n.surveyUnitPcs),
                         ],
                         onChanged: (v) => setSheetState(() => selectedUnit = v),
                       ),
@@ -394,12 +427,42 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
                   variant: ErpButtonVariant.outline,
                   onPressed: () => Navigator.of(ctx).pop('photo'),
                 ),
-                SizedBox(height: t.space2),
-                ErpButton(
-                  label: l10n.surveyMeasureByAr,
-                  variant: ErpButtonVariant.outline,
-                  onPressed: () => Navigator.of(ctx).pop('ar'),
-                ),
+                // AR measures floor area only, on devices that support it.
+                if (selectedType == 'area')
+                  Consumer(
+                    builder: (_, ref, _) {
+                      final availability = ref.watch(arAvailabilityProvider);
+                      if (!arCanStart(availability.value)) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: EdgeInsets.only(top: t.space2),
+                        child: ErpButton(
+                          label: l10n.surveyMeasureByAr,
+                          variant: ErpButtonVariant.outline,
+                          onPressed: () => Navigator.of(ctx).pop('ar'),
+                        ),
+                      );
+                    },
+                  ),
+                // Room scan adds a set of new measurements (iOS LiDAR only).
+                if (existing == null)
+                  Consumer(
+                    builder: (_, ref, _) {
+                      final supported = ref.watch(roomScanSupportedProvider);
+                      if (supported.value != true) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: EdgeInsets.only(top: t.space2),
+                        child: ErpButton(
+                          label: l10n.surveyMeasureByRoomScan,
+                          variant: ErpButtonVariant.outline,
+                          onPressed: () => Navigator.of(ctx).pop('room'),
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
           ),
@@ -441,6 +504,8 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
           existing: existing,
           notes: notes,
         );
+      case 'room':
+        await _scanRoom(area: area, notes: notes);
     }
   }
 
@@ -488,7 +553,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
     };
     final resolvedUnit = switch (unitCode) {
       'mm' => 'mm',
-      'sqm' || 'pcs' => 'm',
+      'sqm' || 'unit' => 'm',
       _ => 'm',
     };
     final resolvedType = switch (measurementType) {
@@ -504,7 +569,8 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
         measurementType: resolvedType,
         value: rounded,
         unitCode: resolvedUnit,
-        captureMethod: 'laser_measured',
+        // Backend has no laser method; a laser reading is a measurement.
+        captureMethod: 'measured',
         notes: notes,
       ),
     );
@@ -562,12 +628,23 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
     FieldSurveyMeasurement? existing,
     String? notes,
   }) async {
+    final l10n = context.l10n;
     final req = _buildArRequest(context);
-    await ref.read(arMeasureControllerProvider.notifier).measure(req);
+    final result = await ref
+        .read(arMeasureControllerProvider.notifier)
+        .measure(req);
     if (!mounted) return;
-    final state = ref.read(arMeasureControllerProvider);
-    final result = state.result;
-    if (result == null) return;
+    if (result == null) {
+      // Cancelled: nothing to save. Failed: tell the user why.
+      final failure = ref.read(arMeasureControllerProvider).failure;
+      if (failure != null) {
+        setState(() {
+          _bannerMessage = arMeasureFailureMessage(l10n, failure);
+          _bannerSeverity = ErpAlertSeverity.danger;
+        });
+      }
+      return;
+    }
     _upsertMeasurement(
       area: area,
       existingId: existing?.id,
@@ -577,6 +654,82 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
         value: double.parse(result.areaSqm.toStringAsFixed(2)),
         unitCode: 'sqm',
         captureMethod: 'measured',
+        notes: notes,
+      ),
+    );
+  }
+
+  /// Saves floor area, width, length and (when walls were found) height as
+  /// new measurements of [area], then gross wall area and each door/window/
+  /// passage as an opening width + height pair labelled in the notes.
+  Future<void> _scanRoom({required FieldSurveyArea area, String? notes}) async {
+    final l10n = context.l10n;
+    final request = RoomScanRequest(
+      cancel: l10n.commonCancel,
+      done: l10n.arDone,
+      colors: _nativeColors(context.tokens),
+    );
+    final RoomScanResult? result;
+    try {
+      result = await ref.read(roomScanServiceProvider).scanRoom(request);
+    } on ArMeasureFailure catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _bannerMessage = arMeasureFailureMessage(l10n, e);
+        _bannerSeverity = ErpAlertSeverity.danger;
+      });
+      return;
+    }
+    if (result == null || !mounted) return;
+    final height = result.ceilingHeightM;
+    final values = <(String, double, String)>[
+      ('area', result.floorAreaSqm, 'sqm'),
+      ('width', result.widthM, 'm'),
+      ('length', result.lengthM, 'm'),
+      if (height != null) ('height', height, 'm'),
+    ];
+    for (final (type, value, unit) in values) {
+      _addMeasurement(area, type, value, unit, 'measured', notes);
+    }
+    if (result.grossWallAreaSqm > 0) {
+      _addMeasurement(
+        area,
+        'custom',
+        result.grossWallAreaSqm,
+        'sqm',
+        'derived',
+        l10n.surveyRoomScanWallArea,
+      );
+    }
+    final counters = <RoomOpeningKind, int>{};
+    for (final opening in result.openings) {
+      final n = counters.update(opening.kind, (c) => c + 1, ifAbsent: () => 1);
+      final label = switch (opening.kind) {
+        RoomOpeningKind.door => l10n.surveyRoomScanDoor(n),
+        RoomOpeningKind.window => l10n.surveyRoomScanWindow(n),
+        RoomOpeningKind.opening => l10n.surveyRoomScanOpening(n),
+      };
+      _addMeasurement(area, 'opening', opening.widthM, 'm', 'derived', label);
+      _addMeasurement(area, 'height', opening.heightM, 'm', 'derived', label);
+    }
+  }
+
+  void _addMeasurement(
+    FieldSurveyArea area,
+    String type,
+    double value,
+    String unit,
+    String captureMethod,
+    String? notes,
+  ) {
+    _upsertMeasurement(
+      area: area,
+      item: FieldSurveyMeasurement(
+        id: _uuid.v4(),
+        measurementType: type,
+        value: double.parse(value.toStringAsFixed(2)),
+        unitCode: unit,
+        captureMethod: captureMethod,
         notes: notes,
       ),
     );
@@ -656,20 +809,23 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
         done: l10n.arDone,
         cancel: l10n.commonCancel,
       ),
-      colors: ArMeasureColors(
-        surface: t.surface.toARGB32(),
-        textMain: t.textMain.toARGB32(),
-        textMuted: t.textMuted.toARGB32(),
-        action: t.action.toARGB32(),
-        onAction: t.onAction.toARGB32(),
-        accentMeasure: t.accentMeasure.toARGB32(),
-        danger: t.danger.toARGB32(),
-        borderStrong: t.borderStrong.toARGB32(),
-        disabledBackground: t.surfaceSubtle.toARGB32(),
-        disabledForeground: t.textSubtle.toARGB32(),
-      ),
+      colors: _nativeColors(t),
     );
   }
+
+  /// Native screens get every colour from ErpTokens.
+  static ArMeasureColors _nativeColors(ErpTokens t) => ArMeasureColors(
+    surface: t.surface.toARGB32(),
+    textMain: t.textMain.toARGB32(),
+    textMuted: t.textMuted.toARGB32(),
+    action: t.action.toARGB32(),
+    onAction: t.onAction.toARGB32(),
+    accentMeasure: t.accentMeasure.toARGB32(),
+    danger: t.danger.toARGB32(),
+    borderStrong: t.borderStrong.toARGB32(),
+    disabledBackground: t.surfaceSubtle.toARGB32(),
+    disabledForeground: t.textSubtle.toARGB32(),
+  );
 
   static String _typeLabel(AppLocalizations l10n, String type) =>
       switch (type) {
@@ -678,6 +834,8 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
         'width' => l10n.surveyMeasureTypeWidth,
         'height' => l10n.surveyMeasureTypeHeight,
         'count' => l10n.surveyMeasureTypeCount,
+        'opening' => l10n.surveyMeasureTypeOpening,
+        'custom' => l10n.surveyMeasureTypeCustom,
         _ => l10n.surveyMeasureTypeArea,
       };
 
@@ -686,7 +844,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
         'sqm' => l10n.surveyUnitSqm,
         'm' => l10n.surveyUnitM,
         'mm' => l10n.surveyUnitMm,
-        'pcs' => l10n.surveyUnitPcs,
+        'unit' => l10n.surveyUnitPcs,
         _ => unit,
       };
 
@@ -734,7 +892,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
           children: [
             Expanded(
               child: Text(
-                '${_record.opportunityCode} · ${_record.opportunityTitle}',
+                '${_record.opportunityCode} ${_record.opportunityTitle}',
                 style: text.titleMedium,
               ),
             ),
@@ -744,9 +902,12 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
         ),
         SizedBox(height: t.space2),
         Text(
-          '${_record.customerName} · '
-          '${_record.siteName.isEmpty ? l10n.todayNoSite : _record.siteName}',
-          style: text.bodyMedium?.copyWith(color: t.textMuted),
+          _record.customerName,
+          style: text.bodyMedium?.copyWith(color: t.textBody),
+        ),
+        Text(
+          _record.siteName.isEmpty ? l10n.todayNoSite : _record.siteName,
+          style: text.bodySmall?.copyWith(color: t.textMuted),
         ),
         SizedBox(height: t.space3),
         ErpTextField(
@@ -793,7 +954,7 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
             ErpBottomActionBar(
               label: l10n.surveySaveDraft,
               isLoading: _saving,
-              onPressed: _saveDraft,
+              onPressed: _confirmAndSave,
               secondaryLabel: l10n.surveyMarkReady,
               onSecondaryPressed: _confirmMarkReady,
             ),
@@ -1242,7 +1403,7 @@ class _ActiveAreaFocusCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '${area.code} · ${area.name}',
+                '${area.code} ${area.name}',
                 style: text.titleMedium,
               ),
             ),

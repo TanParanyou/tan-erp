@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Tooltip } from "@/components/ui/Tooltip";
 import {
   Table,
   TableHeader,
@@ -17,13 +19,16 @@ import {
   TableCaption,
 } from "@/components/ui/Table";
 import { MultiLangInput } from "@/components/forms/MultiLangInput";
-import { IconTrash, IconPlus, IconChevronDown } from "@/components/common/Icons";
+import { IconTrash, IconPlus, IconChevronDown, IconFileText, IconUpload, IconArrowUp, IconArrowDown } from "@/components/common/Icons";
 import { useConfirm } from "@/hooks/useConfirm";
 import type { EstimateWorkspaceFormData } from "../schemas/estimate-workspace-schema";
 import { calculateSectionSummary, calculateWorkItemSummary } from "../utils/estimate-calculations";
 import { formatFinancialNumber, formatPercentRate } from "../utils/estimate-formatters";
+import { marginTone, MARGIN_TEXT_CLASS } from "../utils/estimate-margin-tone";
 import { EstimateWorkItemCard } from "./estimate-work-item-card";
 import { EstimateTemplateModal } from "./estimate-template-modal";
+import { EstimateBoqImportModal } from "./estimate-boq-import-modal";
+import type { BoqImportRow } from "../utils/estimate-boq-import";
 import type { EstimateTemplateItem } from "../constants/estimate-templates";
 import { useEstimateWorkspace, scrollEstimateTarget } from "./estimate-workspace-context";
 import { workspaceWorkMatches } from "../utils/estimate-workspace-filter";
@@ -34,14 +39,20 @@ interface EstimateSectionCardProps {
   isInitiallyExpanded?: boolean;
   branchId?: string;
   onRemoveSection: (sectionIndex: number) => void;
+  onMoveSection?: (sectionIndex: number, delta: -1 | 1) => void;
+  isFirstSection?: boolean;
+  isLastSection?: boolean;
 }
 
-export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpanded = true, branchId, onRemoveSection }: EstimateSectionCardProps) {
+export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpanded = true, branchId, onRemoveSection, onMoveSection, isFirstSection = false, isLastSection = false }: EstimateSectionCardProps) {
   const t = useTranslations("estimates");
   const { confirm, ConfirmDialog } = useConfirm();
   const workspace = useEstimateWorkspace();
   const [isExpanded, setIsExpanded] = useState(isInitiallyExpanded);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [bulkMargin, setBulkMargin] = useState("");
   const { control, getValues, setValue, formState: { errors } } = useFormContext<EstimateWorkspaceFormData>();
   const currentSection = useWatch({ control, name: `sections.${sectionIndex}` });
   const sectionSummary = calculateSectionSummary(currentSection ?? {});
@@ -57,11 +68,12 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
     focusHandled.current = focusTargetId;
     setIsExpanded(true);
     if (work?.uiKey) workspace.selectWork(work.uiKey);
-    requestAnimationFrame(() => {
+    // Two frames: the selected work card mounts after selectWork, so its target does not exist yet in the first one.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const target = document.getElementById(`estimate-target-${focusTargetId}`);
       if (target) scrollEstimateTarget(target);
       target?.focus({ preventScroll: true });
-    });
+    }));
   }, [focusTargetId, currentSection, workspace]);
 
   useEffect(() => {
@@ -90,6 +102,16 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
     append(additions); setIsExpanded(true);
     if (additions[0]) workspace?.selectWork(additions[0].uiKey);
   }
+  function handleImportRows(imported: BoqImportRow[], reasonCode: string, reason: string) {
+    const additions = imported.map((row, offset) => ({
+      uiKey: crypto.randomUUID(), code: row.code, descriptionTh: row.descriptionTh, descriptionEn: row.descriptionEn, quantity: row.quantity,
+      itemId: null, overrideReasonCode: reasonCode, overrideReason: reason, unitCode: row.unitCode,
+      sellingRuleType: "margin", sellingRuleValue: row.marginPercent, sortOrder: fields.length + offset + 1,
+      costComponents: [{ type: "material", description: row.descriptionTh, quantity: 1, unitCode: row.unitCode, unitCost: row.unitCost, currency, sortOrder: 1, isProvisional: true }],
+    }));
+    append(additions); setIsExpanded(true);
+    if (additions[0]) workspace?.selectWork(additions[0].uiKey);
+  }
   function handleDuplicateItem(index: number) {
     const source = getValues(`sections.${sectionIndex}.workItems.${index}`);
     const uiKey = crypto.randomUUID();
@@ -113,11 +135,42 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
   }
   if (!currentSection) return null;
   const visible = currentSection.workItems.map((work, index) => ({ work, index })).filter(({ work }) => workspaceWorkMatches(currentSection, work, workspace?.searchQuery ?? "", workspace?.filterMode ?? "all"));
+  // Bulk actions only touch rows the user can currently see, never rows hidden by the filter.
+  const visibleKeys = visible.flatMap(({ work }) => (work.uiKey ? [work.uiKey] : []));
+  const selectedKeys = checkedKeys.filter((key) => visibleKeys.includes(key));
+  const allChecked = visibleKeys.length > 0 && selectedKeys.length === visibleKeys.length;
+  async function handleRequestRemoveSelected() {
+    if (!await confirm({ title: t("removeSelectedWorkItems", { count: selectedKeys.length }), message: t("confirmDeleteSelectedWorkItems", { count: selectedKeys.length }), confirmText: t("removeWorkItem"), variant: "danger" })) return;
+    remove(currentSection.workItems.flatMap((work, index) => (work.uiKey && selectedKeys.includes(work.uiKey) ? [index] : [])));
+    setCheckedKeys([]);
+  }
+  const bulkMarginValue = Number(bulkMargin);
+  const bulkMarginValid = bulkMargin.trim() !== "" && bulkMarginValue >= 0 && bulkMarginValue <= 95;
+  function handleApplyBulkMargin() {
+    if (!bulkMarginValid) return;
+    currentSection.workItems.forEach((work, index) => {
+      if (!work.uiKey || !selectedKeys.includes(work.uiKey)) return;
+      setValue(`sections.${sectionIndex}.workItems.${index}.sellingRuleType`, "margin", { shouldDirty: true, shouldValidate: true });
+      setValue(`sections.${sectionIndex}.workItems.${index}.sellingRuleValue`, bulkMarginValue, { shouldDirty: true, shouldValidate: true });
+    });
+    setBulkMargin("");
+  }
+  // Arrow keys walk the BOQ rows (all sections) without leaving the keyboard.
+  function handleRowKeyDown(event: React.KeyboardEvent<HTMLTableRowElement>) {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    const rows = Array.from(event.currentTarget.closest("[data-boq-scope]")?.querySelectorAll<HTMLElement>("[data-boq-row]") ?? []);
+    const next = rows[rows.indexOf(event.currentTarget) + (event.key === "ArrowDown" ? 1 : -1)];
+    if (!next) return;
+    event.preventDefault();
+    if (next.dataset.workKey) workspace?.selectWork(next.dataset.workKey);
+    requestAnimationFrame(() => next.querySelector<HTMLElement>("[data-boq-select]")?.focus());
+  }
   const query = workspace?.searchQuery.trim().toLowerCase() ?? "";
   const sectionMatches = [currentSection.code, currentSection.nameTh, currentSection.nameEn].some((value) => value.toLowerCase().includes(query));
   const sectionVisible = visible.length > 0 || ((workspace?.filterMode ?? "all") === "all" && sectionMatches);
-  const cards = fields.map((field, index) => (
-    <div key={field.id} className={workspace && workspace.selectedKey !== field.uiKey ? "hidden" : ""}>
+  // Only the selected card is mounted in the workspace; form values live in react-hook-form, so large BOQs stay light.
+  const cards = fields.map((field, index) => workspace && workspace.selectedKey !== field.uiKey ? null : (
+    <div key={field.id}>
       <EstimateWorkItemCard sectionIndex={sectionIndex} itemIndex={index} currency={currency} branchId={branchId}
         isFirst={index === 0} isLast={index === fields.length - 1} onDuplicateItem={handleDuplicateItem} onRemoveItem={handleRemoveItem}
         onMoveUp={(i) => move(i, i - 1)} onMoveDown={(i) => move(i, i + 1)} />
@@ -170,15 +223,27 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
           </div>
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="mr-auto break-words text-xs font-bold font-mono text-erp-navy" title={t("sectionSubtotal")}>{formatFinancialNumber(sectionSummary.totalSellingPrice)} {currency} <span className="text-xs">({formatPercentRate(sectionSummary.marginRate, 1)})</span></span>
-          <Button size="sm" variant="outline" className="px-3 text-xs sm:text-sm" onClick={() => setIsTemplateModalOpen(true)} title={t("quickTemplatesDesc")}>{t("insertTemplate")}</Button>
-          <Button size="sm" variant="outline" className="px-3 text-xs sm:text-sm" onClick={handleAddWorkItem} icon={<IconPlus size={16} />}>{t("addWorkItem")}</Button>
-          <Button variant="ghost" size="icon" onClick={handleRequestRemoveSection} aria-label={t("removeSection")} icon={<IconTrash size={16} />} />
+          <span className="mr-auto break-words text-xs font-bold font-mono text-erp-navy" ><span className="mr-1 font-sans font-normal text-erp-text-muted">{t("sectionSubtotal")}</span>{formatFinancialNumber(sectionSummary.totalSellingPrice)} {currency} <span className="text-xs">({formatPercentRate(sectionSummary.marginRate, 1)})</span></span>
+          {onMoveSection && <>
+            <Tooltip content={t("moveUp")} position="bottom"><Button size="icon" variant="ghost" disabled={isFirstSection} onClick={() => onMoveSection(sectionIndex, -1)} aria-label={t("moveUp")} icon={<IconArrowUp size={16} />} /></Tooltip>
+            <Tooltip content={t("moveDown")} position="bottom"><Button size="icon" variant="ghost" disabled={isLastSection} onClick={() => onMoveSection(sectionIndex, 1)} aria-label={t("moveDown")} icon={<IconArrowDown size={16} />} /></Tooltip>
+          </>}
+          <Tooltip content={t("importExcel")} position="bottom"><Button size="icon" variant="outline" onClick={() => setIsImportOpen(true)} aria-label={t("importExcel")} icon={<IconUpload size={16} />} /></Tooltip>
+          <Tooltip content={t("quickTemplatesDesc")} position="bottom"><Button size="icon" variant="outline" onClick={() => setIsTemplateModalOpen(true)} aria-label={t("insertTemplate")} icon={<IconFileText size={16} />} /></Tooltip>
+          <Tooltip content={t("addWorkItem")} position="bottom"><Button size="icon" variant="outline" onClick={handleAddWorkItem} aria-label={t("addWorkItem")} icon={<IconPlus size={16} />} /></Tooltip>
+          {selectedKeys.length > 0 && (
+            <span className="flex items-center gap-1">
+              <Input aria-label={t("bulkMarginLabel")} placeholder={t("bulkMarginLabel")} type="number" min="0" max="95" step="any" value={bulkMargin} onChange={(event) => setBulkMargin(event.target.value)} wrapperClassName="mb-0 w-24" className="text-right font-mono" />
+              <Button size="sm" variant="outline" disabled={!bulkMarginValid} onClick={handleApplyBulkMargin}>{t("bulkMarginApply")}</Button>
+            </span>
+          )}
+          {selectedKeys.length > 0 && <Button size="sm" variant="danger" onClick={handleRequestRemoveSelected} icon={<IconTrash size={16} />}>{t("removeSelectedWorkItems", { count: selectedKeys.length })}</Button>}
+          <Tooltip content={t("removeSection")} position="bottom"><Button variant="ghost" size="icon" onClick={handleRequestRemoveSection} aria-label={t("removeSection")} icon={<IconTrash size={16} />} /></Tooltip>
         </div>
       </div>
       <div className={isExpanded ? "overflow-auto" : "hidden"}>
         {fields.length === 0 ? (
-          <p className="p-5 text-center text-sm text-erp-text-muted">{t("addWorkItem")}</p>
+          <div className="p-5 text-center"><Button size="sm" variant="primary" onClick={handleAddWorkItem} icon={<IconPlus size={16} />}>{t("addWorkItem")}</Button></div>
         ) : (
           <Table wrapperClassName="min-w-[620px]" className="text-xs">
             <TableCaption className="sr-only">
@@ -186,6 +251,15 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
             </TableCaption>
             <TableHeader className="bg-erp-surface-subtle text-xs text-erp-text-muted">
               <TableRow>
+                <TableHead className="w-10 px-2 py-2">
+                  <Checkbox
+                    aria-label={t("selectAllWorkItems")}
+                    wrapperClassName="!mb-0"
+                    checked={allChecked}
+                    ref={(element) => { if (element) element.indeterminate = selectedKeys.length > 0 && !allChecked; }}
+                    onCheckedChange={(checked) => setCheckedKeys(checked ? visibleKeys : [])}
+                  />
+                </TableHead>
                 <TableHead className="px-2 py-2 text-left">{t("itemCodeAndDesc")}</TableHead>
                 <TableHead className="px-2 py-2 text-right">{t("quantity")}</TableHead>
                 <TableHead className="px-2 py-2 text-right">{t("totalCost")}</TableHead>
@@ -200,9 +274,23 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
                 return (
                   <TableRow
                     key={work.uiKey}
+                    data-boq-row=""
+                    data-work-key={work.uiKey}
+                    onKeyDown={handleRowKeyDown}
                     aria-selected={selected}
                     className={cn("border-t border-erp-border", selected && "bg-erp-surface-subtle")}
                   >
+                    <TableCell className="w-10 px-2 py-1">
+                      <Checkbox
+                        aria-label={t("selectWorkItem", { code: work.code })}
+                        wrapperClassName="!mb-0"
+                        checked={work.uiKey ? selectedKeys.includes(work.uiKey) : false}
+                        onCheckedChange={(checked) => {
+                          const key = work.uiKey;
+                          if (key) setCheckedKeys((previous) => (checked ? [...previous, key] : previous.filter((value) => value !== key)));
+                        }}
+                      />
+                    </TableCell>
                     <TableCell
                       className={cn(
                         "sticky left-0 px-2 py-1 border-l-4",
@@ -215,6 +303,7 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
                         onClick={() => {
                           if (work.uiKey) workspace?.selectWork(work.uiKey);
                         }}
+                        data-boq-select=""
                         aria-label={t("workspace.selectWorkCode", { code: work.code })}
                       >
                         <span className="block">
@@ -231,7 +320,7 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
                       {formatFinancialNumber(summary.totalSellingPrice)}
                     </TableCell>
                     <TableCell className="px-2 py-2 text-right font-mono">
-                      <span className={summary.marginRate < 30 ? "text-erp-danger" : "text-erp-success"}>
+                      <span className={MARGIN_TEXT_CLASS[marginTone(summary.marginRate, summary.grossProfit)]}>
                         {formatPercentRate(summary.marginRate, 1)}
                       </span>
                     </TableCell>
@@ -245,6 +334,7 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
       {!workspace && cards}
     </section>
     {workspace?.inspector && createPortal(cards, workspace.inspector)}
+    <EstimateBoqImportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} onImport={handleImportRows} sectionTitle={currentSection.nameTh} />
     <EstimateTemplateModal isOpen={isTemplateModalOpen} onClose={() => setIsTemplateModalOpen(false)} onInsertTemplates={handleInsertTemplates} sectionTitle={currentSection.nameTh} />
     <ConfirmDialog />
   </>;

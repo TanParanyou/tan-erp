@@ -10,6 +10,7 @@ import {
   formatSignedFinancialAmount,
   formatPercentRate,
 } from "../utils/estimate-formatters";
+import { marginTone, MARGIN_BADGE_CLASS, MARGIN_TEXT_CLASS } from "../utils/estimate-margin-tone";
 
 interface EstimateWorkspaceHudProps {
   estimateNumber: string;
@@ -17,6 +18,8 @@ interface EstimateWorkspaceHudProps {
   status: string;
   currency: string;
   hudMetrics: WorkspaceFinancialSummary;
+  /** Estimate-level discount inputs, rendered under the quotation total they change. */
+  discountSlot?: React.ReactNode;
 }
 
 export function EstimateWorkspaceHud({
@@ -25,8 +28,10 @@ export function EstimateWorkspaceHud({
   status,
   currency,
   hudMetrics,
+  discountSlot,
 }: EstimateWorkspaceHudProps) {
   const t = useTranslations("estimates");
+  const gpTone = marginTone(hudMetrics.marginRate, hudMetrics.grossProfit);
 
   const statusLabel = ["draft", "submitted", "returned", "quoted", "approved", "cancelled", "superseded", "rejected"].includes(status)
     ? t(`statuses.${status}`)
@@ -51,7 +56,7 @@ export function EstimateWorkspaceHud({
       </div>
 
       {/* Tier 2: Operational Financial HUD (Responsive 3-column / 2-row on mobile) */}
-      <div className="grid grid-cols-2 min-[992px]:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-erp-border bg-erp-surface">
+      <div className="grid grid-cols-2 min-[992px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)] divide-y sm:divide-y-0 sm:divide-x divide-erp-border bg-erp-surface">
         {/* Cell 1: BOQ Cost */}
         <div className="px-3 py-2 min-w-0">
           <span className="text-[11px] font-bold uppercase tracking-wider text-erp-text-muted block">
@@ -75,11 +80,7 @@ export function EstimateWorkspaceHud({
               {t("grossProfit")}
             </span>
             <span
-              className={`text-[11px] font-mono font-bold break-words px-1.5 py-0.5 border !rounded-none ${
-                hudMetrics.isGpHealthy
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                  : "bg-rose-50 text-rose-700 border-rose-300"
-              }`}
+              className={`text-[11px] font-mono font-bold break-words px-1.5 py-0.5 border !rounded-none ${MARGIN_BADGE_CLASS[gpTone]}`}
             >
               {hudMetrics.isGpHealthy
                 ? t("gpBenchmark", { rate: formatFinancialNumber(hudMetrics.marginRate, 1, 1) })
@@ -88,9 +89,7 @@ export function EstimateWorkspaceHud({
           </div>
           <div className="flex items-baseline gap-1.5 mt-0.5">
             <span
-              className={`font-mono text-base sm:text-lg font-bold ${
-                hudMetrics.isGpHealthy ? "text-emerald-700" : "text-rose-600"
-              }`}
+              className={`font-mono text-base sm:text-lg font-bold ${MARGIN_TEXT_CLASS[gpTone]}`}
             >
               {formatSignedFinancialAmount(hudMetrics.grossProfit)}
             </span>
@@ -115,6 +114,7 @@ export function EstimateWorkspaceHud({
           <span className="text-[11px] text-erp-text-muted block mt-0.5">
             {t("quotationTotalSubtext")}
           </span>
+          {discountSlot && <div className="mt-2">{discountSlot}</div>}
         </div>
       </div>
     </div>

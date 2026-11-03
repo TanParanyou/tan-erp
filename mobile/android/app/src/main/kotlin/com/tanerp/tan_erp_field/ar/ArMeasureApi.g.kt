@@ -205,6 +205,18 @@ enum class ArAvailability(val raw: Int) {
   }
 }
 
+enum class RoomOpeningKind(val raw: Int) {
+  DOOR(0),
+  WINDOW(1),
+  OPENING(2);
+
+  companion object {
+    fun ofRaw(raw: Int): RoomOpeningKind? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
 /**
  * Every visible text of the native AR screen; native code has no strings.
  *
@@ -461,6 +473,160 @@ data class ArMeasureResult (
     return result
   }
 }
+
+/**
+ * Texts and colours of the native room scan screen (RoomPlan draws its own
+ * coaching UI; we add only the cancel/done controls).
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class RoomScanRequest (
+  val cancel: String,
+  val done: String,
+  val colors: ArMeasureColors
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): RoomScanRequest {
+      val cancel = pigeonVar_list[0] as String
+      val done = pigeonVar_list[1] as String
+      val colors = pigeonVar_list[2] as ArMeasureColors
+      return RoomScanRequest(cancel, done, colors)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      cancel,
+      done,
+      colors,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as RoomScanRequest
+    return ArMeasureApiPigeonUtils.deepEquals(this.cancel, other.cancel) && ArMeasureApiPigeonUtils.deepEquals(this.done, other.done) && ArMeasureApiPigeonUtils.deepEquals(this.colors, other.colors)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.cancel)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.done)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.colors)
+    return result
+  }
+}
+
+/**
+ * One door, window or open passage found by RoomPlan.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class RoomOpening (
+  val kind: RoomOpeningKind,
+  val widthM: Double,
+  val heightM: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): RoomOpening {
+      val kind = pigeonVar_list[0] as RoomOpeningKind
+      val widthM = pigeonVar_list[1] as Double
+      val heightM = pigeonVar_list[2] as Double
+      return RoomOpening(kind, widthM, heightM)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      kind,
+      widthM,
+      heightM,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as RoomOpening
+    return ArMeasureApiPigeonUtils.deepEquals(this.kind, other.kind) && ArMeasureApiPigeonUtils.deepEquals(this.widthM, other.widthM) && ArMeasureApiPigeonUtils.deepEquals(this.heightM, other.heightM)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.kind)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.widthM)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.heightM)
+    return result
+  }
+}
+
+/**
+ * Room dimensions from a RoomPlan scan. Width/length are the floor's
+ * bounding box (width ≤ length); height is the tallest wall (null when no
+ * wall was detected).
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class RoomScanResult (
+  val floorAreaSqm: Double,
+  val widthM: Double,
+  val lengthM: Double,
+  val ceilingHeightM: Double? = null,
+  /** Sum of every wall's width × height, openings not subtracted. */
+  val grossWallAreaSqm: Double,
+  val openings: List<RoomOpening>
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): RoomScanResult {
+      val floorAreaSqm = pigeonVar_list[0] as Double
+      val widthM = pigeonVar_list[1] as Double
+      val lengthM = pigeonVar_list[2] as Double
+      val ceilingHeightM = pigeonVar_list[3] as Double?
+      val grossWallAreaSqm = pigeonVar_list[4] as Double
+      val openings = pigeonVar_list[5] as List<RoomOpening>
+      return RoomScanResult(floorAreaSqm, widthM, lengthM, ceilingHeightM, grossWallAreaSqm, openings)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      floorAreaSqm,
+      widthM,
+      lengthM,
+      ceilingHeightM,
+      grossWallAreaSqm,
+      openings,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as RoomScanResult
+    return ArMeasureApiPigeonUtils.deepEquals(this.floorAreaSqm, other.floorAreaSqm) && ArMeasureApiPigeonUtils.deepEquals(this.widthM, other.widthM) && ArMeasureApiPigeonUtils.deepEquals(this.lengthM, other.lengthM) && ArMeasureApiPigeonUtils.deepEquals(this.ceilingHeightM, other.ceilingHeightM) && ArMeasureApiPigeonUtils.deepEquals(this.grossWallAreaSqm, other.grossWallAreaSqm) && ArMeasureApiPigeonUtils.deepEquals(this.openings, other.openings)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.floorAreaSqm)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.widthM)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.lengthM)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.ceilingHeightM)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.grossWallAreaSqm)
+    result = 31 * result + ArMeasureApiPigeonUtils.deepHash(this.openings)
+    return result
+  }
+}
 private open class ArMeasureApiPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -470,23 +636,43 @@ private open class ArMeasureApiPigeonCodec : StandardMessageCodec() {
         }
       }
       130.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          ArMeasureStrings.fromList(it)
+        return (readValue(buffer) as Long?)?.let {
+          RoomOpeningKind.ofRaw(it.toInt())
         }
       }
       131.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ArMeasureColors.fromList(it)
+          ArMeasureStrings.fromList(it)
         }
       }
       132.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ArMeasureRequest.fromList(it)
+          ArMeasureColors.fromList(it)
         }
       }
       133.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
+          ArMeasureRequest.fromList(it)
+        }
+      }
+      134.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
           ArMeasureResult.fromList(it)
+        }
+      }
+      135.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RoomScanRequest.fromList(it)
+        }
+      }
+      136.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RoomOpening.fromList(it)
+        }
+      }
+      137.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RoomScanResult.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -498,20 +684,36 @@ private open class ArMeasureApiPigeonCodec : StandardMessageCodec() {
         stream.write(129)
         writeValue(stream, value.raw.toLong())
       }
-      is ArMeasureStrings -> {
+      is RoomOpeningKind -> {
         stream.write(130)
-        writeValue(stream, value.toList())
+        writeValue(stream, value.raw.toLong())
       }
-      is ArMeasureColors -> {
+      is ArMeasureStrings -> {
         stream.write(131)
         writeValue(stream, value.toList())
       }
-      is ArMeasureRequest -> {
+      is ArMeasureColors -> {
         stream.write(132)
         writeValue(stream, value.toList())
       }
-      is ArMeasureResult -> {
+      is ArMeasureRequest -> {
         stream.write(133)
+        writeValue(stream, value.toList())
+      }
+      is ArMeasureResult -> {
+        stream.write(134)
+        writeValue(stream, value.toList())
+      }
+      is RoomScanRequest -> {
+        stream.write(135)
+        writeValue(stream, value.toList())
+      }
+      is RoomOpening -> {
+        stream.write(136)
+        writeValue(stream, value.toList())
+      }
+      is RoomScanResult -> {
+        stream.write(137)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -566,6 +768,66 @@ interface ArMeasureApi {
             val args = message as List<Any?>
             val requestArg = args[0] as ArMeasureRequest
             api.measureFloor(requestArg) { result: Result<ArMeasureResult?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(ArMeasureApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(ArMeasureApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+}
+/**
+ * iOS only (RoomPlan, LiDAR, iOS 17+). Android registers no handler, so
+ * calls fail with a channel error and the app treats it as unsupported.
+ * Error codes of [RoomScanApi.scanRoom]: `camera_permission_denied`,
+ * `unavailable`, `session_failed`, `no_floor`, `busy`.
+ *
+ * Generated interface from Pigeon that represents a handler of messages from Flutter.
+ */
+interface RoomScanApi {
+  fun isSupported(): Boolean
+  /** Opens the native room scan. Returns null when the user cancels. */
+  fun scanRoom(request: RoomScanRequest, callback: (Result<RoomScanResult?>) -> Unit)
+
+  companion object {
+    /** The codec used by RoomScanApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      ArMeasureApiPigeonCodec()
+    }
+    /** Sets up an instance of `RoomScanApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: RoomScanApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tan_erp_field.RoomScanApi.isSupported$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.isSupported())
+            } catch (exception: Throwable) {
+              ArMeasureApiPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tan_erp_field.RoomScanApi.scanRoom$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestArg = args[0] as RoomScanRequest
+            api.scanRoom(requestArg) { result: Result<RoomScanResult?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(ArMeasureApiPigeonUtils.wrapError(error))

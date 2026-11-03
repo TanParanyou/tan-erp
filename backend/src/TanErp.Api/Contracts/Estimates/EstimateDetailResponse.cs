@@ -113,6 +113,16 @@ public sealed record EstimateReadinessReasonResponse(
     Guid? TargetId,
     string TargetField);
 
+public sealed record EstimateReturnReviewerResponse(
+    [property: Required] Guid Id,
+    [property: Required] string DisplayName);
+
+public sealed record EstimateReturnResponse(
+    [property: Required] string ReasonCode,
+    [property: Required] string Note,
+    [property: Required] DateTimeOffset ReturnedAtUtc,
+    [property: Required] EstimateReturnReviewerResponse ReturnedBy);
+
 public sealed record EstimateRevisionResponse(
     Guid Id,
     Guid EstimateId,
@@ -141,7 +151,8 @@ public sealed record EstimateRevisionResponse(
     DateTimeOffset UpdatedAtUtc,
     IReadOnlyList<EstimateSectionResponse> Sections,
     string Readiness,
-    IReadOnlyList<EstimateReadinessReasonResponse> ReadinessReasons);
+    IReadOnlyList<EstimateReadinessReasonResponse> ReadinessReasons,
+    EstimateReturnResponse? LastReturn = null);
 
 public sealed record EstimateDetailResponse(
     Guid Id,
@@ -275,6 +286,9 @@ public sealed record EstimateDetailResponse(
             sections,
             r.Readiness.Status,
             r.Readiness.Reasons.Select(reason => new EstimateReadinessReasonResponse(
-                reason.Code, reason.TargetType, reason.TargetId, reason.TargetField)).ToList());
+                reason.Code, reason.TargetType, reason.TargetId, reason.TargetField)).ToList(),
+            r.LastReturn is null ? null : new EstimateReturnResponse(
+                r.LastReturn.ReasonCode, r.LastReturn.Note, r.LastReturn.ReturnedAtUtc,
+                new EstimateReturnReviewerResponse(r.LastReturn.ReviewerUserId, r.LastReturn.ReviewerDisplayName)));
     }
 }

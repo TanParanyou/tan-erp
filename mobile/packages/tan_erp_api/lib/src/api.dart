@@ -33,6 +33,7 @@ import 'package:tan_erp_api/src/api/departments_api.dart';
 import 'package:tan_erp_api/src/api/document_sequences_api.dart';
 import 'package:tan_erp_api/src/api/document_templates_api.dart';
 import 'package:tan_erp_api/src/api/estimate_catalog_api.dart';
+import 'package:tan_erp_api/src/api/estimate_history_api.dart';
 import 'package:tan_erp_api/src/api/estimate_review_queue_api.dart';
 import 'package:tan_erp_api/src/api/estimates_api.dart';
 import 'package:tan_erp_api/src/api/files_api.dart';
@@ -65,6 +66,7 @@ import 'package:tan_erp_api/src/api/service_requests_api.dart';
 import 'package:tan_erp_api/src/api/site_surveys_api.dart';
 import 'package:tan_erp_api/src/api/sites_api.dart';
 import 'package:tan_erp_api/src/api/supplier_invoices_api.dart';
+import 'package:tan_erp_api/src/api/supplier_item_prices_api.dart';
 import 'package:tan_erp_api/src/api/suppliers_api.dart';
 import 'package:tan_erp_api/src/api/survey_master_data_api.dart';
 import 'package:tan_erp_api/src/api/survey_template_versions_api.dart';
@@ -313,6 +315,12 @@ class TanErpApi {
     return EstimateCatalogApi(dio, serializers);
   }
 
+  /// Get EstimateHistoryApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  EstimateHistoryApi getEstimateHistoryApi() {
+    return EstimateHistoryApi(dio, serializers);
+  }
+
   /// Get EstimateReviewQueueApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   EstimateReviewQueueApi getEstimateReviewQueueApi() {
@@ -503,6 +511,12 @@ class TanErpApi {
   /// by doing that all interceptors will not be executed
   SupplierInvoicesApi getSupplierInvoicesApi() {
     return SupplierInvoicesApi(dio, serializers);
+  }
+
+  /// Get SupplierItemPricesApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  SupplierItemPricesApi getSupplierItemPricesApi() {
+    return SupplierItemPricesApi(dio, serializers);
   }
 
   /// Get SuppliersApi instance, base route and serializer can be overridden by a given but be careful,

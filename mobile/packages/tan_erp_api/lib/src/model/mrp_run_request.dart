@@ -19,6 +19,7 @@ part 'mrp_run_request.g.dart';
 /// * [productionLeadTimeDays] 
 /// * [includeOpenWorkOrders] 
 /// * [demands] 
+/// * [projectIds] 
 @BuiltValue()
 abstract class MrpRunRequest implements Built<MrpRunRequest, MrpRunRequestBuilder> {
   @BuiltValueField(wireName: r'asOfDate')
@@ -35,6 +36,9 @@ abstract class MrpRunRequest implements Built<MrpRunRequest, MrpRunRequestBuilde
 
   @BuiltValueField(wireName: r'demands')
   BuiltList<MrpDemandRequest>? get demands;
+
+  @BuiltValueField(wireName: r'projectIds')
+  BuiltList<String>? get projectIds;
 
   MrpRunRequest._();
 
@@ -92,6 +96,13 @@ class _$MrpRunRequestSerializer implements PrimitiveSerializer<MrpRunRequest> {
       yield serializers.serialize(
         object.demands,
         specifiedType: const FullType.nullable(BuiltList, [FullType(MrpDemandRequest)]),
+      );
+    }
+    if (object.projectIds != null) {
+      yield r'projectIds';
+      yield serializers.serialize(
+        object.projectIds,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
       );
     }
   }
@@ -156,6 +167,14 @@ class _$MrpRunRequestSerializer implements PrimitiveSerializer<MrpRunRequest> {
           ) as BuiltList<MrpDemandRequest>?;
           if (valueDes == null) continue;
           result.demands.replace(valueDes);
+          break;
+        case r'projectIds':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
+          ) as BuiltList<String>?;
+          if (valueDes == null) continue;
+          result.projectIds.replace(valueDes);
           break;
         default:
           unhandled.add(key);

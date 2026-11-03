@@ -186,6 +186,7 @@
   "arErrorInstallDeclined": "ยังไม่ได้ติดตั้ง Google Play Services for AR",
   "arErrorUnavailable": "เครื่องนี้ใช้ AR ไม่ได้",
   "arErrorSessionFailed": "เปิดกล้อง AR ไม่สำเร็จ กรุณาลองใหม่",
+  "arErrorNoFloor": "ไม่พบพื้นห้องในการสแกน กรุณาสแกนใหม่ให้เห็นพื้น",
   "arErrorBusy": "กำลังวัดอยู่แล้ว",
   "photoAreaCardTitle": "วัดพื้นที่จากรูป + A4",
   "photoAreaCardBody": "ถ่ายรูปพื้นที่ที่มีกระดาษขนาดมาตรฐานวางอยู่ แล้วแตะมุมกระดาษและมุมพื้นที่",
@@ -241,6 +242,7 @@
   "todayFilterQualified": "รอนัดสำรวจ",
   "todayEmptyTitle": "ไม่มีงานสำรวจวันนี้",
   "todayEmptyBody": "ยังไม่มีรายการนัดสำรวจในสาขานี้ แตะเพื่อโหลดข้อมูลใหม่",
+  "todaySelectPrompt": "เลือกงานจากรายการเพื่อเริ่มสำรวจ",
   "todayOpenSurvey": "เปิดใบสำรวจ",
   "todayStartSurvey": "เริ่มสำรวจหน้างาน",
   "todayStageQualified": "ผ่านคัดกรอง",
@@ -282,6 +284,8 @@
   "surveyMeasureTypeWidth": "ความกว้าง",
   "surveyMeasureTypeHeight": "ความสูง",
   "surveyMeasureTypeCount": "จำนวน",
+  "surveyMeasureTypeOpening": "ช่องเปิด",
+  "surveyMeasureTypeCustom": "อื่นๆ",
   "surveyUnitSqm": "ตร.ม.",
   "surveyUnitM": "ม.",
   "surveyUnitMm": "มม.",
@@ -293,6 +297,49 @@
   "surveyMeasureByPad": "ป้อนตัวเลข",
   "surveyMeasureByPhoto": "วัดจากรูป A4",
   "surveyMeasureByAr": "AR วัดพื้น",
+  "surveyMeasureByRoomScan": "สแกนห้อง (LiDAR)",
+  "surveyRoomScanDoor": "ประตู {n}",
+  "@surveyRoomScanDoor": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanWindow": "หน้าต่าง {n}",
+  "@surveyRoomScanWindow": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanOpening": "ช่องเปิด {n}",
+  "@surveyRoomScanOpening": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanWallArea": "พื้นที่ผนังรวม (ยังไม่หักช่องเปิด)",
+  "surveyCheckTitle": "ข้อมูลสำรวจยังไม่ครบ",
+  "surveyCheckSaveAnyway": "บันทึกต่อ",
+  "surveyCheckReview": "กลับไปแก้ไข",
+  "surveyCheckNoMeasurement": "ยังไม่มีขนาด",
+  "surveyCheckZeroValue": "มีค่าวัดเป็น 0",
+  "surveyCheckNoPhoto": "ยังไม่มีรูป",
+  "surveyCheckLine": "• {area}: {issue}",
+  "@surveyCheckLine": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      },
+      "issue": {
+        "type": "String"
+      }
+    }
+  },
   "surveyMeasureNotesLabel": "หมายเหตุค่าวัด",
   "surveyMeasureNotesPlaceholder": "เช่น หักเสา 2 ต้น หรือวัดรวมบัว",
   "surveySaveDraft": "บันทึกร่าง",

@@ -23,7 +23,12 @@ enum ErpIcons {
   ruler('ruler'),
   box('box'),
   calculator('calculator'),
-  cloudOff('cloud_off');
+  cloudOff('cloud_off'),
+  globe('globe'),
+  sun('sun'),
+  rows('rows'),
+  typeSize('type_size'),
+  mail('mail');
 
   ErpIcons(this.file);
   final String file;

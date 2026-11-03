@@ -63,6 +63,8 @@ class _$EstimateRevisionResponse extends EstimateRevisionResponse {
   final String? readiness;
   @override
   final BuiltList<EstimateReadinessReasonResponse>? readinessReasons;
+  @override
+  final EstimateReturnResponse? lastReturn;
 
   factory _$EstimateRevisionResponse(
           [void Function(EstimateRevisionResponseBuilder)? updates]) =>
@@ -96,7 +98,8 @@ class _$EstimateRevisionResponse extends EstimateRevisionResponse {
       this.updatedAtUtc,
       this.sections,
       this.readiness,
-      this.readinessReasons})
+      this.readinessReasons,
+      this.lastReturn})
       : super._();
   @override
   EstimateRevisionResponse rebuild(
@@ -138,7 +141,8 @@ class _$EstimateRevisionResponse extends EstimateRevisionResponse {
         updatedAtUtc == other.updatedAtUtc &&
         sections == other.sections &&
         readiness == other.readiness &&
-        readinessReasons == other.readinessReasons;
+        readinessReasons == other.readinessReasons &&
+        lastReturn == other.lastReturn;
   }
 
   @override
@@ -172,6 +176,7 @@ class _$EstimateRevisionResponse extends EstimateRevisionResponse {
     _$hash = $jc(_$hash, sections.hashCode);
     _$hash = $jc(_$hash, readiness.hashCode);
     _$hash = $jc(_$hash, readinessReasons.hashCode);
+    _$hash = $jc(_$hash, lastReturn.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -206,7 +211,8 @@ class _$EstimateRevisionResponse extends EstimateRevisionResponse {
           ..add('updatedAtUtc', updatedAtUtc)
           ..add('sections', sections)
           ..add('readiness', readiness)
-          ..add('readinessReasons', readinessReasons))
+          ..add('readinessReasons', readinessReasons)
+          ..add('lastReturn', lastReturn))
         .toString();
   }
 }
@@ -345,6 +351,12 @@ class EstimateRevisionResponseBuilder
           ListBuilder<EstimateReadinessReasonResponse>? readinessReasons) =>
       _$this._readinessReasons = readinessReasons;
 
+  EstimateReturnResponseBuilder? _lastReturn;
+  EstimateReturnResponseBuilder get lastReturn =>
+      _$this._lastReturn ??= EstimateReturnResponseBuilder();
+  set lastReturn(EstimateReturnResponseBuilder? lastReturn) =>
+      _$this._lastReturn = lastReturn;
+
   EstimateRevisionResponseBuilder() {
     EstimateRevisionResponse._defaults(this);
   }
@@ -380,6 +392,7 @@ class EstimateRevisionResponseBuilder
       _sections = $v.sections?.toBuilder();
       _readiness = $v.readiness;
       _readinessReasons = $v.readinessReasons?.toBuilder();
+      _lastReturn = $v.lastReturn?.toBuilder();
       _$v = null;
     }
     return this;
@@ -431,6 +444,7 @@ class EstimateRevisionResponseBuilder
             sections: _sections?.build(),
             readiness: readiness,
             readinessReasons: _readinessReasons?.build(),
+            lastReturn: _lastReturn?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -440,6 +454,8 @@ class EstimateRevisionResponseBuilder
 
         _$failedField = 'readinessReasons';
         _readinessReasons?.build();
+        _$failedField = 'lastReturn';
+        _lastReturn?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'EstimateRevisionResponse', _$failedField, e.toString());

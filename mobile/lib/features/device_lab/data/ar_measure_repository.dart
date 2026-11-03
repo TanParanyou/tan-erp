@@ -30,14 +30,7 @@ class ArMeasureRepository {
     try {
       return await _api.measureFloor(request);
     } on PlatformException catch (e) {
-      throw switch (e.code) {
-        'camera_permission_denied' => ArMeasureFailure.cameraPermissionDenied,
-        'install_declined' => ArMeasureFailure.installDeclined,
-        'unavailable' => ArMeasureFailure.unavailable,
-        'session_failed' => ArMeasureFailure.sessionFailed,
-        'busy' => ArMeasureFailure.busy,
-        _ => ArMeasureFailure.unknown,
-      };
+      throw ArMeasureFailure.fromCode(e.code);
     }
   }
 }

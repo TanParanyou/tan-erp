@@ -202,6 +202,10 @@ builder.Services.AddScoped<TanErp.Application.Surveys.GetSiteSurvey.GetSiteSurve
 builder.Services.AddScoped<TanErp.Application.Surveys.UpdateSurveyDraft.UpdateSurveyDraftHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.MarkSurveyReady.MarkSurveyReadyHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.CloneSurveyRevision.CloneSurveyRevisionHandler>();
+builder.Services.Configure<TanErp.Infrastructure.Surveys.Narrative.SurveyNarrativeOptions>(builder.Configuration.GetSection("SurveyNarrative"));
+builder.Services.AddHttpClient<TanErp.Application.Surveys.Narrative.ISurveyNarrativeProvider, TanErp.Infrastructure.Surveys.Narrative.GeminiSurveyNarrativeProvider>(
+    client => client.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddScoped<TanErp.Application.Surveys.Narrative.PolishSurveyNarrative.PolishSurveyNarrativeHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.VoidSurveyRevision.VoidSurveyRevisionHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.ISurveyTemplateStore, TanErp.Infrastructure.Persistence.Surveys.SurveyTemplateStore>();
 builder.Services.AddScoped<TanErp.Application.Surveys.ListSurveyTemplateVersions.ListSurveyTemplateVersionsHandler>();
@@ -338,6 +342,7 @@ builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateReviewQueueRead
 builder.Services.AddScoped<TanErp.Application.Items.ICostResolver, TanErp.Infrastructure.Persistence.Items.CostResolver>();
 builder.Services.AddScoped<TanErp.Application.Items.IUnitConversionResolver, TanErp.Infrastructure.Persistence.Items.UnitConversionResolver>();
 builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateUnitOptionsReader, TanErp.Infrastructure.Persistence.Estimates.EstimateUnitOptionsReader>();
+builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateHistoryReader, TanErp.Infrastructure.Persistence.Estimates.EstimateHistoryReader>();
 builder.Services.AddScoped<TanErp.Application.Items.Catalog.IEstimateCatalogReader, TanErp.Infrastructure.Persistence.Items.EstimateCatalogReader>();
 
 // File Service (reusable across modules)

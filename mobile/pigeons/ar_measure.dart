@@ -114,3 +114,68 @@ abstract class ArMeasureApi {
   @async
   ArMeasureResult? measureFloor(ArMeasureRequest request);
 }
+
+/// Texts and colours of the native room scan screen (RoomPlan draws its own
+/// coaching UI; we add only the cancel/done controls).
+class RoomScanRequest {
+  RoomScanRequest({
+    required this.cancel,
+    required this.done,
+    required this.colors,
+  });
+
+  String cancel;
+  String done;
+  ArMeasureColors colors;
+}
+
+enum RoomOpeningKind { door, window, opening }
+
+/// One door, window or open passage found by RoomPlan.
+class RoomOpening {
+  RoomOpening({
+    required this.kind,
+    required this.widthM,
+    required this.heightM,
+  });
+
+  RoomOpeningKind kind;
+  double widthM;
+  double heightM;
+}
+
+/// Room dimensions from a RoomPlan scan. Width/length are the floor's
+/// bounding box (width ≤ length); height is the tallest wall (null when no
+/// wall was detected).
+class RoomScanResult {
+  RoomScanResult({
+    required this.floorAreaSqm,
+    required this.widthM,
+    required this.lengthM,
+    required this.grossWallAreaSqm,
+    required this.openings,
+    this.ceilingHeightM,
+  });
+
+  double floorAreaSqm;
+  double widthM;
+  double lengthM;
+  double? ceilingHeightM;
+
+  /// Sum of every wall's width × height, openings not subtracted.
+  double grossWallAreaSqm;
+  List<RoomOpening> openings;
+}
+
+/// iOS only (RoomPlan, LiDAR, iOS 17+). Android registers no handler, so
+/// calls fail with a channel error and the app treats it as unsupported.
+/// Error codes of [RoomScanApi.scanRoom]: `camera_permission_denied`,
+/// `unavailable`, `session_failed`, `no_floor`, `busy`.
+@HostApi()
+abstract class RoomScanApi {
+  bool isSupported();
+
+  /// Opens the native room scan. Returns null when the user cancels.
+  @async
+  RoomScanResult? scanRoom(RoomScanRequest request);
+}

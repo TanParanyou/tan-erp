@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { components } from "@/generated/api/tan-erp.v1";
 import { ApiError, AuthenticationRequiredError } from "@/lib/api/api-error";
 import type { ProblemDetails } from "@/lib/api/problem-details";
+import { clearAllDrafts } from "@/lib/drafts/draft-store";
 
 export type AuthResultResponse = components["schemas"]["AuthResultResponse"];
 
@@ -335,6 +336,12 @@ export async function signInWithEmail(
 export async function signOutSession(client: QueryClient): Promise<void> {
   await client.cancelQueries();
   client.clear();
+
+  try {
+    await clearAllDrafts();
+  } catch {
+    // Local drafts are a best-effort cache; never block sign-out on storage errors
+  }
 
   try {
     await fetch(`${getApiBaseUrl()}/api/v1/auth/logout`, {

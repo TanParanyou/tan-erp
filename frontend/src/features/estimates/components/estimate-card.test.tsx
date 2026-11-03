@@ -193,7 +193,8 @@ describe("EstimateCard", () => {
     expect(screen.getByText(/70,000\.00/)).toBeInTheDocument();
     expect(screen.getByText(/5,000\.00/)).toBeInTheDocument();
     expect(screen.getByText(/69,550\.00/)).toBeInTheDocument();
-    expect(screen.getByText(/0\.23%/)).toBeInTheDocument();
+    // marginRate is a fraction (0.2308); the card shows it as a percentage
+    expect(screen.getByText(/23\.08%/)).toBeInTheDocument();
     expect(screen.getByText("readiness.status.blocked")).toBeInTheDocument();
     expect(screen.getByText("readiness.reasons.costIncomplete")).toBeInTheDocument();
   });

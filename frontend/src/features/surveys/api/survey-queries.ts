@@ -8,6 +8,8 @@ import {
   type MarkSurveyReadyRequest,
   type CloneSurveyRevisionRequest,
   type VoidSurveyRevisionRequest,
+  type PolishSurveyNarrativeRequest,
+  type PolishSurveyNarrativeResponse,
   type SurveyTemplateVersionListResponse,
   type SurveyTemplateVersionResponse,
   type PublishSurveyTemplateVersionRequest,
@@ -284,6 +286,28 @@ export function useCloneSurveyRevision(
       queryClient.invalidateQueries({
         queryKey: opportunitySurveyQueryKey(membershipId, normalizedLocale, opportunityId),
       });
+    },
+  });
+}
+
+/** Optional AI text polish; only usable when reference data reports `narrativeAssistEnabled`. */
+export function usePolishSurveyNarrative(): UseMutationResult<
+  PolishSurveyNarrativeResponse,
+  Error,
+  PolishSurveyNarrativeRequest
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async (payload) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.polishSurveyNarrative(payload, { token, membershipId, locale: normalizedLocale });
     },
   });
 }

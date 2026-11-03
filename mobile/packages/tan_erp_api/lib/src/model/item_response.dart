@@ -30,6 +30,10 @@ part 'item_response.g.dart';
 /// * [name] 
 /// * [description] 
 /// * [taxCategoryCode] 
+/// * [weightKg] 
+/// * [lengthMm] 
+/// * [widthMm] 
+/// * [heightMm] 
 /// * [availabilityMode] 
 /// * [capabilities] 
 /// * [attributes] 
@@ -81,6 +85,18 @@ abstract class ItemResponse implements Built<ItemResponse, ItemResponseBuilder> 
 
   @BuiltValueField(wireName: r'taxCategoryCode')
   String? get taxCategoryCode;
+
+  @BuiltValueField(wireName: r'weightKg')
+  double? get weightKg;
+
+  @BuiltValueField(wireName: r'lengthMm')
+  double? get lengthMm;
+
+  @BuiltValueField(wireName: r'widthMm')
+  double? get widthMm;
+
+  @BuiltValueField(wireName: r'heightMm')
+  double? get heightMm;
 
   @BuiltValueField(wireName: r'availabilityMode')
   String? get availabilityMode;
@@ -233,6 +249,34 @@ class _$ItemResponseSerializer implements PrimitiveSerializer<ItemResponse> {
       yield serializers.serialize(
         object.taxCategoryCode,
         specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.weightKg != null) {
+      yield r'weightKg';
+      yield serializers.serialize(
+        object.weightKg,
+        specifiedType: const FullType.nullable(double),
+      );
+    }
+    if (object.lengthMm != null) {
+      yield r'lengthMm';
+      yield serializers.serialize(
+        object.lengthMm,
+        specifiedType: const FullType.nullable(double),
+      );
+    }
+    if (object.widthMm != null) {
+      yield r'widthMm';
+      yield serializers.serialize(
+        object.widthMm,
+        specifiedType: const FullType.nullable(double),
+      );
+    }
+    if (object.heightMm != null) {
+      yield r'heightMm';
+      yield serializers.serialize(
+        object.heightMm,
+        specifiedType: const FullType.nullable(double),
       );
     }
     if (object.availabilityMode != null) {
@@ -477,6 +521,38 @@ class _$ItemResponseSerializer implements PrimitiveSerializer<ItemResponse> {
           ) as String?;
           if (valueDes == null) continue;
           result.taxCategoryCode = valueDes;
+          break;
+        case r'weightKg':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.weightKg = valueDes;
+          break;
+        case r'lengthMm':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.lengthMm = valueDes;
+          break;
+        case r'widthMm':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.widthMm = valueDes;
+          break;
+        case r'heightMm':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.heightMm = valueDes;
           break;
         case r'availabilityMode':
           final valueDes = serializers.deserialize(

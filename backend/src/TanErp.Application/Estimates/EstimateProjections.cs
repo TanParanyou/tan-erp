@@ -79,6 +79,14 @@ public sealed record EstimateSectionProjection(
     decimal SubtotalSellingPrice,
     IReadOnlyList<EstimateWorkItemProjection> WorkItems);
 
+/// <summary>Latest reviewer return decision of a revision, so editors can see why it came back.</summary>
+public sealed record EstimateReturnProjection(
+    string ReasonCode,
+    string Note,
+    DateTimeOffset ReturnedAtUtc,
+    Guid ReviewerUserId,
+    string ReviewerDisplayName);
+
 public sealed record EstimateRevisionProjection(
     Guid Id,
     Guid EstimateId,
@@ -106,7 +114,8 @@ public sealed record EstimateRevisionProjection(
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset UpdatedAtUtc,
     IReadOnlyList<EstimateSectionProjection> Sections,
-    EstimateReadinessResult Readiness);
+    EstimateReadinessResult Readiness,
+    EstimateReturnProjection? LastReturn = null);
 
 public sealed record EstimateDetailProjection(
     Guid Id,

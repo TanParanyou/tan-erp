@@ -344,7 +344,7 @@ export function EstimateItemCatalogModal({
           <button
             type="button"
             onClick={() => handleAttributeKeyChange("")}
-            className="text-[11px] text-erp-text-muted hover:text-rose-600 underline"
+            className="text-[11px] text-erp-text-muted hover:text-erp-danger underline"
           >
             {t("catalogFacets.allAttributeNames")}
           </button>
@@ -512,7 +512,7 @@ export function EstimateItemCatalogModal({
                 <button
                   type="button"
                   onClick={handleClearSelection}
-                  className="text-[11px] text-erp-text-muted hover:text-rose-600 transition-colors px-1"
+                  className="text-[11px] text-erp-text-muted hover:text-erp-danger transition-colors px-1"
                 >
                   {t("catalogFacets.clearSelection")}
                 </button>
@@ -600,7 +600,7 @@ export function EstimateItemCatalogModal({
 
         {/* Branch Guard */}
         {!branchId && (
-          <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+          <div className="p-4 bg-erp-warning-bg border border-erp-warning-border text-erp-warning-text text-xs">
             {t("noBranchSelected")}
           </div>
         )}
@@ -615,7 +615,7 @@ export function EstimateItemCatalogModal({
               <div className="sticky top-0 z-10 px-3 border-b border-erp-border bg-erp-surface flex min-h-11 items-center justify-between font-bold text-erp-navy">
                 <span>{t("catalogFacets.filtersTitle")}</span>
                 {activeFiltersCount > 0 && (
-                  <Button type="button" size="sm" variant="ghost" onClick={handleResetFilters} className="px-2 text-[11px] font-normal text-erp-text-muted hover:text-rose-600">
+                  <Button type="button" size="sm" variant="ghost" onClick={handleResetFilters} className="px-2 text-[11px] font-normal text-erp-text-muted hover:text-erp-danger">
                     {t("catalogFacets.clearFilters")}
                   </Button>
                 )}
@@ -752,7 +752,7 @@ export function EstimateItemCatalogModal({
                     <span>{t("loadingCatalog")}</span>
                   </div>
                 ) : isError ? (
-                  <div className="py-20 text-center text-xs text-rose-600 flex flex-col items-center justify-center gap-3">
+                  <div className="py-20 text-center text-xs text-erp-danger flex flex-col items-center justify-center gap-3">
                     <span>{t("errorLoadingCatalog")}</span>
                     <Button
                       type="button"
@@ -1000,7 +1000,7 @@ export function EstimateItemCatalogModal({
                       <button
                         type="button"
                         onClick={() => handleRemoveSelectedItem(selectedItem.id)}
-                        className="text-[11px] text-rose-600 hover:bg-rose-50 border border-rose-200 px-1.5 py-0.5 font-bold transition-colors"
+                        className="text-[11px] text-erp-danger hover:bg-erp-danger-bg border border-erp-danger-border px-1.5 py-0.5 font-bold transition-colors"
                         title={t("catalogFacets.removeItem")}
                       >
                         {t("catalogFacets.removeItem")} ✕

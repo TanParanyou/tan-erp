@@ -104,6 +104,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               ErpNavDestination(icon: ErpIcons.user, label: l10n.navMe),
             ],
+            fullWidth: shell.currentIndex == 0,
             child: shell,
           );
         },

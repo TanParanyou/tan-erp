@@ -44,10 +44,6 @@ jobs:
         with:
           dotnet-version: "10.0.400"
 
-      # Service containers cannot override the entrypoint arguments, so reuse the repository's own compose definition.
-      - name: Start Firebase Auth Emulator
-        run: docker compose -f deploy/compose.yml up -d firebase-emulator
-
       - name: Verify Git whitespace and line endings
         run: git diff --check
 
@@ -118,20 +114,10 @@ jobs:
             --startup-project backend/src/TanErp.Api \
             --connection "Host=localhost;Database=tan_erp;Username=postgres;Password=postgres"
 
-      - name: Seed Firebase Auth Emulator Users
-        run: |
-          # Wait for emulator port 9099
-          until curl -s http://127.0.0.1:9099/ > /dev/null; do
-            echo "Waiting for Firebase emulator..."
-            sleep 1
-          done
-          node scripts/seed-emulator-users.mjs
-
       - name: Start Backend API (Background)
         env:
           ASPNETCORE_ENVIRONMENT: Test
           SeedTestData: "true"
-          FIREBASE_AUTH_EMULATOR_HOST: "127.0.0.1:9099"
           Firebase__ProjectId: "tan-erp-test-only"
           ConnectionStrings__Database: "Host=localhost;Database=tan_erp;Username=postgres;Password=postgres"
         run: |
@@ -147,7 +133,6 @@ jobs:
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "tan-erp-test-only.firebaseapp.com"
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: "tan-erp-test-only"
           NEXT_PUBLIC_FIREBASE_APP_ID: "1:1234567890:web:abcdef123456"
-          NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL: "http://127.0.0.1:9099"
           NEXT_PUBLIC_API_BASE_URL: "http://localhost:5000"
         run: |
           npm --prefix frontend run dev -- -p 3005 &

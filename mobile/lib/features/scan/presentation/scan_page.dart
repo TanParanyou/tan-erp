@@ -9,6 +9,7 @@ import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
 import 'package:tan_erp_field/core/ui/erp_card.dart';
 import 'package:tan_erp_field/core/ui/erp_icon.dart';
+import 'package:tan_erp_field/core/ui/erp_mono_loading.dart';
 import 'package:tan_erp_field/core/ui/erp_status_badge.dart';
 import 'package:tan_erp_field/core/ui/erp_text_field.dart';
 import 'package:tan_erp_field/features/scan/domain/scan_models.dart';
@@ -178,16 +179,7 @@ class _ScanPageState extends ConsumerState<ScanPage> {
           if (state.isLoading)
             Padding(
               padding: EdgeInsets.symmetric(vertical: t.space6),
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: t.action,
-                  ),
-                ),
-              ),
+              child: ErpMonoLoading(color: t.action),
             )
           else if (state.notFound)
             ErpCard(
@@ -256,7 +248,7 @@ class _ScanPageState extends ConsumerState<ScanPage> {
                               SizedBox(height: t.space1 / 2),
                               Text(
                                 item.barcodeValue != null
-                                    ? '${item.code} · ${item.barcodeValue}'
+                                    ? '${item.code}   ${item.barcodeValue}'
                                     : item.code,
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(

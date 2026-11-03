@@ -1,9 +1,8 @@
 "use client";
 
-/* eslint-disable no-restricted-syntax -- token-exempt: fallback design-style swatch palettes are data, not theme colours */
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import type {
@@ -12,9 +11,19 @@ import type {
 } from "../../schemas/field-survey-schema";
 import { resolveFieldSurveyPhotoPurpose, resolveFieldSurveyPhotoTag, resolveGrossAreaSqm, resolveNetAreaSqm } from "../../schemas/field-survey-schema";
 import {
+  evaluateFieldSurveyItems,
+  type FieldSurveyLimits,
+  type FieldSurveyWarning,
+  type MeasurementRange,
+} from "../../schemas/field-survey-checks";
+import { buildFieldSurveySummary } from "../../schemas/field-survey-summary";
+import {
   useOpportunitySurvey,
   useCreateSiteSurvey,
   useSurveyReferenceData,
+  useCloneSurveyRevision,
+  usePolishSurveyNarrative,
+  opportunitySurveyQueryKey,
 } from "../../api/survey-queries";
 import { useOpportunityDetail } from "@/features/opportunities/api/opportunity-queries";
 import { apiClient } from "@/lib/api/api-client";
@@ -22,6 +31,7 @@ import type {
   UpdateSurveyAreaRequest,
   UpdateSurveyMeasurementRequest,
   UpdateSurveyDraftRequest,
+  SiteSurveyResponse,
 } from "@/lib/api/api-client";
 import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -29,6 +39,8 @@ import { useOptionalSelectedMembership } from "@/lib/membership/selected-members
 import { FieldSurveyMeasurementPad } from "./field-survey-measurement-pad";
 import { FieldSurveyCatalogPicker } from "./field-survey-catalog-picker";
 import { FieldSurveyItemPhotoManager } from "./field-survey-item-photo-manager";
+import { FieldSurveyVoiceInput } from "./field-survey-voice-input";
+import type { ParsedVoiceMeasurement } from "../../schemas/field-survey-voice";
 import { RoomNameCombobox } from "./room-name-combobox";
 import { OpportunityAutocomplete } from "@/features/opportunities/components/opportunity-autocomplete";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -36,6 +48,9 @@ import { FormContainer } from "@/components/forms/FormContainer";
 import { FormSection } from "@/components/forms/FormSection";
 import { Alert } from "@/components/ui/Alert";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { useDraftRecovery } from "@/hooks/useDraftRecovery";
+import { formatDateTime } from "@/lib/formatters/formatters";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -57,6 +72,25 @@ import {
 } from "./survey-style-preference-selector";
 
 export type { DesignStyleOption, MoodToneOption };
+
+/** A survey cannot be created until the opportunity has a primary site, an owner and a row version. */
+class OpportunityIncompleteError extends Error {}
+
+/** scope_summary column limit in the backend. */
+const MAX_SCOPE_SUMMARY_CHARS = 2000;
+
+/** Form state kept in the browser-local draft; photos keep their File so they can be re-uploaded after recovery. */
+interface FieldSurveyDraftSnapshot {
+  roomName: string;
+  surveyorNotes: string;
+  designStyle: string;
+  moodTone: string;
+  customStyleNotes: string;
+  items: FieldSurveyItem[];
+  /** Progress of a save that failed midway, so a retry after a reload updates the saved room instead of adding one. Absent in drafts written by older builds. */
+  partialArea?: { opportunityId: string; areaId: string; code: string } | null;
+  attachedPhotoIds?: string[];
+}
 
 export interface FieldSurveyWorkspaceProps {
   initialOpportunityId?: string;
@@ -83,6 +117,13 @@ export function FieldSurveyWorkspace({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Non-blocking completeness warnings shown in a confirm modal before saving
+  const [pendingWarnings, setPendingWarnings] = useState<FieldSurveyWarning[] | null>(null);
+  const skipWarningsRef = useRef(false);
+  // Notes before the last AI polish, so it can be undone; null when there is nothing to undo
+  const [notesBeforePolish, setNotesBeforePolish] = useState<string | null>(null);
+  const [narrativeFailed, setNarrativeFailed] = useState(false);
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null);
 
   // Next Action Modal state after save
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
@@ -97,7 +138,53 @@ export function FieldSurveyWorkspace({
   const opportunityQuery = useOpportunityDetail(opportunityId || undefined);
   const surveyQuery = useOpportunitySurvey(opportunityId || undefined);
   const createSurveyMutation = useCreateSiteSurvey(opportunityId);
+  const cloneRevisionMutation = useCloneSurveyRevision(opportunityId, surveyQuery.data?.id ?? "");
+  const polishNarrativeMutation = usePolishSurveyNarrative();
+  const queryClient = useQueryClient();
+  // Area saved by a draft whose photo upload failed; a retry replaces it instead of adding another room
+  const partialAreaRef = useRef<{ opportunityId: string; areaId: string; code: string } | null>(null);
+  const attachedPhotoIdsRef = useRef<Set<string>>(new Set());
   const photoUploader = useDeferredFileUpload({ parentType: "survey-area" });
+
+  const membershipId = membershipContext?.selectedMembership?.id;
+  const draftKey = membershipId && opportunityId ? `field-survey:${membershipId}:${opportunityId}` : null;
+  const {
+    status: draftStatus,
+    savedAt: draftSavedAt,
+    save: saveDraft,
+    clear: clearDraft,
+    accept: acceptDraft,
+    discard: discardDraft,
+  } = useDraftRecovery<FieldSurveyDraftSnapshot>(draftKey);
+
+  const buildDraftSnapshot = useCallback(
+    (): FieldSurveyDraftSnapshot => ({
+      roomName,
+      surveyorNotes,
+      designStyle,
+      moodTone,
+      customStyleNotes,
+      items,
+      partialArea: partialAreaRef.current,
+      attachedPhotoIds: Array.from(attachedPhotoIdsRef.current),
+    }),
+    [roomName, surveyorNotes, designStyle, moodTone, customStyleNotes, items]
+  );
+
+  // Autosave locally while editing; a room with no items is not worth keeping
+  useEffect(() => {
+    if (draftStatus !== "ready" || items.length === 0) return;
+    saveDraft(buildDraftSnapshot());
+  }, [draftStatus, saveDraft, buildDraftSnapshot, items.length]);
+
+  const limitOf = (code: string): MeasurementRange | undefined => {
+    const type = refData?.measurementTypes?.find((m) => m.code === code);
+    return typeof type?.minValue === "number" && typeof type.maxValue === "number"
+      ? { min: type.minValue, max: type.maxValue }
+      : undefined;
+  };
+  const fieldSurveyLimits: FieldSurveyLimits = { box: limitOf("box"), area: limitOf("area"), custom: limitOf("custom") };
+  const warningMessage = (warning: FieldSurveyWarning) => t(`checks.warnings.${warning.code}`, warning.values);
 
   const categoryOptions = refData?.categories && refData.categories.length > 0
     ? refData.categories
@@ -115,43 +202,24 @@ export function FieldSurveyWorkspace({
         { code: "mep", label: t("categories.mep") },
       ];
 
-  const designStyleOptions: DesignStyleOption[] = refData?.designStyles && refData.designStyles.length > 0
-    ? refData.designStyles
-        .filter((s): s is typeof s & { code: string } => Boolean(s.code))
-        .map((s) => ({
-          code: s.code,
-          label: locale === "en" ? s.name?.english || s.code : s.name?.thai || s.code,
-          description: s.description || "",
-          imageFileId: s.imageFileId ?? null,
-          imageFileIds: s.imageFileIds ?? null,
-        }))
-    : [
-        { code: "modern_luxury", label: "Modern Luxury", description: "โมเดิร์น ลักชูรี่ หรูหรา กระจก/หินอ่อน/โลหะทอง" },
-        { code: "japandi", label: "Japandi / Muji", description: "จาแปนดี้ / มูจิ เน้นไม้ธรรมชาติ อบอุ่น เรียบง่าย" },
-        { code: "modern_contemporary", label: "Modern Contemporary", description: "โมเดิร์นร่วมสมัย เส้นสายเรียบคม ฟังก์ชันลงตัว" },
-        { code: "scandinavian", label: "Scandinavian", description: "โปร่งสบาย โทนสีสว่าง ไม้ธรรมชาติ ผ่อนคลาย" },
-        { code: "minimalist", label: "Minimalist", description: "มินิมอล เรียบเกลี้ยง ซ่อนฟังก์ชัน จัดเก็บสบายตา" },
-        { code: "industrial_loft", label: "Industrial Loft", description: "โครงเหล็ก ปูนเปลือย อิฐโชว์แนว ไม้สีเข้ม" },
-        { code: "classic_neo_classic", label: "Classic / Neo Classic", description: "บัวคิ้ว หน้าบานลูกฟัก สมมาตรภูมิฐาน" },
-        { code: "vintage_retro", label: "Vintage / Retro", description: "กลิ่นอายย้อนยุค มีเสน่ห์เฉพาะตัว" },
-      ];
+  const designStyleOptions: DesignStyleOption[] = (refData?.designStyles ?? [])
+    .filter((s): s is typeof s & { code: string } => Boolean(s.code))
+    .map((s) => ({
+      code: s.code,
+      label: locale === "en" ? s.name?.english || s.code : s.name?.thai || s.code,
+      description: s.description || "",
+      imageFileId: s.imageFileId ?? null,
+      imageFileIds: s.imageFileIds ?? null,
+    }));
 
-  const moodToneOptions: MoodToneOption[] = refData?.moodTones && refData.moodTones.length > 0
-    ? refData.moodTones
-        .filter((m): m is typeof m & { code: string } => Boolean(m.code))
-        .map((m) => ({
-          code: m.code,
-          label: locale === "en" ? m.name?.english || m.code : m.name?.thai || m.code,
-          description: m.description || "",
-          colorPalette: m.colorPalette || [],
-        }))
-    : [
-        { code: "warm_earthy", label: "Warm & Earthy", description: "โทนอุ่น น้ำตาล ครีม เบจ ไม้ธรรมชาติ", colorPalette: ["#F5EBE0", "#D6CCC2", "#8D6E63", "#4E342E"] },
-        { code: "cool_monotone", label: "Cool & Monotone", description: "โทนเย็น ขาว เทา ดำ หินอ่อน เรียบเท่", colorPalette: ["#FFFFFF", "#E0E0E0", "#757575", "#212121"] },
-        { code: "dark_elegant", label: "Dark & Elegant", description: "ดาร์กลักชูรี่ ดำ วอลนัท ทอง หรูหราลุ่มลึก", colorPalette: ["#1A1A1A", "#3E2723", "#C5A059", "#0B3056"] },
-        { code: "light_natural", label: "Light & Natural", description: "สว่างโปร่ง ไม้สน/โอ๊คธรรมชาติ สบายตา", colorPalette: ["#FAFAFA", "#FFF8E7", "#E2D4C9", "#A3B18A"] },
-        { code: "colorful_pastel", label: "Pastel & Colorful", description: "สีสันสดใส เขียวเซจ น้ำเงินเข้ม พาสเทล", colorPalette: ["#C2D8B9", "#8E9AAF", "#CBC0D3", "#EFD3D7"] },
-      ];
+  const moodToneOptions: MoodToneOption[] = (refData?.moodTones ?? [])
+    .filter((m): m is typeof m & { code: string } => Boolean(m.code))
+    .map((m) => ({
+      code: m.code,
+      label: locale === "en" ? m.name?.english || m.code : m.name?.thai || m.code,
+      description: m.description || "",
+      colorPalette: m.colorPalette || [],
+    }));
 
   useEffect(() => {
     if (initialOpportunityId) {
@@ -185,6 +253,22 @@ export function FieldSurveyWorkspace({
     );
   };
 
+  // Spoken values fill the box dimensions; the title is only set when the item has none yet.
+  const handleApplyVoice = (index: number, item: FieldSurveyItem, parsed: ParsedVoiceMeasurement) => {
+    const updated: Partial<FieldSurveyItem> = {};
+    if (parsed.title && !item.title.trim()) updated.title = parsed.title;
+    if (parsed.widthMm !== null || parsed.depthMm !== null || parsed.heightMm !== null) {
+      const current = item.boxDimensions ?? { widthMm: 0, depthMm: 0, heightMm: 0 };
+      updated.measurementType = "box";
+      updated.boxDimensions = {
+        widthMm: parsed.widthMm ?? current.widthMm,
+        depthMm: parsed.depthMm ?? current.depthMm,
+        heightMm: parsed.heightMm ?? current.heightMm,
+      };
+    }
+    handleUpdateItem(index, updated);
+  };
+
   const handleRemoveItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
@@ -216,8 +300,10 @@ export function FieldSurveyWorkspace({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const skipWarnings = skipWarningsRef.current;
+    skipWarningsRef.current = false;
     setErrorMessage(null);
     setSaveSuccess(false);
 
@@ -231,6 +317,20 @@ export function FieldSurveyWorkspace({
       return;
     }
 
+    // Only the real-save path needs an opportunity; onSave callers own their own payload
+    if (!onSave && !opportunityId) {
+      setErrorMessage(t("opportunityRequired"));
+      return;
+    }
+
+    if (!skipWarnings) {
+      const warnings = evaluateFieldSurveyItems(items, fieldSurveyLimits);
+      if (warnings.length > 0) {
+        setPendingWarnings(warnings);
+        return;
+      }
+    }
+
     const payload: FieldSurveyFormData = {
       opportunityId: opportunityId || "00000000-0000-4000-a000-000000000000",
       roomName: roomName.trim(),
@@ -242,23 +342,39 @@ export function FieldSurveyWorkspace({
     try {
       if (onSave) {
         await onSave(payload);
-      } else if (opportunityId && opportunityId !== "00000000-0000-4000-a000-000000000000") {
+      } else {
         let survey = surveyQuery.data;
+        const surveyQueryKey = opportunitySurveyQueryKey(
+          membershipContext?.selectedMembership?.id,
+          locale === "en" ? "en" : "th",
+          opportunityId
+        );
 
         // If survey does not exist yet, auto-create it for this opportunity
         if (!survey) {
           const opp = opportunityQuery.data;
-          const siteId = opp?.primarySite?.id || "00000000-0000-0000-0000-000000000000";
-          const assignedSurveyorId = opp?.owner?.id || "00000000-0000-0000-0000-000000000000";
+          if (!opp?.primarySite?.id || !opp.owner?.id || !opp.rowVersion) {
+            throw new OpportunityIncompleteError();
+          }
           const idempotencyKey = `create-survey-${opportunityId}-${Date.now()}`;
           survey = await createSurveyMutation.mutateAsync({
             payload: {
-              siteId,
-              assignedSurveyorId,
-              expectedOpportunityVersion: opp?.rowVersion || "00000000-0000-0000-0000-000000000000",
+              siteId: opp.primarySite.id,
+              assignedSurveyorId: opp.owner.id,
+              expectedOpportunityVersion: opp.rowVersion,
             },
             idempotencyKey,
           });
+        }
+
+        // A ready revision is locked, so clone it into a new draft before adding the room
+        if (survey?.currentRevision?.status === "ready") {
+          await cloneRevisionMutation.mutateAsync({
+            payload: { sourceRevisionId: survey.currentRevision.id, reason: t("cloneReason") },
+            idempotencyKey: `clone-revision-${opportunityId}-${Date.now()}`,
+          });
+          await queryClient.invalidateQueries({ queryKey: surveyQueryKey });
+          survey = queryClient.getQueryData<SiteSurveyResponse | null>(surveyQueryKey);
         }
 
         if (!survey?.id || !survey.currentRevision?.id) {
@@ -353,11 +469,12 @@ export function FieldSurveyWorkspace({
         const styleHeader = stylePrefixParts.length > 0 ? `[${stylePrefixParts.join(" | ")}]` : "";
 
         // Build or merge Area for this room
-        const existingAreas = currentRevision.areas || [];
-        const roomCode = `RM-${(existingAreas.length + 1).toString().padStart(2, "0")}`;
+        const partialArea = partialAreaRef.current?.opportunityId === opportunityId ? partialAreaRef.current : null;
+        const existingAreas = (currentRevision.areas || []).filter((ea) => ea.id !== partialArea?.areaId);
+        const roomCode = partialArea?.code ?? `RM-${(existingAreas.length + 1).toString().padStart(2, "0")}`;
         const roomDescription = [styleHeader, surveyorNotes.trim()].filter(Boolean).join("\n") || null;
         const newAreaRequest: UpdateSurveyAreaRequest = {
-          id: null,
+          id: partialArea?.areaId ?? null,
           code: roomCode,
           name: roomName.trim(),
           description: roomDescription,
@@ -382,10 +499,21 @@ export function FieldSurveyWorkspace({
           })),
         }));
 
-        const combinedScopeSummary = [
-          styleHeader,
-          surveyorNotes.trim() || currentRevision.scopeSummary,
-        ].filter(Boolean).join("\n\n") || null;
+        // The revision-level summary is kept once set; each room's notes live on its own area description.
+        const combinedScopeSummary =
+          currentRevision.scopeSummary ||
+          [styleHeader, surveyorNotes.trim()].filter(Boolean).join("\n\n").slice(0, MAX_SCOPE_SUMMARY_CHARS) ||
+          null;
+
+        // Incomplete items stay visible on the revision, which also records warnings the surveyor saved past.
+        const missingTexts = evaluateFieldSurveyItems(items, fieldSurveyLimits).map((w) =>
+          t("summary.missingLine", {
+            room: roomName.trim(),
+            index: w.itemIndex + 1,
+            title: items[w.itemIndex].title,
+            reason: warningMessage(w),
+          })
+        );
 
         const updatePayload: UpdateSurveyDraftRequest = {
           expectedRevisionVersion: currentRevision.rowVersion,
@@ -398,7 +526,7 @@ export function FieldSurveyWorkspace({
               : []),
           ],
           constraints: [...(currentRevision.constraints || [])],
-          missingDetails: [...(currentRevision.missingDetails || [])],
+          missingDetails: Array.from(new Set([...(currentRevision.missingDetails || []), ...missingTexts])),
           areas: [...existingAreaRequests, newAreaRequest],
         };
 
@@ -419,8 +547,19 @@ export function FieldSurveyWorkspace({
           }
         );
 
+        const createdAreaId = savedRevision.areas?.find((a) => a.code === roomCode)?.id;
+        if (createdAreaId) {
+          partialAreaRef.current = { opportunityId, areaId: createdAreaId, code: roomCode };
+        }
+
+        // Refresh the cached survey so the next room saves against the new rowVersion and area list.
+        await queryClient.invalidateQueries({ queryKey: surveyQueryKey });
+
         // Photos upload only now: the area id exists once the draft is saved.
-        const photoFiles = items.flatMap((it) => it.photos).filter((p): p is typeof p & { file: File } => p.file instanceof File);
+        // Photos attached by an earlier failed attempt are skipped so a retry cannot attach them twice
+        const photoFiles = items
+          .flatMap((it) => it.photos)
+          .filter((p): p is typeof p & { file: File } => p.file instanceof File && !attachedPhotoIdsRef.current.has(p.id));
         if (photoFiles.length > 0) {
           const savedAreaId = savedRevision.areas?.find((a) => a.code === roomCode)?.id;
           if (!savedAreaId) {
@@ -456,11 +595,11 @@ export function FieldSurveyWorkspace({
                 idempotencyKey: `survey-photo-${crypto.randomUUID()}`,
               }
             );
+            attachedPhotoIdsRef.current.add(photo.id);
           }
         }
-      } else {
-        // Fallback simulated save
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        partialAreaRef.current = null;
+        attachedPhotoIdsRef.current.clear();
       }
       setSaveSuccess(true);
       setLastSavedSummary({
@@ -469,11 +608,57 @@ export function FieldSurveyWorkspace({
         photosCount: totalPhotosCount,
       });
       setIsSuccessModalOpen(true);
-    } catch {
-      setErrorMessage(t("actions.saveFailed"));
+      // Items are on the server now; clear them so re-clicking save cannot duplicate the room
+      clearDraft();
+      setItems([]);
+      setCollapsedItemIds(new Set());
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof OpportunityIncompleteError ? t("opportunityIncomplete") : t("actions.saveFailed"));
+      // Keep how far the save got, so a retry after a reload cannot add the room twice
+      if (draftStatus === "ready" && items.length > 0) saveDraft(buildDraftSnapshot());
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleRestoreDraft = () => {
+    const snapshot = acceptDraft();
+    if (!snapshot) return;
+    setRoomName(snapshot.roomName);
+    setSurveyorNotes(snapshot.surveyorNotes);
+    setDesignStyle(snapshot.designStyle);
+    setMoodTone(snapshot.moodTone);
+    setCustomStyleNotes(snapshot.customStyleNotes);
+    setCollapsedItemIds(new Set());
+    partialAreaRef.current = snapshot.partialArea ?? null;
+    attachedPhotoIdsRef.current = new Set(snapshot.attachedPhotoIds ?? []);
+    // Object URLs do not survive a reload, so rebuild them from the stored files
+    setItems(
+      snapshot.items.map((item) => ({
+        ...item,
+        photos: item.photos.map((photo) =>
+          photo.file ? { ...photo, url: URL.createObjectURL(photo.file) } : photo
+        ),
+      }))
+    );
+  };
+
+  const handleConfirmWarnings = () => {
+    setPendingWarnings(null);
+    skipWarningsRef.current = true;
+    void handleSubmit();
+  };
+
+  const handleReviewWarnings = () => {
+    const warned = pendingWarnings ?? [];
+    setPendingWarnings(null);
+    if (warned.length === 0) return;
+    setCollapsedItemIds((prev) => {
+      const next = new Set(prev);
+      for (const w of warned) next.delete(w.itemId);
+      return next;
+    });
+    window.setTimeout(() => scrollToItem(warned[0].itemId), 0);
   };
 
   const handleStartNextRoom = () => {
@@ -507,6 +692,72 @@ export function FieldSurveyWorkspace({
     } else {
       router.push(`/${locale}/surveys`);
     }
+  };
+
+  const getDimensionSummary = (item: FieldSurveyItem): string => {
+    if (item.measurementType === "box" && item.boxDimensions) {
+      const { widthMm, depthMm, heightMm } = item.boxDimensions;
+      if (widthMm || depthMm || heightMm) {
+        return t("dimensions.boxSummary", { w: widthMm, d: depthMm, h: heightMm });
+      }
+    } else if (item.measurementType === "area" && item.areaDimensions) {
+      if (resolveGrossAreaSqm(item.areaDimensions) > 0) {
+        return t("dimensions.areaSummary", { area: resolveNetAreaSqm(item.areaDimensions).toFixed(2) });
+      }
+    } else if (item.measurementType === "custom" && item.customMeasurements) {
+      return t("dimensions.customSummary", { count: item.customMeasurements.length });
+    }
+    return "";
+  };
+
+  const getSpecSummary = (item: FieldSurveyItem): string =>
+    item.specSelection?.coreSkuName || item.specSelection?.finishSkuName || "";
+
+  // Appends the rule-based summary to the notes; never overwrites what the surveyor typed.
+  const handleDraftSummary = () => {
+    const draft = buildFieldSurveySummary(
+      items,
+      (item) =>
+        [
+          categoryOptions.find((c) => c.code === item.category)?.label,
+          getDimensionSummary(item),
+          getSpecSummary(item),
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      {
+        header: (count) => t("summary.header", { count }),
+        itemLine: (index, title, details) =>
+          details
+            ? t("summary.itemLine", { index, title, details })
+            : t("summary.itemLineBare", { index, title }),
+        more: (count) => t("summary.more", { count }),
+      }
+    );
+    if (!draft) return;
+    setSurveyorNotes((prev) => (prev.includes(draft) ? prev : [prev.trim(), draft].filter(Boolean).join("\n\n")));
+  };
+
+  const handlePolishNotes = async () => {
+    const text = surveyorNotes.trim();
+    if (!text) return;
+    setNarrativeFailed(false);
+    try {
+      const result = await polishNarrativeMutation.mutateAsync({ text, language: locale === "en" ? "en" : "th" });
+      if (!result.text) {
+        setNarrativeFailed(true);
+        return;
+      }
+      setNotesBeforePolish(surveyorNotes);
+      setSurveyorNotes(result.text);
+    } catch {
+      setNarrativeFailed(true);
+    }
+  };
+
+  const handleUndoPolish = () => {
+    if (notesBeforePolish !== null) setSurveyorNotes(notesBeforePolish);
+    setNotesBeforePolish(null);
   };
 
   const totalPhotosCount = items.reduce((acc, it) => acc + (it.photos?.length ?? 0), 0);
@@ -576,6 +827,22 @@ export function FieldSurveyWorkspace({
         />
       }
     >
+      {draftStatus === "found" && (
+        <Alert variant="info" title={t("draft.foundTitle")}>
+          <div className="space-y-3">
+            <div>{t("draft.foundDesc", { date: draftSavedAt ? formatDateTime(new Date(draftSavedAt), locale) : "-" })}</div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="primary" size="sm" onClick={handleRestoreDraft}>
+                {t("draft.restore")}
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={discardDraft}>
+                {t("draft.discard")}
+              </Button>
+            </div>
+          </div>
+        </Alert>
+      )}
+
       {/* Section 1: Target Opportunity & Survey Room */}
       <FormSection
         title={t("surveyTargetSection")}
@@ -613,6 +880,41 @@ export function FieldSurveyWorkspace({
               wrapperClassName="!mb-0"
               className="text-xs"
             />
+            <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
+              {refData?.narrativeAssistEnabled && (
+                <span className="mr-auto text-[11px] text-erp-text-muted">{t("narrative.privacyNote")}</span>
+              )}
+              {notesBeforePolish !== null && (
+                <Button type="button" variant="outline" size="sm" onClick={handleUndoPolish} disabled={isSaving}>
+                  {t("narrative.undo")}
+                </Button>
+              )}
+              {refData?.narrativeAssistEnabled && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePolishNotes}
+                  disabled={isSaving || polishNarrativeMutation.isPending || !surveyorNotes.trim()}
+                >
+                  {polishNarrativeMutation.isPending ? t("narrative.polishing") : t("narrative.polishButton")}
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDraftSummary}
+                disabled={isSaving || items.length === 0}
+              >
+                {t("summary.draftButton")}
+              </Button>
+            </div>
+            {narrativeFailed && (
+              <Alert variant="warning" onClose={() => setNarrativeFailed(false)}>
+                {t("narrative.failed")}
+              </Alert>
+            )}
           </div>
         </div>
       </FormSection>
@@ -715,28 +1017,8 @@ export function FieldSurveyWorkspace({
             const isCollapsed = collapsedItemIds.has(item.id);
 
             // Summary text for collapsed card
-            let dimensionSummary = "";
-            if (item.measurementType === "box" && item.boxDimensions) {
-              const { widthMm, depthMm, heightMm } = item.boxDimensions;
-              if (widthMm || depthMm || heightMm) {
-                dimensionSummary = t("dimensions.boxSummary", {
-                  w: widthMm,
-                  d: depthMm,
-                  h: heightMm,
-                });
-              }
-            } else if (item.measurementType === "area" && item.areaDimensions) {
-              if (resolveGrossAreaSqm(item.areaDimensions) > 0) {
-                const area = resolveNetAreaSqm(item.areaDimensions).toFixed(2);
-                dimensionSummary = t("dimensions.areaSummary", { area });
-              }
-            } else if (item.measurementType === "custom" && item.customMeasurements) {
-              dimensionSummary = t("dimensions.customSummary", {
-                count: item.customMeasurements.length,
-              });
-            }
-
-            const specSummary = item.specSelection?.coreSkuName || item.specSelection?.finishSkuName || "";
+            const dimensionSummary = getDimensionSummary(item);
+            const specSummary = getSpecSummary(item);
 
             return (
               <div
@@ -798,7 +1080,7 @@ export function FieldSurveyWorkspace({
                     <button
                       type="button"
                       disabled={isSaving}
-                      onClick={() => handleRemoveItem(index)}
+                      onClick={() => setItemToDeleteIndex(index)}
                       className="inline-flex min-h-[36px] items-center gap-1 border border-erp-danger-border bg-white px-2.5 py-1 text-xs font-medium text-erp-danger hover:bg-erp-danger-bg"
                     >
                       <IconTrash size={14} />
@@ -839,6 +1121,13 @@ export function FieldSurveyWorkspace({
                         />
                       </div>
                     </div>
+
+                    <FieldSurveyVoiceInput
+                      lang={locale === "en" ? "en-US" : "th-TH"}
+                      canSetTitle={!item.title.trim()}
+                      disabled={isSaving}
+                      onApply={(parsed) => handleApplyVoice(index, item, parsed)}
+                    />
 
                     {/* Sub-component 1: Measurement Pad */}
                     <div>
@@ -885,6 +1174,65 @@ export function FieldSurveyWorkspace({
         </div>
       )}
       </FormSection>
+
+      <ConfirmationModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={() => {
+          if (itemToDeleteIndex !== null) handleRemoveItem(itemToDeleteIndex);
+          setItemToDeleteIndex(null);
+        }}
+        variant="danger"
+        title={t("deleteConfirm.title")}
+        message={t("deleteConfirm.message", {
+          name: (itemToDeleteIndex !== null && items[itemToDeleteIndex]?.title) || t("unnamedItem"),
+        })}
+        confirmText={t("actions.deleteItem")}
+        cancelText={t("deleteConfirm.cancel")}
+      />
+
+      {/* Completeness warnings: non-blocking, the user may save anyway */}
+      <Modal
+        isOpen={pendingWarnings !== null}
+        onClose={() => setPendingWarnings(null)}
+        size="md"
+        showCloseButton={true}
+        title={t("checks.title")}
+        description={t("checks.description")}
+      >
+        <div className="space-y-4 py-2">
+          <ul className="space-y-2 border border-erp-border bg-erp-surface-subtle p-3.5 text-xs">
+            {pendingWarnings?.map((w) => (
+              <li key={`${w.itemId}-${w.code}`} className="flex gap-2">
+                <span className="shrink-0 font-semibold text-erp-navy">
+                  {t("actions.itemNumber", { number: w.itemIndex + 1 })}
+                </span>
+                <span className="text-erp-text-muted">{warningMessage(w)}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              className="w-full justify-center"
+              onClick={handleConfirmWarnings}
+            >
+              {t("checks.continue")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              className="w-full justify-center"
+              onClick={handleReviewWarnings}
+            >
+              {t("checks.backToEdit")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Next Action Success Modal - Atelier Architectural Navy Sharp */}
       <Modal

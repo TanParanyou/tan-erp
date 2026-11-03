@@ -186,6 +186,7 @@
   "arErrorInstallDeclined": "Google Play Services for AR is not installed",
   "arErrorUnavailable": "AR is not available on this device",
   "arErrorSessionFailed": "Could not start the AR camera. Please try again",
+  "arErrorNoFloor": "No floor was found in the scan. Please scan again with the floor in view",
   "arErrorBusy": "A measurement is already running",
   "photoAreaCardTitle": "Measure area from photo + reference sheet",
   "photoAreaCardBody": "Take a photo of the floor with a sheet of known size lying on it, tap the sheet corners and the area corners",
@@ -241,6 +242,7 @@
   "todayFilterQualified": "Ready to schedule",
   "todayEmptyTitle": "No surveys scheduled today",
   "todayEmptyBody": "There are no survey tasks in this branch yet. Tap to refresh",
+  "todaySelectPrompt": "Select a task to start the survey",
   "todayOpenSurvey": "Open survey",
   "todayStartSurvey": "Start field survey",
   "todayStageQualified": "Qualified",
@@ -282,6 +284,8 @@
   "surveyMeasureTypeWidth": "Width",
   "surveyMeasureTypeHeight": "Height",
   "surveyMeasureTypeCount": "Count",
+  "surveyMeasureTypeOpening": "Opening",
+  "surveyMeasureTypeCustom": "Other",
   "surveyUnitSqm": "m²",
   "surveyUnitM": "m",
   "surveyUnitMm": "mm",
@@ -293,6 +297,49 @@
   "surveyMeasureByPad": "Keypad",
   "surveyMeasureByPhoto": "Photo A4",
   "surveyMeasureByAr": "AR floor",
+  "surveyMeasureByRoomScan": "Room scan (LiDAR)",
+  "surveyRoomScanDoor": "Door {n}",
+  "@surveyRoomScanDoor": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanWindow": "Window {n}",
+  "@surveyRoomScanWindow": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanOpening": "Opening {n}",
+  "@surveyRoomScanOpening": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanWallArea": "Gross wall area (openings not deducted)",
+  "surveyCheckTitle": "Survey looks incomplete",
+  "surveyCheckSaveAnyway": "Save anyway",
+  "surveyCheckReview": "Go back and fix",
+  "surveyCheckNoMeasurement": "No measurement yet",
+  "surveyCheckZeroValue": "A measurement is 0",
+  "surveyCheckNoPhoto": "No photo yet",
+  "surveyCheckLine": "• {area}: {issue}",
+  "@surveyCheckLine": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      },
+      "issue": {
+        "type": "String"
+      }
+    }
+  },
   "surveyMeasureNotesLabel": "Measurement notes",
   "surveyMeasureNotesPlaceholder": "e.g. Deduct 2 columns, includes skirting",
   "surveySaveDraft": "Save draft",

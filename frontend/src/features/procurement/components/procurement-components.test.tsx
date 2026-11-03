@@ -539,6 +539,16 @@ describe("SupplierList", () => {
       update: { mutateAsync: vi.fn(), isPending: false },
       setActive: { mutateAsync: vi.fn(), isPending: false },
     } as unknown as ReturnType<typeof procurementQueries.useSupplierMutations>);
+    // SupplierList also mounts the price drawer, which reads the supplier price list
+    vi.spyOn(procurementQueries, "useSupplierItemPrices").mockReturnValue({
+      data: { items: [], pagination: { page: 1, pageSize: 100, totalCount: 0, totalPages: 0 } },
+      isLoading: false, isError: false, error: null, refetch: vi.fn(),
+    } as unknown as ReturnType<typeof procurementQueries.useSupplierItemPrices>);
+    vi.spyOn(procurementQueries, "useSupplierItemPriceMutations").mockReturnValue({
+      create: { mutateAsync: vi.fn(), isPending: false },
+      update: { mutateAsync: vi.fn(), isPending: false },
+      remove: { mutateAsync: vi.fn(), isPending: false },
+    } as unknown as ReturnType<typeof procurementQueries.useSupplierItemPriceMutations>);
   });
 
   function renderList() {

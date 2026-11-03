@@ -161,7 +161,8 @@ describe("ItemEditor", () => {
     state.itemQuery.isLoading = false;
     state.itemQuery.isError = true;
     renderEditor("item-1");
-    expect(screen.getByRole("alert")).toHaveTextContent("load failed");
+    // A plain Error is not shown raw: the editor falls back to its translated load-failed message
+    expect(screen.getByRole("alert")).toHaveTextContent("โหลดข้อมูลสินค้าไม่สำเร็จ");
     fireEvent.click(screen.getByRole("button", { name: "ลองใหม่อีกครั้ง" }));
     expect(state.itemQuery.refetch).toHaveBeenCalledOnce();
   });

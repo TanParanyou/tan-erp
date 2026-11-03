@@ -478,6 +478,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not start the AR camera. Please try again';
 
   @override
+  String get arErrorNoFloor =>
+      'No floor was found in the scan. Please scan again with the floor in view';
+
+  @override
   String get arErrorBusy => 'A measurement is already running';
 
   @override
@@ -641,6 +645,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'There are no survey tasks in this branch yet. Tap to refresh';
 
   @override
+  String get todaySelectPrompt => 'Select a task to start the survey';
+
+  @override
   String get todayOpenSurvey => 'Open survey';
 
   @override
@@ -766,6 +773,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get surveyMeasureTypeCount => 'Count';
 
   @override
+  String get surveyMeasureTypeOpening => 'Opening';
+
+  @override
+  String get surveyMeasureTypeCustom => 'Other';
+
+  @override
   String get surveyUnitSqm => 'm²';
 
   @override
@@ -797,6 +810,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get surveyMeasureByAr => 'AR floor';
+
+  @override
+  String get surveyMeasureByRoomScan => 'Room scan (LiDAR)';
+
+  @override
+  String surveyRoomScanDoor(int n) {
+    return 'Door $n';
+  }
+
+  @override
+  String surveyRoomScanWindow(int n) {
+    return 'Window $n';
+  }
+
+  @override
+  String surveyRoomScanOpening(int n) {
+    return 'Opening $n';
+  }
+
+  @override
+  String get surveyRoomScanWallArea =>
+      'Gross wall area (openings not deducted)';
+
+  @override
+  String get surveyCheckTitle => 'Survey looks incomplete';
+
+  @override
+  String get surveyCheckSaveAnyway => 'Save anyway';
+
+  @override
+  String get surveyCheckReview => 'Go back and fix';
+
+  @override
+  String get surveyCheckNoMeasurement => 'No measurement yet';
+
+  @override
+  String get surveyCheckZeroValue => 'A measurement is 0';
+
+  @override
+  String get surveyCheckNoPhoto => 'No photo yet';
+
+  @override
+  String surveyCheckLine(String area, String issue) {
+    return '• $area: $issue';
+  }
 
   @override
   String get surveyMeasureNotesLabel => 'Measurement notes';

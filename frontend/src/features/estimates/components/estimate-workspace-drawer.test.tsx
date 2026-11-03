@@ -35,11 +35,18 @@ vi.mock("@/features/estimates/api/estimate-queries", async () => {
       };
     },
     useCalculateEstimate: () => ({ isPending: false, mutateAsync: mocks.calculate }),
+    useEstimateHistory: () => ({ data: undefined, isLoading: false, isError: false }),
   };
 });
 
 vi.mock("@/hooks/useToast", () => ({
   useToast: () => ({ toast: mocks.toast }),
+}));
+
+// The workspace keys its local BOQ draft by membership, so it needs a selected membership
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({ selectedMembership: { id: "membership-test", permissions: [] } }),
+  useOptionalSelectedMembership: () => ({ selectedMembership: { id: "membership-test", permissions: [] } }),
 }));
 
 vi.mock("@/hooks/useConfirm", () => ({
@@ -52,8 +59,9 @@ vi.mock("@/hooks/useKeyboardShortcut", () => ({
 
 vi.mock("./estimate-item-catalog-modal", () => ({ EstimateItemCatalogModal: () => null }));
 
+// The discount inputs are passed to the HUD as a slot, so the stub must render it
 vi.mock("./estimate-workspace-hud", () => ({
-  EstimateWorkspaceHud: () => null,
+  EstimateWorkspaceHud: ({ discountSlot }: { discountSlot?: React.ReactNode }) => <>{discountSlot}</>,
 }));
 
 vi.mock("./estimate-section-card", async () => {

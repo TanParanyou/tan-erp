@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/estimate_return_response.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:tan_erp_api/src/model/estimate_readiness_reason_response.dart';
 import 'package:tan_erp_api/src/model/estimate_section_response.dart';
@@ -42,6 +43,7 @@ part 'estimate_revision_response.g.dart';
 /// * [sections] 
 /// * [readiness] 
 /// * [readinessReasons] 
+/// * [lastReturn] 
 @BuiltValue()
 abstract class EstimateRevisionResponse implements Built<EstimateRevisionResponse, EstimateRevisionResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -127,6 +129,9 @@ abstract class EstimateRevisionResponse implements Built<EstimateRevisionRespons
 
   @BuiltValueField(wireName: r'readinessReasons')
   BuiltList<EstimateReadinessReasonResponse>? get readinessReasons;
+
+  @BuiltValueField(wireName: r'lastReturn')
+  EstimateReturnResponse? get lastReturn;
 
   EstimateRevisionResponse._();
 
@@ -345,6 +350,13 @@ class _$EstimateRevisionResponseSerializer implements PrimitiveSerializer<Estima
       yield serializers.serialize(
         object.readinessReasons,
         specifiedType: const FullType.nullable(BuiltList, [FullType(EstimateReadinessReasonResponse)]),
+      );
+    }
+    if (object.lastReturn != null) {
+      yield r'lastReturn';
+      yield serializers.serialize(
+        object.lastReturn,
+        specifiedType: const FullType(EstimateReturnResponse),
       );
     }
   }
@@ -593,6 +605,14 @@ class _$EstimateRevisionResponseSerializer implements PrimitiveSerializer<Estima
           ) as BuiltList<EstimateReadinessReasonResponse>?;
           if (valueDes == null) continue;
           result.readinessReasons.replace(valueDes);
+          break;
+        case r'lastReturn':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(EstimateReturnResponse),
+          ) as EstimateReturnResponse?;
+          if (valueDes == null) continue;
+          result.lastReturn.replace(valueDes);
           break;
         default:
           unhandled.add(key);

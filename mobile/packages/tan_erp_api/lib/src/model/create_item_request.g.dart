@@ -35,6 +35,14 @@ class _$CreateItemRequest extends CreateItemRequest {
   final int? attributesSchemaVersion;
   @override
   final String? taxCategoryCode;
+  @override
+  final double? weightKg;
+  @override
+  final double? lengthMm;
+  @override
+  final double? widthMm;
+  @override
+  final double? heightMm;
 
   factory _$CreateItemRequest(
           [void Function(CreateItemRequestBuilder)? updates]) =>
@@ -54,7 +62,11 @@ class _$CreateItemRequest extends CreateItemRequest {
       this.aliases,
       this.attributes,
       this.attributesSchemaVersion,
-      this.taxCategoryCode})
+      this.taxCategoryCode,
+      this.weightKg,
+      this.lengthMm,
+      this.widthMm,
+      this.heightMm})
       : super._();
   @override
   CreateItemRequest rebuild(void Function(CreateItemRequestBuilder) updates) =>
@@ -81,7 +93,11 @@ class _$CreateItemRequest extends CreateItemRequest {
         aliases == other.aliases &&
         attributes == other.attributes &&
         attributesSchemaVersion == other.attributesSchemaVersion &&
-        taxCategoryCode == other.taxCategoryCode;
+        taxCategoryCode == other.taxCategoryCode &&
+        weightKg == other.weightKg &&
+        lengthMm == other.lengthMm &&
+        widthMm == other.widthMm &&
+        heightMm == other.heightMm;
   }
 
   @override
@@ -101,6 +117,10 @@ class _$CreateItemRequest extends CreateItemRequest {
     _$hash = $jc(_$hash, attributes.hashCode);
     _$hash = $jc(_$hash, attributesSchemaVersion.hashCode);
     _$hash = $jc(_$hash, taxCategoryCode.hashCode);
+    _$hash = $jc(_$hash, weightKg.hashCode);
+    _$hash = $jc(_$hash, lengthMm.hashCode);
+    _$hash = $jc(_$hash, widthMm.hashCode);
+    _$hash = $jc(_$hash, heightMm.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -121,7 +141,11 @@ class _$CreateItemRequest extends CreateItemRequest {
           ..add('aliases', aliases)
           ..add('attributes', attributes)
           ..add('attributesSchemaVersion', attributesSchemaVersion)
-          ..add('taxCategoryCode', taxCategoryCode))
+          ..add('taxCategoryCode', taxCategoryCode)
+          ..add('weightKg', weightKg)
+          ..add('lengthMm', lengthMm)
+          ..add('widthMm', widthMm)
+          ..add('heightMm', heightMm))
         .toString();
   }
 }
@@ -200,6 +224,22 @@ class CreateItemRequestBuilder
   set taxCategoryCode(String? taxCategoryCode) =>
       _$this._taxCategoryCode = taxCategoryCode;
 
+  double? _weightKg;
+  double? get weightKg => _$this._weightKg;
+  set weightKg(double? weightKg) => _$this._weightKg = weightKg;
+
+  double? _lengthMm;
+  double? get lengthMm => _$this._lengthMm;
+  set lengthMm(double? lengthMm) => _$this._lengthMm = lengthMm;
+
+  double? _widthMm;
+  double? get widthMm => _$this._widthMm;
+  set widthMm(double? widthMm) => _$this._widthMm = widthMm;
+
+  double? _heightMm;
+  double? get heightMm => _$this._heightMm;
+  set heightMm(double? heightMm) => _$this._heightMm = heightMm;
+
   CreateItemRequestBuilder() {
     CreateItemRequest._defaults(this);
   }
@@ -221,6 +261,10 @@ class CreateItemRequestBuilder
       _attributes = $v.attributes?.toBuilder();
       _attributesSchemaVersion = $v.attributesSchemaVersion;
       _taxCategoryCode = $v.taxCategoryCode;
+      _weightKg = $v.weightKg;
+      _lengthMm = $v.lengthMm;
+      _widthMm = $v.widthMm;
+      _heightMm = $v.heightMm;
       _$v = null;
     }
     return this;
@@ -262,6 +306,10 @@ class CreateItemRequestBuilder
             attributes: _attributes?.build(),
             attributesSchemaVersion: attributesSchemaVersion,
             taxCategoryCode: taxCategoryCode,
+            weightKg: weightKg,
+            lengthMm: lengthMm,
+            widthMm: widthMm,
+            heightMm: heightMm,
           );
     } catch (_) {
       late String _$failedField;

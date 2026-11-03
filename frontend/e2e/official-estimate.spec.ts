@@ -19,7 +19,7 @@ async function signIn(page: Page, email = "foundation-user@example.test"): Promi
   const meResponse = page.waitForResponse(
     (response) => response.url().includes("/api/v1/me")
   );
-  await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
+  await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
   const [request, response] = await Promise.all([meRequest, meResponse]);
   const currentUserPayload = await response.text();
   expect(response.status(), `Current user request failed with ${response.status()}: ${currentUserPayload}`).toBe(200);

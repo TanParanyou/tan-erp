@@ -73,7 +73,9 @@ function renderList(locale: "th" | "en"): void {
   render(
     <QueryClientProvider client={client}>
       <NextIntlClientProvider locale={locale} messages={locale === "th" ? thMessages : enMessages}>
-        <CustomerList />
+        <ToastProvider>
+          <CustomerList />
+        </ToastProvider>
       </NextIntlClientProvider>
     </QueryClientProvider>,
   );

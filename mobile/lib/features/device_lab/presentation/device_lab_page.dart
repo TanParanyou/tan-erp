@@ -11,8 +11,8 @@ import 'package:tan_erp_field/core/ui/erp_mono_loading.dart';
 import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
 import 'package:tan_erp_field/features/device_lab/data/ar_measure_repository.dart';
-import 'package:tan_erp_field/features/device_lab/domain/ar_measure_failure.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/ar_measure_controller.dart';
+import 'package:tan_erp_field/features/device_lab/presentation/ar_measure_failure_message.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/photo_area_card.dart';
 import 'package:tan_erp_field/native/laser_meter/laser_meter_service.dart';
 
@@ -55,13 +55,7 @@ class _ArMeasureCard extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final availability = ref.watch(arAvailabilityProvider);
     final measure = ref.watch(arMeasureControllerProvider);
-    // Unknown may still work: ARCore's install flow gives the final answer.
-    final canStart = switch (availability.value) {
-      ArAvailability.supported ||
-      ArAvailability.needsInstall ||
-      ArAvailability.unknown => true,
-      ArAvailability.unsupported || null => false,
-    };
+    final canStart = arCanStart(availability.value);
 
     return ErpCard(
       title: l10n.arCardTitle,
@@ -92,7 +86,7 @@ class _ArMeasureCard extends ConsumerWidget {
         if (measure.failure != null) ...[
           SizedBox(height: t.space3),
           ErpAlert(
-            message: _failureMessage(l10n, measure.failure!),
+            message: arMeasureFailureMessage(l10n, measure.failure!),
             severity: ErpAlertSeverity.danger,
           ),
         ],
@@ -113,16 +107,6 @@ class _ArMeasureCard extends ConsumerWidget {
       ],
     );
   }
-
-  static String _failureMessage(AppLocalizations l10n, ArMeasureFailure f) =>
-      switch (f) {
-        ArMeasureFailure.cameraPermissionDenied => l10n.arErrorCameraPermission,
-        ArMeasureFailure.installDeclined => l10n.arErrorInstallDeclined,
-        ArMeasureFailure.unavailable => l10n.arErrorUnavailable,
-        ArMeasureFailure.busy => l10n.arErrorBusy,
-        ArMeasureFailure.sessionFailed ||
-        ArMeasureFailure.unknown => l10n.arErrorSessionFailed,
-      };
 
   /// Native screen gets every text and colour from here (l10n + ErpTokens).
   static ArMeasureRequest _request(BuildContext context) {

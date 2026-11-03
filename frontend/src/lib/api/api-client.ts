@@ -48,6 +48,8 @@ export type OpportunityWorkImageResponse = components["schemas"]["OpportunityWor
 export type OpportunityMetricsResponse = components["schemas"]["OpportunityMetricsResponse"];
 
 export type SiteSurveyResponse = components["schemas"]["SiteSurveyResponse"];
+export type PolishSurveyNarrativeRequest = components["schemas"]["PolishSurveyNarrativeRequest"];
+export type PolishSurveyNarrativeResponse = components["schemas"]["PolishSurveyNarrativeResponse"];
 export type SiteSurveyRevisionResponse = components["schemas"]["SiteSurveyRevisionResponse"];
 export type SiteSurveyAreaResponse = components["schemas"]["SiteSurveyAreaResponse"];
 export type SiteSurveyMeasurementResponse = components["schemas"]["SiteSurveyMeasurementResponse"];
@@ -80,6 +82,7 @@ export type CreateSurveyMoodToneRequest = components["schemas"]["CreateSurveyMoo
 export type UpdateSurveyMoodToneRequest = components["schemas"]["UpdateSurveyMoodToneRequest"];
 
 export type EstimateDetailResponse = components["schemas"]["EstimateDetailResponse"];
+export type EstimateHistoryResponse = components["schemas"]["EstimateHistoryResponse"];
 export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionResponse"];
 export type EstimateConversionSnapshotResponse = components["schemas"]["EstimateConversionSnapshotResponse"];
 export type EstimateUnitOptionsResponse = components["schemas"]["EstimateUnitOptionsResponse"];
@@ -1258,6 +1261,18 @@ export class ApiClient {
     );
   }
 
+  async polishSurveyNarrative(
+    payload: PolishSurveyNarrativeRequest,
+    options: RequestOptions
+  ): Promise<PolishSurveyNarrativeResponse> {
+    return this.request<PolishSurveyNarrativeResponse>(
+      "/api/v1/surveys/narrative/polish",
+      "POST",
+      options,
+      payload
+    );
+  }
+
   async cloneSurveyRevision(
     opportunityId: string,
     surveyId: string,
@@ -1375,6 +1390,17 @@ export class ApiClient {
   ): Promise<EstimateDetailResponse> {
     return this.request<EstimateDetailResponse>(
       `/api/v1/estimates/${encodeURIComponent(id)}`,
+      "GET",
+      options
+    );
+  }
+
+  async getEstimateHistory(
+    id: string,
+    options: RequestOptions
+  ): Promise<EstimateHistoryResponse> {
+    return this.request<EstimateHistoryResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/history`,
       "GET",
       options
     );

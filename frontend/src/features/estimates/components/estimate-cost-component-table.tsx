@@ -5,7 +5,9 @@ import { useFormContext, useFieldArray, Controller, useWatch } from "react-hook-
 import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { IconTrash, IconPlus } from "@/components/common/Icons";
+import { Badge } from "@/components/ui/Badge";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { IconTrash, IconPlus, IconList } from "@/components/common/Icons";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useEstimateOptions } from "../options/estimate-options";
 import { QUICK_COST_PRESETS, type QuickCostPreset } from "../constants/estimate-templates";
@@ -102,117 +104,79 @@ export function EstimateCostComponentTable({
     }
   };
 
+  const totalOfLines = costComponents.reduce((sum, line) => sum + calculateCostComponentSubtotal(line.quantity, line.unitCost), 0);
+  const openCatalog = () => {
+    if (workspace) {
+      const section = getValues(`sections.${sectionIndex}`);
+      const work = section.workItems[itemIndex];
+      if (section.uiKey && work.uiKey) workspace.openCatalog({ sectionKey: section.uiKey, workKey: work.uiKey });
+    } else setIsCatalogOpen(true);
+  };
+
   return (
     <div className="bg-erp-surface">
-      {/* 1. Header & Add Actions */}
-      <div className="flex flex-wrap justify-between items-center mb-2.5 gap-2">
-        <span className="text-xs font-bold text-erp-navy flex items-center gap-1.5">
-          {t("costComponents")} ({fields.length})
-        </span>
-
-        <div className="flex items-center gap-2">
-          {/* Browse Catalog Button */}
-          <Button size="sm" variant="outline"
-            type="button"
-            onClick={() => {
-              if (workspace) {
-                const section = getValues(`sections.${sectionIndex}`);
-                const work = section.workItems[itemIndex];
-                if (section.uiKey && work.uiKey) workspace.openCatalog({ sectionKey: section.uiKey, workKey: work.uiKey });
-              } else setIsCatalogOpen(true);
-            }}
-            title={t("catalogModalDesc")}
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-            </svg>
-            {t("browseCatalog")}
-          </Button>
-
-          {/* Add Blank Cost Button */}
-          <Button size="sm" variant="outline"
-            type="button"
-            onClick={handleAddCost}
-          >
-            <IconPlus size={13} />
-            {t("addComponent")}
-          </Button>
+      {/* Summary + the two ways to add a line; the primary action is the blank line */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-xs text-erp-text-muted">{t("costComponents")} ({fields.length})</div>
+          <div className="font-mono text-base font-bold text-erp-navy">{formatFinancialNumber(totalOfLines)} <span className="text-xs font-normal text-erp-text-muted">{currency}</span></div>
+          <div className="text-[11px] text-erp-text-muted">{t("costLinesTotal")}</div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" type="button" onClick={openCatalog} title={t("catalogModalDesc")} icon={<IconList size={14} />}>{t("browseCatalog")}</Button>
+          <Button size="sm" variant="primary" type="button" onClick={handleAddCost} icon={<IconPlus size={14} />}>{t("addComponent")}</Button>
         </div>
       </div>
 
-      {/* 2. Quick Cost Chips */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-3 pb-2.5 border-b border-border/60">
-        <span className="text-xs font-semibold text-erp-text-muted mr-1">
-          {t("quickAddCostTitle")}
-        </span>
-        {QUICK_COST_PRESETS.map((preset) => (
-          <Button size="sm" variant="outline"
-            key={preset.id}
-            type="button"
-            onClick={() => handleQuickAddCost(preset)}
-            title={`${preset.defaultDesc} (@ ${preset.defaultCost} ${currency})`}
-          >
-            <span className="text-erp-text-muted hover:text-white">+</span>
-            <span>{t(preset.labelKey)}</span>
-          </Button>
-        ))}
-      </div>
+      <Select
+        id={`cost-quick-add-${sectionIndex}-${itemIndex}`}
+        aria-label={t("quickAddCostTitle")}
+        placeholder={t("quickAddCostTitle")}
+        options={QUICK_COST_PRESETS.map((preset) => ({ value: preset.id, label: `${t(preset.labelKey)} (@ ${preset.defaultCost} ${currency})` }))}
+        value=""
+        onChange={(event) => {
+          const preset = QUICK_COST_PRESETS.find((candidate) => candidate.id === event.target.value);
+          if (preset) handleQuickAddCost(preset);
+        }}
+        wrapperClassName="mb-3"
+      />
 
-      {/* 3. Cost Components Table */}
       {fields.length === 0 ? (
-        <div className="text-center py-5 text-xs text-erp-text-muted border border-dashed border-erp-border bg-erp-surface-subtle/50">
+        <div className="border border-dashed border-erp-border bg-erp-surface-subtle p-5 text-center text-xs text-erp-text-muted">
           {t("addComponent")}
         </div>
       ) : (
-        <div className="border border-erp-border">
-          {/* Component forms */}
-          <div className="divide-y divide-erp-border/60">
-            {fields.map((field, cIdx) => {
-              const currentItem = costComponents[cIdx];
-              if (!currentItem) return null;
-              const subtotal = calculateCostComponentSubtotal(
-                currentItem.quantity,
-                currentItem.unitCost
-              );
+        <div className="space-y-3">
+          {fields.map((field, cIdx) => {
+            const currentItem = costComponents[cIdx];
+            if (!currentItem) return null;
+            const subtotal = calculateCostComponentSubtotal(currentItem.quantity, currentItem.unitCost);
+            const base = `sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}` as const;
+            const lineErrors = errors.sections?.[sectionIndex]?.workItems?.[itemIndex]?.costComponents?.[cIdx];
+            const isProvisional = currentItem.isProvisional !== false;
 
-              return (
-                <div
-                  key={field.id}
-                  id={currentItem.id ? `estimate-target-${currentItem.id}` : undefined}
-                  tabIndex={-1}
-                  className="grid grid-cols-2 gap-2 items-start p-2 text-xs focus-visible:outline-2 focus-visible:outline-erp-navy"
-                >
-                  {/* Cost Type Select */}
-                  <div className="col-span-2">
-                    <Controller
-                      control={control}
-                      name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.type`}
-                      render={({ field: selectField }) => (
-                        <Select
-                          id={`cost-type-${sectionIndex}-${itemIndex}-${cIdx}`}
-                          label={t("costType")}
-                          options={options.costTypes}
-                          value={selectField.value}
-                          onChange={selectField.onChange}
-                          wrapperClassName="mb-0"
-                        />
-                      )}
-                    />
+            return (
+              <div
+                key={field.id}
+                id={currentItem.id ? `estimate-target-${currentItem.id}` : undefined}
+                tabIndex={-1}
+                className="border border-erp-border text-xs focus-visible:outline-2 focus-visible:outline-erp-navy"
+              >
+                <div className="flex items-center justify-between gap-2 border-b border-erp-border bg-erp-surface-subtle px-2 py-1">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="font-semibold text-erp-text-main">{t("costLineNumber", { number: cIdx + 1 })}</span>
+                    <Badge variant={isProvisional ? "warning" : "success"}>{isProvisional ? t("costBadgeEstimated") : t("costBadgeConfirmed")}</Badge>
                   </div>
+                  <Tooltip content={t("removeCostLine")} position="bottom">
+                    <Button size="icon" variant="ghost" type="button" onClick={() => handleRemoveCost(cIdx)} aria-label={t("removeCostLine")} icon={<IconTrash size={16} />} />
+                  </Tooltip>
+                </div>
 
-                  {/* Description Input */}
+                <div className="grid grid-cols-2 gap-2 p-2">
                   <div className="col-span-2">
                     <Controller
                       control={control}
-                      name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.description`}
+                      name={`${base}.description`}
                       render={({ field: inputField }) => (
                         <Input
                           label={t("costDesc")}
@@ -226,13 +190,48 @@ export function EstimateCostComponentTable({
                     />
                   </div>
 
+                  <div className={currentItem.itemId ? "col-span-2" : "col-span-1"}>
+                    <Controller
+                      control={control}
+                      name={`${base}.type`}
+                      render={({ field: selectField }) => (
+                        <Select
+                          id={`cost-type-${sectionIndex}-${itemIndex}-${cIdx}`}
+                          label={t("costType")}
+                          options={options.costTypes}
+                          value={selectField.value}
+                          onChange={selectField.onChange}
+                          wrapperClassName="mb-0"
+                        />
+                      )}
+                    />
+                  </div>
+                  {!currentItem.itemId && (
+                    <div className="col-span-1">
+                      <Controller
+                        control={control}
+                        name={`${base}.unitCode`}
+                        render={({ field: unitField }) => (
+                          <Input
+                            id={`cost-unit-code-${sectionIndex}-${itemIndex}-${cIdx}`}
+                            label={t("unitCode")}
+                            placeholder={t("unitCodePlaceholder")}
+                            list={`cost-units-${sectionIndex}-${itemIndex}`}
+                            value={unitField.value ?? ""}
+                            onChange={unitField.onChange}
+                            wrapperClassName="mb-0"
+                          />
+                        )}
+                      />
+                    </div>
+                  )}
+
                   <EstimateCostUnitSelect sectionIndex={sectionIndex} itemIndex={itemIndex} costIndex={cIdx} branchId={branchId} />
 
-                  {/* Quantity Input */}
                   <div className="col-span-1">
                     <Controller
                       control={control}
-                      name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.quantity`}
+                      name={`${base}.quantity`}
                       render={({ field: qtyField }) => (
                         <Input
                           type="number"
@@ -241,7 +240,7 @@ export function EstimateCostComponentTable({
                           id={`cost-quantity-${sectionIndex}-${itemIndex}-${cIdx}`}
                           label={t("quantity")}
                           placeholder={t("quantityPlaceholder")}
-                          error={errors.sections?.[sectionIndex]?.workItems?.[itemIndex]?.costComponents?.[cIdx]?.quantity ? t("workspace.costInvalid") : undefined}
+                          error={lineErrors?.quantity ? t("workspace.costInvalid") : undefined}
                           value={qtyField.value ?? ""}
                           onChange={(e) => qtyField.onChange(Number(e.target.value))}
                           wrapperClassName="mb-0"
@@ -250,12 +249,10 @@ export function EstimateCostComponentTable({
                       )}
                     />
                   </div>
-
-                  {/* Unit Cost Input */}
                   <div className="col-span-1">
                     <Controller
                       control={control}
-                      name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.unitCost`}
+                      name={`${base}.unitCost`}
                       render={({ field: costField }) => (
                         <Input
                           id={`cost-component-unit-cost-${sectionIndex}-${itemIndex}-${cIdx}`}
@@ -264,7 +261,7 @@ export function EstimateCostComponentTable({
                           min="0"
                           label={t("unitCost")}
                           placeholder={t("unitCostPlaceholder")}
-                          error={errors.sections?.[sectionIndex]?.workItems?.[itemIndex]?.costComponents?.[cIdx]?.unitCost ? t("workspace.costInvalid") : undefined}
+                          error={lineErrors?.unitCost ? t("workspace.costInvalid") : undefined}
                           value={costField.value ?? ""}
                           onChange={(e) => costField.onChange(Number(e.target.value))}
                           wrapperClassName="mb-0"
@@ -274,28 +271,17 @@ export function EstimateCostComponentTable({
                     />
                   </div>
 
-                  {/* Line Subtotal */}
-                  <div className="col-span-1 text-right font-mono text-xs font-bold text-erp-navy truncate">
-                    {formatFinancialNumber(subtotal)}
+                  <div className="col-span-2 flex flex-wrap items-baseline justify-end gap-x-2 border-t border-erp-border pt-2 font-mono">
+                    <span className="text-erp-text-muted">{formatFinancialNumber(currentItem.quantity)} {currentItem.unitCode} × {formatFinancialNumber(currentItem.unitCost)} =</span>
+                    <span className="text-sm font-bold text-erp-navy">{formatFinancialNumber(subtotal)} {currency}</span>
                   </div>
 
-                  {/* Delete Action Button */}
-                  <div className="col-span-1 flex items-center justify-center">
-                    <Button size="sm" variant="outline"
-                      type="button"
-                      onClick={() => handleRemoveCost(cIdx)}
-                      className="text-erp-text-muted"
-                      title={t("removeWorkItem")}
-                      aria-label={t("removeWorkItem")}
-                    >
-                      <IconTrash size={14} />
-                    </Button>
-                  </div>
-                  {currentItem.isProvisional !== false && (
-                    <div className="col-span-2 grid grid-cols-1 gap-2 border-t border-erp-border/40 pt-2">
+                  {isProvisional && (
+                    <div className="col-span-2 grid grid-cols-1 gap-2 border border-erp-warning-border bg-erp-warning-bg p-2">
+                      <p className="text-erp-warning-text">{t("provisionalHint")}</p>
                       <Controller
                         control={control}
-                        name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.provisionalReasonCode`}
+                        name={`${base}.provisionalReasonCode`}
                         render={({ field: reasonField }) => (
                           <Select
                             options={[
@@ -316,7 +302,7 @@ export function EstimateCostComponentTable({
                       />
                       <Controller
                         control={control}
-                        name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.provisionalNote`}
+                        name={`${base}.provisionalNote`}
                         render={({ field: noteField }) => (
                           <Input
                             value={noteField.value ?? ""}
@@ -330,11 +316,12 @@ export function EstimateCostComponentTable({
                     </div>
                   )}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       )}
+      <datalist id={`cost-units-${sectionIndex}-${itemIndex}`}>{options.units.map((unit) => <option key={unit.value} value={unit.value}>{unit.label}</option>)}</datalist>
 
       {/* Multi-tier Faceted Item Catalog Modal */}
       {!workspace && <EstimateItemCatalogModal

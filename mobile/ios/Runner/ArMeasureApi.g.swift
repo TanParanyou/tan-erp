@@ -181,6 +181,12 @@ enum ArAvailability: Int {
   case unknown = 3
 }
 
+enum RoomOpeningKind: Int {
+  case door = 0
+  case window = 1
+  case opening = 2
+}
+
 /// Every visible text of the native AR screen; native code has no strings.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
@@ -450,6 +456,154 @@ struct ArMeasureResult: Hashable {
   }
 }
 
+/// Texts and colours of the native room scan screen (RoomPlan draws its own
+/// coaching UI; we add only the cancel/done controls).
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct RoomScanRequest: Hashable {
+  var cancel: String
+  var done: String
+  var colors: ArMeasureColors
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> RoomScanRequest? {
+    let cancel = pigeonVar_list[0] as! String
+    let done = pigeonVar_list[1] as! String
+    let colors = pigeonVar_list[2] as! ArMeasureColors
+
+    return RoomScanRequest(
+      cancel: cancel,
+      done: done,
+      colors: colors
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      cancel,
+      done,
+      colors,
+    ]
+  }
+  static func == (lhs: RoomScanRequest, rhs: RoomScanRequest) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsArMeasureApi(lhs.cancel, rhs.cancel) && deepEqualsArMeasureApi(lhs.done, rhs.done) && deepEqualsArMeasureApi(lhs.colors, rhs.colors)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("RoomScanRequest")
+    deepHashArMeasureApi(value: cancel, hasher: &hasher)
+    deepHashArMeasureApi(value: done, hasher: &hasher)
+    deepHashArMeasureApi(value: colors, hasher: &hasher)
+  }
+}
+
+/// One door, window or open passage found by RoomPlan.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct RoomOpening: Hashable {
+  var kind: RoomOpeningKind
+  var widthM: Double
+  var heightM: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> RoomOpening? {
+    let kind = pigeonVar_list[0] as! RoomOpeningKind
+    let widthM = pigeonVar_list[1] as! Double
+    let heightM = pigeonVar_list[2] as! Double
+
+    return RoomOpening(
+      kind: kind,
+      widthM: widthM,
+      heightM: heightM
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      kind,
+      widthM,
+      heightM,
+    ]
+  }
+  static func == (lhs: RoomOpening, rhs: RoomOpening) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsArMeasureApi(lhs.kind, rhs.kind) && deepEqualsArMeasureApi(lhs.widthM, rhs.widthM) && deepEqualsArMeasureApi(lhs.heightM, rhs.heightM)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("RoomOpening")
+    deepHashArMeasureApi(value: kind, hasher: &hasher)
+    deepHashArMeasureApi(value: widthM, hasher: &hasher)
+    deepHashArMeasureApi(value: heightM, hasher: &hasher)
+  }
+}
+
+/// Room dimensions from a RoomPlan scan. Width/length are the floor's
+/// bounding box (width ≤ length); height is the tallest wall (null when no
+/// wall was detected).
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct RoomScanResult: Hashable {
+  var floorAreaSqm: Double
+  var widthM: Double
+  var lengthM: Double
+  var ceilingHeightM: Double? = nil
+  /// Sum of every wall's width × height, openings not subtracted.
+  var grossWallAreaSqm: Double
+  var openings: [RoomOpening]
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> RoomScanResult? {
+    let floorAreaSqm = pigeonVar_list[0] as! Double
+    let widthM = pigeonVar_list[1] as! Double
+    let lengthM = pigeonVar_list[2] as! Double
+    let ceilingHeightM: Double? = nilOrValue(pigeonVar_list[3])
+    let grossWallAreaSqm = pigeonVar_list[4] as! Double
+    let openings = pigeonVar_list[5] as! [RoomOpening]
+
+    return RoomScanResult(
+      floorAreaSqm: floorAreaSqm,
+      widthM: widthM,
+      lengthM: lengthM,
+      ceilingHeightM: ceilingHeightM,
+      grossWallAreaSqm: grossWallAreaSqm,
+      openings: openings
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      floorAreaSqm,
+      widthM,
+      lengthM,
+      ceilingHeightM,
+      grossWallAreaSqm,
+      openings,
+    ]
+  }
+  static func == (lhs: RoomScanResult, rhs: RoomScanResult) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsArMeasureApi(lhs.floorAreaSqm, rhs.floorAreaSqm) && deepEqualsArMeasureApi(lhs.widthM, rhs.widthM) && deepEqualsArMeasureApi(lhs.lengthM, rhs.lengthM) && deepEqualsArMeasureApi(lhs.ceilingHeightM, rhs.ceilingHeightM) && deepEqualsArMeasureApi(lhs.grossWallAreaSqm, rhs.grossWallAreaSqm) && deepEqualsArMeasureApi(lhs.openings, rhs.openings)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("RoomScanResult")
+    deepHashArMeasureApi(value: floorAreaSqm, hasher: &hasher)
+    deepHashArMeasureApi(value: widthM, hasher: &hasher)
+    deepHashArMeasureApi(value: lengthM, hasher: &hasher)
+    deepHashArMeasureApi(value: ceilingHeightM, hasher: &hasher)
+    deepHashArMeasureApi(value: grossWallAreaSqm, hasher: &hasher)
+    deepHashArMeasureApi(value: openings, hasher: &hasher)
+  }
+}
+
 private class ArMeasureApiPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -460,13 +614,25 @@ private class ArMeasureApiPigeonCodecReader: FlutterStandardReader {
       }
       return nil
     case 130:
-      return ArMeasureStrings.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return RoomOpeningKind(rawValue: enumResultAsInt)
+      }
+      return nil
     case 131:
-      return ArMeasureColors.fromList(self.readValue() as! [Any?])
+      return ArMeasureStrings.fromList(self.readValue() as! [Any?])
     case 132:
-      return ArMeasureRequest.fromList(self.readValue() as! [Any?])
+      return ArMeasureColors.fromList(self.readValue() as! [Any?])
     case 133:
+      return ArMeasureRequest.fromList(self.readValue() as! [Any?])
+    case 134:
       return ArMeasureResult.fromList(self.readValue() as! [Any?])
+    case 135:
+      return RoomScanRequest.fromList(self.readValue() as! [Any?])
+    case 136:
+      return RoomOpening.fromList(self.readValue() as! [Any?])
+    case 137:
+      return RoomScanResult.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -478,17 +644,29 @@ private class ArMeasureApiPigeonCodecWriter: FlutterStandardWriter {
     if let value = value as? ArAvailability {
       super.writeByte(129)
       super.writeValue(value.rawValue)
-    } else if let value = value as? ArMeasureStrings {
+    } else if let value = value as? RoomOpeningKind {
       super.writeByte(130)
-      super.writeValue(value.toList())
-    } else if let value = value as? ArMeasureColors {
+      super.writeValue(value.rawValue)
+    } else if let value = value as? ArMeasureStrings {
       super.writeByte(131)
       super.writeValue(value.toList())
-    } else if let value = value as? ArMeasureRequest {
+    } else if let value = value as? ArMeasureColors {
       super.writeByte(132)
       super.writeValue(value.toList())
-    } else if let value = value as? ArMeasureResult {
+    } else if let value = value as? ArMeasureRequest {
       super.writeByte(133)
+      super.writeValue(value.toList())
+    } else if let value = value as? ArMeasureResult {
+      super.writeByte(134)
+      super.writeValue(value.toList())
+    } else if let value = value as? RoomScanRequest {
+      super.writeByte(135)
+      super.writeValue(value.toList())
+    } else if let value = value as? RoomOpening {
+      super.writeByte(136)
+      super.writeValue(value.toList())
+    } else if let value = value as? RoomScanResult {
+      super.writeByte(137)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -560,6 +738,57 @@ class ArMeasureApiSetup {
       }
     } else {
       measureFloorChannel.setMessageHandler(nil)
+    }
+  }
+}
+/// iOS only (RoomPlan, LiDAR, iOS 17+). Android registers no handler, so
+/// calls fail with a channel error and the app treats it as unsupported.
+/// Error codes of [RoomScanApi.scanRoom]: `camera_permission_denied`,
+/// `unavailable`, `session_failed`, `no_floor`, `busy`.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol RoomScanApi {
+  func isSupported() throws -> Bool
+  /// Opens the native room scan. Returns null when the user cancels.
+  func scanRoom(request: RoomScanRequest, completion: @escaping (Result<RoomScanResult?, Error>) -> Void)
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class RoomScanApiSetup {
+  static var codec: FlutterStandardMessageCodec { ArMeasureApiPigeonCodec.shared }
+  /// Sets up an instance of `RoomScanApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: RoomScanApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    let isSupportedChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tan_erp_field.RoomScanApi.isSupported\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      isSupportedChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.isSupported()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      isSupportedChannel.setMessageHandler(nil)
+    }
+    /// Opens the native room scan. Returns null when the user cancels.
+    let scanRoomChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tan_erp_field.RoomScanApi.scanRoom\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      scanRoomChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let requestArg = args[0] as! RoomScanRequest
+        api.scanRoom(request: requestArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      scanRoomChannel.setMessageHandler(nil)
     }
   }
 }

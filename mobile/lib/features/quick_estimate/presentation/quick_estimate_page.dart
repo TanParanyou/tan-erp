@@ -10,6 +10,7 @@ import 'package:tan_erp_field/core/ui/erp_bottom_action_bar.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
 import 'package:tan_erp_field/core/ui/erp_card.dart';
 import 'package:tan_erp_field/core/ui/erp_confirm_dialog.dart';
+import 'package:tan_erp_field/core/ui/erp_content_frame.dart';
 import 'package:tan_erp_field/core/ui/erp_measure_display.dart';
 import 'package:tan_erp_field/core/ui/erp_mono_loading.dart';
 import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
@@ -125,10 +126,7 @@ class _QuickEstimatePageState extends ConsumerState<QuickEstimatePage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                l10n.quickEstimateShareSheetTitle,
-                style: text.titleMedium,
-              ),
+              Text(l10n.quickEstimateShareSheetTitle, style: text.titleMedium),
               SizedBox(height: t.space3),
               ErpCard(
                 children: [
@@ -212,154 +210,157 @@ class _QuickEstimatePageState extends ConsumerState<QuickEstimatePage> {
 
     return ErpScreen(
       title: l10n.quickEstimateTitle(record.number),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ListView(
-              padding: ErpPagePadding.of(context),
-              children: [
-                if (_successMessage != null) ...[
-                  ErpAlert(
-                    message: _successMessage!,
-                    severity: ErpAlertSeverity.success,
-                  ),
-                  SizedBox(height: t.space3),
-                ],
-                ErpCard(
-                  children: [
-                    ErpSelect<String>(
-                      label: l10n.quickEstimatePropertyTypeLabel,
-                      placeholder: l10n.commonSelect,
-                      value: _selectedPropertyType,
-                      options: [
-                        ErpOption(
-                          value: 'condo',
-                          label: l10n.quickEstimatePropertyCondo,
-                        ),
-                        ErpOption(
-                          value: 'house',
-                          label: l10n.quickEstimatePropertyHouse,
-                        ),
-                        ErpOption(
-                          value: 'office',
-                          label: l10n.quickEstimatePropertyOffice,
-                        ),
-                      ],
-                      onChanged: (v) =>
-                          setState(() => _selectedPropertyType = v),
+      body: ErpContentFrame(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ListView(
+                padding: ErpPagePadding.of(context),
+                children: [
+                  if (_successMessage != null) ...[
+                    ErpAlert(
+                      message: _successMessage!,
+                      severity: ErpAlertSeverity.success,
                     ),
                     SizedBox(height: t.space3),
-                    ErpSelect<String>(
-                      label: l10n.quickEstimateGradeLabel,
-                      placeholder: l10n.commonSelect,
-                      value: _selectedGradeCode,
-                      options: [
-                        ErpOption(
-                          value: 'standard',
-                          label: l10n.quickEstimateGradeStandard,
-                        ),
-                        ErpOption(
-                          value: 'premium',
-                          label: l10n.quickEstimateGradePremium,
-                        ),
-                        ErpOption(
-                          value: 'luxury',
-                          label: l10n.quickEstimateGradeLuxury,
-                        ),
-                      ],
-                      onChanged: (v) => setState(() => _selectedGradeCode = v),
-                    ),
-                    SizedBox(height: t.space4),
-                    ErpButton(
-                      label: l10n.quickEstimateCalculateAction,
-                      variant: ErpButtonVariant.outline,
-                      isLoading: _saving,
-                      onPressed: _recalculate,
-                    ),
                   ],
-                ),
-                SizedBox(height: t.space4),
-                ErpCard(
-                  children: [
-                    ErpMeasureDisplay(
-                      label: l10n.quickEstimateRangeLabel,
-                      valueText: rangeText,
-                    ),
-                    SizedBox(height: t.space3),
-                    _summaryRow(
-                      label: l10n.quickEstimateNetAmountLabel,
-                      value: '฿${fmt.format(record.netAmount)}',
-                      text: text,
-                      t: t,
-                    ),
-                    _summaryRow(
-                      label: l10n.quickEstimateTaxAmountLabel,
-                      value: '฿${fmt.format(record.taxAmount)}',
-                      text: text,
-                      t: t,
-                    ),
-                    _summaryRow(
-                      label: l10n.quickEstimateValidUntilLabel(
-                        record.validUntilText,
+                  ErpCard(
+                    children: [
+                      ErpSelect<String>(
+                        label: l10n.quickEstimatePropertyTypeLabel,
+                        placeholder: l10n.commonSelect,
+                        value: _selectedPropertyType,
+                        options: [
+                          ErpOption(
+                            value: 'condo',
+                            label: l10n.quickEstimatePropertyCondo,
+                          ),
+                          ErpOption(
+                            value: 'house',
+                            label: l10n.quickEstimatePropertyHouse,
+                          ),
+                          ErpOption(
+                            value: 'office',
+                            label: l10n.quickEstimatePropertyOffice,
+                          ),
+                        ],
+                        onChanged: (v) =>
+                            setState(() => _selectedPropertyType = v),
                       ),
-                      value: '',
-                      text: text,
-                      t: t,
-                    ),
-                  ],
-                ),
-                SizedBox(height: t.space4),
-                ErpCard(
-                  title: l10n.quickEstimateLinesSection,
-                  children: [
-                    for (final line in record.lines) ...[
-                      Padding(
-                        padding: EdgeInsets.only(bottom: t.space2),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${line.areaCode} · ${line.areaName}',
-                                    style: text.bodyMedium,
-                                  ),
-                                  SizedBox(height: t.space1),
-                                  Text(
-                                    '${fmtDec.format(line.quantitySqm)} '
-                                    '${l10n.surveyUnitSqm} @ '
-                                    '฿${fmt.format(line.unitRate)}',
-                                    style: text.bodySmall?.copyWith(
-                                      color: t.textMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              '฿${fmt.format(line.lineTotal)}',
-                              style: text.bodyMedium,
-                            ),
-                          ],
-                        ),
+                      SizedBox(height: t.space3),
+                      ErpSelect<String>(
+                        label: l10n.quickEstimateGradeLabel,
+                        placeholder: l10n.commonSelect,
+                        value: _selectedGradeCode,
+                        options: [
+                          ErpOption(
+                            value: 'standard',
+                            label: l10n.quickEstimateGradeStandard,
+                          ),
+                          ErpOption(
+                            value: 'premium',
+                            label: l10n.quickEstimateGradePremium,
+                          ),
+                          ErpOption(
+                            value: 'luxury',
+                            label: l10n.quickEstimateGradeLuxury,
+                          ),
+                        ],
+                        onChanged: (v) =>
+                            setState(() => _selectedGradeCode = v),
+                      ),
+                      SizedBox(height: t.space4),
+                      ErpButton(
+                        label: l10n.quickEstimateCalculateAction,
+                        variant: ErpButtonVariant.outline,
+                        isLoading: _saving,
+                        onPressed: _recalculate,
                       ),
                     ],
-                  ],
-                ),
-              ],
+                  ),
+                  SizedBox(height: t.space4),
+                  ErpCard(
+                    children: [
+                      ErpMeasureDisplay(
+                        label: l10n.quickEstimateRangeLabel,
+                        valueText: rangeText,
+                      ),
+                      SizedBox(height: t.space3),
+                      _summaryRow(
+                        label: l10n.quickEstimateNetAmountLabel,
+                        value: '฿${fmt.format(record.netAmount)}',
+                        text: text,
+                        t: t,
+                      ),
+                      _summaryRow(
+                        label: l10n.quickEstimateTaxAmountLabel,
+                        value: '฿${fmt.format(record.taxAmount)}',
+                        text: text,
+                        t: t,
+                      ),
+                      _summaryRow(
+                        label: l10n.quickEstimateValidUntilLabel(
+                          record.validUntilText,
+                        ),
+                        value: '',
+                        text: text,
+                        t: t,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: t.space4),
+                  ErpCard(
+                    title: l10n.quickEstimateLinesSection,
+                    children: [
+                      for (final line in record.lines) ...[
+                        Padding(
+                          padding: EdgeInsets.only(bottom: t.space2),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${line.areaCode} ${line.areaName}',
+                                      style: text.bodyMedium,
+                                    ),
+                                    SizedBox(height: t.space1),
+                                    Text(
+                                      '${fmtDec.format(line.quantitySqm)} '
+                                      '${l10n.surveyUnitSqm} @ '
+                                      '฿${fmt.format(line.unitRate)}',
+                                      style: text.bodySmall?.copyWith(
+                                        color: t.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '฿${fmt.format(line.lineTotal)}',
+                                style: text.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          ErpBottomActionBar(
-            label: l10n.quickEstimateConvertAction,
-            isLoading: _saving,
-            onPressed: record.isConverted ? null : () => _onConvert(record),
-            secondaryLabel: l10n.quickEstimateShareAction,
-            onSecondaryPressed: () => _openShareSheet(record),
-          ),
-        ],
+            ErpBottomActionBar(
+              label: l10n.quickEstimateConvertAction,
+              isLoading: _saving,
+              onPressed: record.isConverted ? null : () => _onConvert(record),
+              secondaryLabel: l10n.quickEstimateShareAction,
+              onSecondaryPressed: () => _openShareSheet(record),
+            ),
+          ],
+        ),
       ),
     );
   }

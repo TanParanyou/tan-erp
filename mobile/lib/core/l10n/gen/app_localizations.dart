@@ -962,6 +962,12 @@ abstract class AppLocalizations {
   /// **'เปิดกล้อง AR ไม่สำเร็จ กรุณาลองใหม่'**
   String get arErrorSessionFailed;
 
+  /// No description provided for @arErrorNoFloor.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่พบพื้นห้องในการสแกน กรุณาสแกนใหม่ให้เห็นพื้น'**
+  String get arErrorNoFloor;
+
   /// No description provided for @arErrorBusy.
   ///
   /// In th, this message translates to:
@@ -1256,6 +1262,12 @@ abstract class AppLocalizations {
   /// **'ยังไม่มีรายการนัดสำรวจในสาขานี้ แตะเพื่อโหลดข้อมูลใหม่'**
   String get todayEmptyBody;
 
+  /// No description provided for @todaySelectPrompt.
+  ///
+  /// In th, this message translates to:
+  /// **'เลือกงานจากรายการเพื่อเริ่มสำรวจ'**
+  String get todaySelectPrompt;
+
   /// No description provided for @todayOpenSurvey.
   ///
   /// In th, this message translates to:
@@ -1490,6 +1502,18 @@ abstract class AppLocalizations {
   /// **'จำนวน'**
   String get surveyMeasureTypeCount;
 
+  /// No description provided for @surveyMeasureTypeOpening.
+  ///
+  /// In th, this message translates to:
+  /// **'ช่องเปิด'**
+  String get surveyMeasureTypeOpening;
+
+  /// No description provided for @surveyMeasureTypeCustom.
+  ///
+  /// In th, this message translates to:
+  /// **'อื่นๆ'**
+  String get surveyMeasureTypeCustom;
+
   /// No description provided for @surveyUnitSqm.
   ///
   /// In th, this message translates to:
@@ -1555,6 +1579,78 @@ abstract class AppLocalizations {
   /// In th, this message translates to:
   /// **'AR วัดพื้น'**
   String get surveyMeasureByAr;
+
+  /// No description provided for @surveyMeasureByRoomScan.
+  ///
+  /// In th, this message translates to:
+  /// **'สแกนห้อง (LiDAR)'**
+  String get surveyMeasureByRoomScan;
+
+  /// No description provided for @surveyRoomScanDoor.
+  ///
+  /// In th, this message translates to:
+  /// **'ประตู {n}'**
+  String surveyRoomScanDoor(int n);
+
+  /// No description provided for @surveyRoomScanWindow.
+  ///
+  /// In th, this message translates to:
+  /// **'หน้าต่าง {n}'**
+  String surveyRoomScanWindow(int n);
+
+  /// No description provided for @surveyRoomScanOpening.
+  ///
+  /// In th, this message translates to:
+  /// **'ช่องเปิด {n}'**
+  String surveyRoomScanOpening(int n);
+
+  /// No description provided for @surveyRoomScanWallArea.
+  ///
+  /// In th, this message translates to:
+  /// **'พื้นที่ผนังรวม (ยังไม่หักช่องเปิด)'**
+  String get surveyRoomScanWallArea;
+
+  /// No description provided for @surveyCheckTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ข้อมูลสำรวจยังไม่ครบ'**
+  String get surveyCheckTitle;
+
+  /// No description provided for @surveyCheckSaveAnyway.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกต่อ'**
+  String get surveyCheckSaveAnyway;
+
+  /// No description provided for @surveyCheckReview.
+  ///
+  /// In th, this message translates to:
+  /// **'กลับไปแก้ไข'**
+  String get surveyCheckReview;
+
+  /// No description provided for @surveyCheckNoMeasurement.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่มีขนาด'**
+  String get surveyCheckNoMeasurement;
+
+  /// No description provided for @surveyCheckZeroValue.
+  ///
+  /// In th, this message translates to:
+  /// **'มีค่าวัดเป็น 0'**
+  String get surveyCheckZeroValue;
+
+  /// No description provided for @surveyCheckNoPhoto.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่มีรูป'**
+  String get surveyCheckNoPhoto;
+
+  /// No description provided for @surveyCheckLine.
+  ///
+  /// In th, this message translates to:
+  /// **'• {area}: {issue}'**
+  String surveyCheckLine(String area, String issue);
 
   /// No description provided for @surveyMeasureNotesLabel.
   ///

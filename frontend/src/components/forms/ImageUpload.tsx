@@ -1,10 +1,20 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { IconUpload, IconClose, IconEye, IconAlertCircle } from "@/components/common/Icons";
+import {
+  IconUpload,
+  IconTrash,
+  IconEye,
+  IconAlertCircle,
+  IconCamera,
+} from "@/components/common/Icons";
 import { optimizeImageToWebP } from "@/lib/media/image-optimization";
-import { GalleryLightboxModal, type GalleryItemMetadata } from "@/components/common/GalleryLightboxModal";
+import {
+  GalleryLightboxModal,
+  type GalleryItemMetadata,
+} from "@/components/common/GalleryLightboxModal";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils/cn";
 
 export interface ImageUploadProps {
   label?: string;
@@ -101,7 +111,8 @@ export function ImageUpload({
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (disabled) return;
     if (localPreview) {
       URL.revokeObjectURL(localPreview);
@@ -144,7 +155,7 @@ export function ImageUpload({
   const activeError = uploadError || error;
 
   return (
-    <div className={`erp-form-group ${className}`}>
+    <div className={cn("erp-form-group", className)}>
       <input
         ref={fileInputRef}
         type="file"
@@ -159,77 +170,131 @@ export function ImageUpload({
 
       {previewSrc ? (
         <div
-          className="relative w-32 h-32 shrink-0 self-start group/preview"
-          style={{ width: "8rem", height: "8rem" }}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className="relative w-32 h-32 shrink-0 self-start group overflow-hidden border border-erp-border bg-erp-surface-subtle shadow-xs select-none transition-all duration-200"
         >
-          <div className="relative h-full w-full overflow-hidden border border-erp-border bg-erp-surface-muted rounded-none">
+          {/* Active Drag & Drop Visual State */}
+          {isDragging && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-2 text-center bg-erp-navy-50/95 text-erp-navy border-2 border-dashed border-erp-navy">
+              <IconUpload size={24} className="animate-bounce mb-1 text-erp-navy" />
+              <span className="text-[11px] font-semibold leading-tight">
+                {t("upload")}
+              </span>
+            </div>
+          )}
+
+          {/* Clickable Image Surface: Opens Lightbox Preview */}
+          <button
+            type="button"
+            onClick={() => setIsLightboxOpen(true)}
+            aria-label={label || tForm("imagePreview")}
+            title={tForm("imagePreview")}
+            className="w-full h-full p-0 m-0 border-0 bg-transparent cursor-pointer block overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-erp-navy focus-visible:ring-inset"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewSrc}
               alt={tForm("imagePreview")}
-              className="h-full w-full object-cover rounded-none"
+              className="h-full w-full object-cover"
             />
+          </button>
 
-            {/* Hover overlay with Eye action */}
-            <button
-              type="button"
-              onClick={() => setIsLightboxOpen(true)}
-              className="absolute inset-0 bg-erp-navy/40 text-white rounded-none flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity focus-visible:outline-2 focus-visible:outline-white cursor-pointer"
-              title={t("view")}
-              aria-label={t("view")}
-            >
-              <span className="p-2 bg-erp-surface text-erp-navy rounded-none shadow-md">
-                <IconEye size={18} strokeWidth={2} />
-              </span>
-            </button>
+          {/* Subtle eye badge in bottom-right corner when idle */}
+          <div
+            className="absolute bottom-1.5 right-1.5 z-10 w-6 h-6 bg-erp-surface/90 border border-erp-border text-erp-slate-500 flex items-center justify-center shadow-xs pointer-events-none group-hover:opacity-0 transition-opacity"
+            aria-hidden="true"
+          >
+            <IconEye size={13} strokeWidth={2} />
           </div>
 
-          <button
-            type="button"
-            onClick={handleRemove}
-            disabled={disabled}
-            className="absolute -top-2 -right-2 h-6 w-6 bg-erp-danger text-white rounded-none flex items-center justify-center shadow-md transition-colors z-10 focus-visible:outline-2 focus-visible:outline-white cursor-pointer hover:bg-red-700"
-            title={t("delete")}
-            aria-label={t("delete")}
-          >
-            <IconClose size={14} />
-          </button>
+          {/* In-Image Action Scrim: Icon-Only Buttons on Hover / Focus */}
+          {!disabled && (
+            <div
+              className={cn(
+                "absolute inset-0 z-20 flex items-center justify-center gap-2 p-2",
+                "bg-erp-navy-950/75 backdrop-blur-[1.5px] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200"
+              )}
+            >
+              {/* Preview Icon Button */}
+              <button
+                type="button"
+                onClick={() => setIsLightboxOpen(true)}
+                title={tForm("imagePreview")}
+                aria-label={tForm("imagePreview")}
+                className={cn(
+                  "w-8 h-8 flex items-center justify-center bg-erp-surface text-erp-navy hover:bg-white",
+                  "border border-white/30 shadow-xs transition-transform active:scale-95 cursor-pointer",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                )}
+              >
+                <IconEye size={15} strokeWidth={2} />
+              </button>
+
+              {/* Change / Upload Icon Button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                title={t("upload")}
+                aria-label={t("upload")}
+                className={cn(
+                  "w-8 h-8 flex items-center justify-center bg-erp-navy hover:bg-erp-navy-hover text-white",
+                  "border border-erp-navy-700 shadow-xs transition-transform active:scale-95 cursor-pointer",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                )}
+              >
+                <IconCamera size={15} strokeWidth={2} />
+              </button>
+
+              {/* Delete Icon Button */}
+              <button
+                type="button"
+                onClick={handleRemove}
+                title={t("delete")}
+                aria-label={t("delete")}
+                className={cn(
+                  "w-8 h-8 flex items-center justify-center bg-erp-danger hover:bg-red-700 text-white",
+                  "shadow-xs transition-transform active:scale-95 cursor-pointer",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                )}
+              >
+                <IconTrash size={15} strokeWidth={2} />
+              </button>
+            </div>
+          )}
         </div>
       ) : (
-        <div
-          onClick={() => { if (!disabled) fileInputRef.current?.click(); }}
+        /* Empty State: Blueprint Drag & Drop Tile */
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => fileInputRef.current?.click()}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          role="button"
-          aria-disabled={disabled}
-          tabIndex={disabled ? -1 : 0}
-          onKeyDown={(e) => {
-            if (disabled) return;
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              fileInputRef.current?.click();
-            }
-          }}
-          className={`flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed ${
+          aria-label={label || t("upload")}
+          className={cn(
+            "flex flex-col items-center justify-center w-32 h-32 p-2.5 text-center gap-1.5 transition-all cursor-pointer group border border-dashed select-none",
             isDragging
-              ? "border-erp-navy bg-erp-navy-light"
-              : "border-erp-border bg-erp-surface hover:border-erp-navy hover:bg-erp-surface-muted"
-          } rounded-none transition-all cursor-pointer group ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+              ? "border-2 border-dashed border-erp-navy bg-erp-navy-50/90 text-erp-navy"
+              : "border-erp-border hover:border-erp-navy/70 bg-erp-surface-subtle/40 hover:bg-erp-surface-subtle/70",
+            disabled && "cursor-not-allowed opacity-50",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-erp-navy focus-visible:ring-inset"
+          )}
         >
-          <IconUpload
-            size={22}
-            className="text-erp-text-muted group-hover:text-erp-navy mb-1.5 transition-colors"
-          />
-          <span className="text-xs text-erp-text-muted group-hover:text-erp-navy font-medium text-center px-2">
+          <div className="w-10 h-10 border border-erp-border bg-erp-surface flex items-center justify-center text-erp-slate-400 group-hover:text-erp-navy group-hover:border-erp-navy transition-colors mb-0.5">
+            <IconCamera size={20} strokeWidth={1.8} />
+          </div>
+          <span className="text-xs text-erp-text-main group-hover:text-erp-navy font-semibold transition-colors truncate max-w-full">
             {t("upload")}
           </span>
-        </div>
+        </button>
       )}
 
       {activeError && (
-        <p className="erp-error-text flex items-center gap-1 mt-1" role="alert">
-          <IconAlertCircle size={12} />
+        <p className="erp-error-text flex items-center gap-1.5 mt-1 text-xs text-erp-danger font-medium" role="alert">
+          <IconAlertCircle size={14} className="shrink-0" />
           <span>{activeError}</span>
         </p>
       )}

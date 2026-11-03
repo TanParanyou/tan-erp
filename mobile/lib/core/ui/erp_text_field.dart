@@ -14,6 +14,7 @@ class ErpTextField extends StatelessWidget {
     this.keyboardType,
     this.textInputAction,
     this.autofillHints,
+    this.showLabel = true,
     super.key,
   });
 
@@ -26,14 +27,20 @@ class ErpTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
 
+  /// Hide the visible label (still the field's semantic name) when the screen
+  /// title already names it, e.g. a search box.
+  final bool showLabel;
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.labelLarge),
-        SizedBox(height: t.space1),
+        if (showLabel) ...[
+          Text(label, style: Theme.of(context).textTheme.labelLarge),
+          SizedBox(height: t.space1),
+        ],
         ConstrainedBox(
           constraints: BoxConstraints(minHeight: t.tapTarget),
           child: ReactiveTextField<String>(
@@ -43,7 +50,10 @@ class ErpTextField extends StatelessWidget {
             textInputAction: textInputAction,
             autofillHints: autofillHints,
             validationMessages: validationMessages,
-            decoration: InputDecoration(hintText: placeholder),
+            decoration: InputDecoration(
+              hintText: placeholder,
+              semanticCounterText: showLabel ? null : label,
+            ),
           ),
         ),
       ],

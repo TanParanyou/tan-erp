@@ -1,6 +1,6 @@
 # Mobile Architecture (สถาปัตยกรรมแอปภาคสนาม)
 
-> สถานะ: Implemented (2026-10-29) — โครงสร้างหลัก, Offline Outbox/Conflict Diff, Survey (Manual/Laser BLE/Photo/ARCore/RoomPlan LiDAR), Quick Estimate, Barcode Scan, Push & In-App Notifications พร้อม Quick Approval และ Backend Companion APIs เสร็จสมบูรณ์. เหตุผลการตัดสินใจ: [ADR 0030](../adr/0030-flutter-field-companion-app.md), [ADR 0031](../adr/0031-cross-platform-design-tokens-and-theming.md). แผนเริ่มต้น: [Mobile Foundation Phase 0](../superpowers/plans/2026-10-26-mobile-foundation-phase-0.md)
+> สถานะ: Implemented (2026-10-29) — โครงสร้างหลัก, Offline Outbox/Conflict Diff, Survey (Manual/Laser BLE/Photo/AR วัดพื้น — Android ARCore + iOS ARKit; สแกนห้อง RoomPlan LiDAR — iOS 17+ เครื่องที่มี LiDAR), Quick Estimate, Barcode Scan, Push & In-App Notifications พร้อม Quick Approval และ Backend Companion APIs เสร็จสมบูรณ์. เหตุผลการตัดสินใจ: [ADR 0030](../adr/0030-flutter-field-companion-app.md), [ADR 0031](../adr/0031-cross-platform-design-tokens-and-theming.md). แผนเริ่มต้น: [Mobile Foundation Phase 0](../superpowers/plans/2026-10-26-mobile-foundation-phase-0.md)
 
 แอป Flutter สำหรับงานภาคสนามบน iOS/Android ทั้งมือถือและแท็บเล็ต ใช้ Backend และ API เดียวกับเว็บ ([Frontend Architecture](frontend-architecture.md), [Backend Architecture](backend-architecture.md)).
 
@@ -45,7 +45,7 @@
 | สแกนเอกสาร | `cunning_document_scanner` | |
 | Bluetooth (เครื่องวัดเลเซอร์) | `flutter_blue_plus` | |
 | ตำแหน่ง | `geolocator` | |
-| Native module เขียนเอง | `pigeon` | RoomPlan (LiDAR), ARCore |
+| Native module เขียนเอง | `pigeon` | ARCore (Android), ARKit (iOS), RoomPlan LiDAR (iOS 17+, weak-link เพื่อให้ iOS 15–16 ยังเปิดแอปได้) |
 | ไอคอน | `flutter_svg` | SVG stroke ชุดเดียวกับเว็บ ห้าม icon pack |
 | Test | `flutter_test`, `mocktail`, `integration_test` | |
 
@@ -131,7 +131,7 @@ presentation (screens/widgets) → providers (Riverpod) → repository (interfac
 
 1. **เข้าใช้งาน:** ล็อกอิน → biometric (ครั้งถัดไป) → เลือก membership/สาขา.
 2. **งานวันนี้:** รายการนัดสำรวจที่ได้รับมอบหมาย (ออฟไลน์ได้) → นำทาง/โทร → เช็กอินหน้างาน.
-3. **สำรวจหน้างาน:** Opportunity → ห้อง (Area) → รายการ → วัด (เอง / เลเซอร์ / จากรูป / LiDAR) → รูป → บันทึกลงเครื่อง → sync → จัดการ conflict ถ้ามี.
+3. **สำรวจหน้างาน:** Opportunity → ห้อง (Area) → รายการ → วัด (เอง / เลเซอร์ / จากรูป / AR วัดพื้น / สแกนห้อง LiDAR → พื้นที่ กว้าง ยาว สูง) → รูป → บันทึกลงเครื่อง → sync → จัดการ conflict ถ้ามี.
 4. **ประเมินราคาด่วน:** จากผลสำรวจ → Quick Estimate → แชร์ลูกค้า.
 5. **สแกน:** รับของ / ติดตามชิ้นงาน ด้วยบาร์โค้ด/QR.
 6. **แจ้งเตือน:** push → deep link → เปิดเอกสาร → อนุมัติ/ส่งกลับ.

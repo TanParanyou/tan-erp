@@ -13,6 +13,7 @@ import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
 import 'package:tan_erp_field/core/ui/erp_card.dart';
+import 'package:tan_erp_field/core/ui/erp_content_frame.dart';
 import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
 import 'package:tan_erp_field/core/ui/erp_text_field.dart';
@@ -64,10 +65,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   final FormGroup _setupForm = FormGroup({
     'code': FormControl<String>(
-      validators: [
-        Validators.required,
-        Validators.pattern(r'^\d{6}$'),
-      ],
+      validators: [Validators.required, Validators.pattern(r'^\d{6}$')],
     ),
   });
 
@@ -94,8 +92,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final email = _mock
           ? _credentialsForm.control('uid').value as String
           : _credentialsForm.control('email').value as String;
-      final password =
-          _mock ? '' : _credentialsForm.control('password').value as String;
+      final password = _mock
+          ? ''
+          : _credentialsForm.control('password').value as String;
 
       final outcome = await ref
           .read(sessionProvider.notifier)
@@ -114,9 +113,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             _step = _LoginStep.twoFactorVerify;
           });
         case SignInTwoFactorSetupRequired(
-            :final challengeToken,
-            :final secretKey,
-          ):
+          :final challengeToken,
+          :final secretKey,
+        ):
           setState(() {
             _challengeToken = challengeToken;
             _secretKey = secretKey;
@@ -193,9 +192,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           _step = _LoginStep.backupCodesDisplay;
         });
       } else {
-        await ref
-            .read(sessionProvider.notifier)
-            .completeAuthenticatedSession();
+        await ref.read(sessionProvider.notifier).completeAuthenticatedSession();
       }
     } on AuthFailure catch (e) {
       _error = e;
@@ -213,9 +210,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _error = null;
     });
     try {
-      await ref
-          .read(sessionProvider.notifier)
-          .completeAuthenticatedSession();
+      await ref.read(sessionProvider.notifier).completeAuthenticatedSession();
     } on AuthFailure catch (e) {
       _error = e;
     } on ApiFailure catch (e) {
@@ -254,23 +249,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return ErpScreen(
       title: title,
-      body: ListView(
-        padding: ErpPagePadding.of(context),
-        children: [
-          if (_error != null) ...[
-            ErpAlert(
-              message: failureMessage(l10n, _error!),
-              severity: ErpAlertSeverity.danger,
-            ),
-            SizedBox(height: t.space4),
+      body: ErpContentFrame(
+        child: ListView(
+          padding: ErpPagePadding.of(context),
+          children: [
+            if (_error != null) ...[
+              ErpAlert(
+                message: failureMessage(l10n, _error!),
+                severity: ErpAlertSeverity.danger,
+              ),
+              SizedBox(height: t.space4),
+            ],
+            switch (_step) {
+              _LoginStep.credentials => _buildCredentialsView(context),
+              _LoginStep.twoFactorVerify => _buildTwoFactorVerifyView(context),
+              _LoginStep.twoFactorSetup => _buildTwoFactorSetupView(context),
+              _LoginStep.backupCodesDisplay => _buildBackupCodesView(context),
+            },
           ],
-          switch (_step) {
-            _LoginStep.credentials => _buildCredentialsView(context),
-            _LoginStep.twoFactorVerify => _buildTwoFactorVerifyView(context),
-            _LoginStep.twoFactorSetup => _buildTwoFactorSetupView(context),
-            _LoginStep.backupCodesDisplay => _buildBackupCodesView(context),
-          },
-        ],
+        ),
       ),
     );
   }
@@ -345,9 +342,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       children: [
         Text(
           l10n.loginTwoFactorVerifyDesc,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: t.textMuted,
-              ),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: t.textMuted),
         ),
         SizedBox(height: t.space4),
         ErpTextField(
