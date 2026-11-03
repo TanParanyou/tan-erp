@@ -181,6 +181,12 @@ enum ArAvailability: Int {
   case unknown = 3
 }
 
+enum RoomOpeningKind: Int {
+  case door = 0
+  case window = 1
+  case opening = 2
+}
+
 /// Every visible text of the native AR screen; native code has no strings.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
@@ -494,6 +500,49 @@ struct RoomScanRequest: Hashable {
   }
 }
 
+/// One door, window or open passage found by RoomPlan.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct RoomOpening: Hashable {
+  var kind: RoomOpeningKind
+  var widthM: Double
+  var heightM: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> RoomOpening? {
+    let kind = pigeonVar_list[0] as! RoomOpeningKind
+    let widthM = pigeonVar_list[1] as! Double
+    let heightM = pigeonVar_list[2] as! Double
+
+    return RoomOpening(
+      kind: kind,
+      widthM: widthM,
+      heightM: heightM
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      kind,
+      widthM,
+      heightM,
+    ]
+  }
+  static func == (lhs: RoomOpening, rhs: RoomOpening) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return deepEqualsArMeasureApi(lhs.kind, rhs.kind) && deepEqualsArMeasureApi(lhs.widthM, rhs.widthM) && deepEqualsArMeasureApi(lhs.heightM, rhs.heightM)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("RoomOpening")
+    deepHashArMeasureApi(value: kind, hasher: &hasher)
+    deepHashArMeasureApi(value: widthM, hasher: &hasher)
+    deepHashArMeasureApi(value: heightM, hasher: &hasher)
+  }
+}
+
 /// Room dimensions from a RoomPlan scan. Width/length are the floor's
 /// bounding box (width ≤ length); height is the tallest wall (null when no
 /// wall was detected).
@@ -504,6 +553,9 @@ struct RoomScanResult: Hashable {
   var widthM: Double
   var lengthM: Double
   var ceilingHeightM: Double? = nil
+  /// Sum of every wall's width × height, openings not subtracted.
+  var grossWallAreaSqm: Double
+  var openings: [RoomOpening]
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
@@ -512,12 +564,16 @@ struct RoomScanResult: Hashable {
     let widthM = pigeonVar_list[1] as! Double
     let lengthM = pigeonVar_list[2] as! Double
     let ceilingHeightM: Double? = nilOrValue(pigeonVar_list[3])
+    let grossWallAreaSqm = pigeonVar_list[4] as! Double
+    let openings = pigeonVar_list[5] as! [RoomOpening]
 
     return RoomScanResult(
       floorAreaSqm: floorAreaSqm,
       widthM: widthM,
       lengthM: lengthM,
-      ceilingHeightM: ceilingHeightM
+      ceilingHeightM: ceilingHeightM,
+      grossWallAreaSqm: grossWallAreaSqm,
+      openings: openings
     )
   }
   func toList() -> [Any?] {
@@ -526,13 +582,15 @@ struct RoomScanResult: Hashable {
       widthM,
       lengthM,
       ceilingHeightM,
+      grossWallAreaSqm,
+      openings,
     ]
   }
   static func == (lhs: RoomScanResult, rhs: RoomScanResult) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return deepEqualsArMeasureApi(lhs.floorAreaSqm, rhs.floorAreaSqm) && deepEqualsArMeasureApi(lhs.widthM, rhs.widthM) && deepEqualsArMeasureApi(lhs.lengthM, rhs.lengthM) && deepEqualsArMeasureApi(lhs.ceilingHeightM, rhs.ceilingHeightM)
+    return deepEqualsArMeasureApi(lhs.floorAreaSqm, rhs.floorAreaSqm) && deepEqualsArMeasureApi(lhs.widthM, rhs.widthM) && deepEqualsArMeasureApi(lhs.lengthM, rhs.lengthM) && deepEqualsArMeasureApi(lhs.ceilingHeightM, rhs.ceilingHeightM) && deepEqualsArMeasureApi(lhs.grossWallAreaSqm, rhs.grossWallAreaSqm) && deepEqualsArMeasureApi(lhs.openings, rhs.openings)
   }
 
   func hash(into hasher: inout Hasher) {
@@ -541,6 +599,8 @@ struct RoomScanResult: Hashable {
     deepHashArMeasureApi(value: widthM, hasher: &hasher)
     deepHashArMeasureApi(value: lengthM, hasher: &hasher)
     deepHashArMeasureApi(value: ceilingHeightM, hasher: &hasher)
+    deepHashArMeasureApi(value: grossWallAreaSqm, hasher: &hasher)
+    deepHashArMeasureApi(value: openings, hasher: &hasher)
   }
 }
 
@@ -554,16 +614,24 @@ private class ArMeasureApiPigeonCodecReader: FlutterStandardReader {
       }
       return nil
     case 130:
-      return ArMeasureStrings.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return RoomOpeningKind(rawValue: enumResultAsInt)
+      }
+      return nil
     case 131:
-      return ArMeasureColors.fromList(self.readValue() as! [Any?])
+      return ArMeasureStrings.fromList(self.readValue() as! [Any?])
     case 132:
-      return ArMeasureRequest.fromList(self.readValue() as! [Any?])
+      return ArMeasureColors.fromList(self.readValue() as! [Any?])
     case 133:
-      return ArMeasureResult.fromList(self.readValue() as! [Any?])
+      return ArMeasureRequest.fromList(self.readValue() as! [Any?])
     case 134:
-      return RoomScanRequest.fromList(self.readValue() as! [Any?])
+      return ArMeasureResult.fromList(self.readValue() as! [Any?])
     case 135:
+      return RoomScanRequest.fromList(self.readValue() as! [Any?])
+    case 136:
+      return RoomOpening.fromList(self.readValue() as! [Any?])
+    case 137:
       return RoomScanResult.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -576,23 +644,29 @@ private class ArMeasureApiPigeonCodecWriter: FlutterStandardWriter {
     if let value = value as? ArAvailability {
       super.writeByte(129)
       super.writeValue(value.rawValue)
-    } else if let value = value as? ArMeasureStrings {
+    } else if let value = value as? RoomOpeningKind {
       super.writeByte(130)
-      super.writeValue(value.toList())
-    } else if let value = value as? ArMeasureColors {
+      super.writeValue(value.rawValue)
+    } else if let value = value as? ArMeasureStrings {
       super.writeByte(131)
       super.writeValue(value.toList())
-    } else if let value = value as? ArMeasureRequest {
+    } else if let value = value as? ArMeasureColors {
       super.writeByte(132)
       super.writeValue(value.toList())
-    } else if let value = value as? ArMeasureResult {
+    } else if let value = value as? ArMeasureRequest {
       super.writeByte(133)
       super.writeValue(value.toList())
-    } else if let value = value as? RoomScanRequest {
+    } else if let value = value as? ArMeasureResult {
       super.writeByte(134)
       super.writeValue(value.toList())
-    } else if let value = value as? RoomScanResult {
+    } else if let value = value as? RoomScanRequest {
       super.writeByte(135)
+      super.writeValue(value.toList())
+    } else if let value = value as? RoomOpening {
+      super.writeByte(136)
+      super.writeValue(value.toList())
+    } else if let value = value as? RoomScanResult {
+      super.writeByte(137)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)

@@ -104,6 +104,12 @@ enum ArAvailability {
   unknown,
 }
 
+enum RoomOpeningKind {
+  door,
+  window,
+  opening,
+}
+
 /// Every visible text of the native AR screen; native code has no strings.
 class ArMeasureStrings {
   ArMeasureStrings({
@@ -459,6 +465,57 @@ class RoomScanRequest {
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
 
+/// One door, window or open passage found by RoomPlan.
+class RoomOpening {
+  RoomOpening({
+    required this.kind,
+    required this.widthM,
+    required this.heightM,
+  });
+
+  RoomOpeningKind kind;
+
+  double widthM;
+
+  double heightM;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      kind,
+      widthM,
+      heightM,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static RoomOpening decode(Object result) {
+    result as List<Object?>;
+    return RoomOpening(
+      kind: result[0]! as RoomOpeningKind,
+      widthM: result[1]! as double,
+      heightM: result[2]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! RoomOpening || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(kind, other.kind) && _deepEquals(widthM, other.widthM) && _deepEquals(heightM, other.heightM);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
 /// Room dimensions from a RoomPlan scan. Width/length are the floor's
 /// bounding box (width ≤ length); height is the tallest wall (null when no
 /// wall was detected).
@@ -468,6 +525,8 @@ class RoomScanResult {
     required this.widthM,
     required this.lengthM,
     this.ceilingHeightM,
+    required this.grossWallAreaSqm,
+    required this.openings,
   });
 
   double floorAreaSqm;
@@ -478,12 +537,19 @@ class RoomScanResult {
 
   double? ceilingHeightM;
 
+  /// Sum of every wall's width × height, openings not subtracted.
+  double grossWallAreaSqm;
+
+  List<RoomOpening> openings;
+
   List<Object?> _toList() {
     return <Object?>[
       floorAreaSqm,
       widthM,
       lengthM,
       ceilingHeightM,
+      grossWallAreaSqm,
+      openings,
     ];
   }
 
@@ -497,6 +563,8 @@ class RoomScanResult {
       widthM: result[1]! as double,
       lengthM: result[2]! as double,
       ceilingHeightM: result[3] as double?,
+      grossWallAreaSqm: result[4]! as double,
+      openings: (result[5]! as List<Object?>).cast<RoomOpening>(),
     );
   }
 
@@ -509,7 +577,7 @@ class RoomScanResult {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(floorAreaSqm, other.floorAreaSqm) && _deepEquals(widthM, other.widthM) && _deepEquals(lengthM, other.lengthM) && _deepEquals(ceilingHeightM, other.ceilingHeightM);
+    return _deepEquals(floorAreaSqm, other.floorAreaSqm) && _deepEquals(widthM, other.widthM) && _deepEquals(lengthM, other.lengthM) && _deepEquals(ceilingHeightM, other.ceilingHeightM) && _deepEquals(grossWallAreaSqm, other.grossWallAreaSqm) && _deepEquals(openings, other.openings);
   }
 
   @override
@@ -528,23 +596,29 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is ArAvailability) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    }    else if (value is ArMeasureStrings) {
+    }    else if (value is RoomOpeningKind) {
       buffer.putUint8(130);
-      writeValue(buffer, value.encode());
-    }    else if (value is ArMeasureColors) {
+      writeValue(buffer, value.index);
+    }    else if (value is ArMeasureStrings) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
-    }    else if (value is ArMeasureRequest) {
+    }    else if (value is ArMeasureColors) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
-    }    else if (value is ArMeasureResult) {
+    }    else if (value is ArMeasureRequest) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
-    }    else if (value is RoomScanRequest) {
+    }    else if (value is ArMeasureResult) {
       buffer.putUint8(134);
       writeValue(buffer, value.encode());
-    }    else if (value is RoomScanResult) {
+    }    else if (value is RoomScanRequest) {
       buffer.putUint8(135);
+      writeValue(buffer, value.encode());
+    }    else if (value is RoomOpening) {
+      buffer.putUint8(136);
+      writeValue(buffer, value.encode());
+    }    else if (value is RoomScanResult) {
+      buffer.putUint8(137);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -558,16 +632,21 @@ class _PigeonCodec extends StandardMessageCodec {
         final value = readValue(buffer) as int?;
         return value == null ? null : ArAvailability.values[value];
       case 130:
-        return ArMeasureStrings.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : RoomOpeningKind.values[value];
       case 131:
-        return ArMeasureColors.decode(readValue(buffer)!);
+        return ArMeasureStrings.decode(readValue(buffer)!);
       case 132:
-        return ArMeasureRequest.decode(readValue(buffer)!);
+        return ArMeasureColors.decode(readValue(buffer)!);
       case 133:
-        return ArMeasureResult.decode(readValue(buffer)!);
+        return ArMeasureRequest.decode(readValue(buffer)!);
       case 134:
-        return RoomScanRequest.decode(readValue(buffer)!);
+        return ArMeasureResult.decode(readValue(buffer)!);
       case 135:
+        return RoomScanRequest.decode(readValue(buffer)!);
+      case 136:
+        return RoomOpening.decode(readValue(buffer)!);
+      case 137:
         return RoomScanResult.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);

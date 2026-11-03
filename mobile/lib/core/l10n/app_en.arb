@@ -284,6 +284,8 @@
   "surveyMeasureTypeWidth": "Width",
   "surveyMeasureTypeHeight": "Height",
   "surveyMeasureTypeCount": "Count",
+  "surveyMeasureTypeOpening": "Opening",
+  "surveyMeasureTypeCustom": "Other",
   "surveyUnitSqm": "m²",
   "surveyUnitM": "m",
   "surveyUnitMm": "mm",
@@ -296,6 +298,48 @@
   "surveyMeasureByPhoto": "Photo A4",
   "surveyMeasureByAr": "AR floor",
   "surveyMeasureByRoomScan": "Room scan (LiDAR)",
+  "surveyRoomScanDoor": "Door {n}",
+  "@surveyRoomScanDoor": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanWindow": "Window {n}",
+  "@surveyRoomScanWindow": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanOpening": "Opening {n}",
+  "@surveyRoomScanOpening": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanWallArea": "Gross wall area (openings not deducted)",
+  "surveyCheckTitle": "Survey looks incomplete",
+  "surveyCheckSaveAnyway": "Save anyway",
+  "surveyCheckReview": "Go back and fix",
+  "surveyCheckNoMeasurement": "No measurement yet",
+  "surveyCheckZeroValue": "A measurement is 0",
+  "surveyCheckNoPhoto": "No photo yet",
+  "surveyCheckLine": "• {area}: {issue}",
+  "@surveyCheckLine": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      },
+      "issue": {
+        "type": "String"
+      }
+    }
+  },
   "surveyMeasureNotesLabel": "Measurement notes",
   "surveyMeasureNotesPlaceholder": "e.g. Deduct 2 columns, includes skirting",
   "surveySaveDraft": "Save draft",

@@ -773,6 +773,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get surveyMeasureTypeCount => 'Count';
 
   @override
+  String get surveyMeasureTypeOpening => 'Opening';
+
+  @override
+  String get surveyMeasureTypeCustom => 'Other';
+
+  @override
   String get surveyUnitSqm => 'm²';
 
   @override
@@ -807,6 +813,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get surveyMeasureByRoomScan => 'Room scan (LiDAR)';
+
+  @override
+  String surveyRoomScanDoor(int n) {
+    return 'Door $n';
+  }
+
+  @override
+  String surveyRoomScanWindow(int n) {
+    return 'Window $n';
+  }
+
+  @override
+  String surveyRoomScanOpening(int n) {
+    return 'Opening $n';
+  }
+
+  @override
+  String get surveyRoomScanWallArea =>
+      'Gross wall area (openings not deducted)';
+
+  @override
+  String get surveyCheckTitle => 'Survey looks incomplete';
+
+  @override
+  String get surveyCheckSaveAnyway => 'Save anyway';
+
+  @override
+  String get surveyCheckReview => 'Go back and fix';
+
+  @override
+  String get surveyCheckNoMeasurement => 'No measurement yet';
+
+  @override
+  String get surveyCheckZeroValue => 'A measurement is 0';
+
+  @override
+  String get surveyCheckNoPhoto => 'No photo yet';
+
+  @override
+  String surveyCheckLine(String area, String issue) {
+    return '• $area: $issue';
+  }
 
   @override
   String get surveyMeasureNotesLabel => 'Measurement notes';

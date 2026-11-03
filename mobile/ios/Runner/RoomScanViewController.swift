@@ -185,7 +185,8 @@ final class RoomScanViewController: UIViewController, RoomCaptureViewDelegate {
 @available(iOS 17.0, *)
 enum RoomDimensions {
   /// Nil when RoomPlan found no floor. Area sums every floor; width/length are
-  /// the largest floor's bounding box (width ≤ length); height is the tallest wall.
+  /// the largest floor's bounding box (width ≤ length); height is the tallest wall;
+  /// doors, windows and open passages are listed with their width and height.
   static func measure(_ room: CapturedRoom) -> RoomScanResult? {
     var total = 0.0
     var largest: (area: Double, sides: [Double])?
@@ -200,7 +201,19 @@ enum RoomDimensions {
       floorAreaSqm: total,
       widthM: largest.sides[0],
       lengthM: largest.sides[1],
-      ceilingHeightM: room.walls.map { Double($0.dimensions.y) }.max())
+      ceilingHeightM: room.walls.map { Double($0.dimensions.y) }.max(),
+      grossWallAreaSqm: room.walls.reduce(0) { $0 + Double($1.dimensions.x * $1.dimensions.y) },
+      openings: openings(room.doors, .door) + openings(room.windows, .window)
+        + openings(room.openings, .opening))
+  }
+
+  /// Width is the surface's x size, height its y size.
+  private static func openings(_ surfaces: [CapturedRoom.Surface], _ kind: RoomOpeningKind)
+    -> [RoomOpening]
+  {
+    surfaces.map {
+      RoomOpening(kind: kind, widthM: Double($0.dimensions.x), heightM: Double($0.dimensions.y))
+    }
   }
 
   /// Floor corners in the floor's own plane: the two local axes it spans most.

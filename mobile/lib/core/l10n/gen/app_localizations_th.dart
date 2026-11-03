@@ -766,6 +766,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get surveyMeasureTypeCount => 'จำนวน';
 
   @override
+  String get surveyMeasureTypeOpening => 'ช่องเปิด';
+
+  @override
+  String get surveyMeasureTypeCustom => 'อื่นๆ';
+
+  @override
   String get surveyUnitSqm => 'ตร.ม.';
 
   @override
@@ -800,6 +806,47 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get surveyMeasureByRoomScan => 'สแกนห้อง (LiDAR)';
+
+  @override
+  String surveyRoomScanDoor(int n) {
+    return 'ประตู $n';
+  }
+
+  @override
+  String surveyRoomScanWindow(int n) {
+    return 'หน้าต่าง $n';
+  }
+
+  @override
+  String surveyRoomScanOpening(int n) {
+    return 'ช่องเปิด $n';
+  }
+
+  @override
+  String get surveyRoomScanWallArea => 'พื้นที่ผนังรวม (ยังไม่หักช่องเปิด)';
+
+  @override
+  String get surveyCheckTitle => 'ข้อมูลสำรวจยังไม่ครบ';
+
+  @override
+  String get surveyCheckSaveAnyway => 'บันทึกต่อ';
+
+  @override
+  String get surveyCheckReview => 'กลับไปแก้ไข';
+
+  @override
+  String get surveyCheckNoMeasurement => 'ยังไม่มีขนาด';
+
+  @override
+  String get surveyCheckZeroValue => 'มีค่าวัดเป็น 0';
+
+  @override
+  String get surveyCheckNoPhoto => 'ยังไม่มีรูป';
+
+  @override
+  String surveyCheckLine(String area, String issue) {
+    return '• $area: $issue';
+  }
 
   @override
   String get surveyMeasureNotesLabel => 'หมายเหตุค่าวัด';

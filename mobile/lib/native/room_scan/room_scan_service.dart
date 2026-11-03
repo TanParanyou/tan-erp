@@ -4,7 +4,7 @@ import 'package:tan_erp_field/features/device_lab/domain/ar_measure_failure.dart
 import 'package:tan_erp_field/generated/pigeon/ar_measure_api.g.dart';
 
 export 'package:tan_erp_field/generated/pigeon/ar_measure_api.g.dart'
-    show RoomScanRequest, RoomScanResult;
+    show RoomOpening, RoomOpeningKind, RoomScanRequest, RoomScanResult;
 
 /// Wraps the Pigeon room scan channel (iOS RoomPlan only; Android has no
 /// handler, so it reports unsupported).

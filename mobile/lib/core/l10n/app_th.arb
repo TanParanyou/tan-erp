@@ -284,6 +284,8 @@
   "surveyMeasureTypeWidth": "ความกว้าง",
   "surveyMeasureTypeHeight": "ความสูง",
   "surveyMeasureTypeCount": "จำนวน",
+  "surveyMeasureTypeOpening": "ช่องเปิด",
+  "surveyMeasureTypeCustom": "อื่นๆ",
   "surveyUnitSqm": "ตร.ม.",
   "surveyUnitM": "ม.",
   "surveyUnitMm": "มม.",
@@ -296,6 +298,48 @@
   "surveyMeasureByPhoto": "วัดจากรูป A4",
   "surveyMeasureByAr": "AR วัดพื้น",
   "surveyMeasureByRoomScan": "สแกนห้อง (LiDAR)",
+  "surveyRoomScanDoor": "ประตู {n}",
+  "@surveyRoomScanDoor": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanWindow": "หน้าต่าง {n}",
+  "@surveyRoomScanWindow": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanOpening": "ช่องเปิด {n}",
+  "@surveyRoomScanOpening": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "surveyRoomScanWallArea": "พื้นที่ผนังรวม (ยังไม่หักช่องเปิด)",
+  "surveyCheckTitle": "ข้อมูลสำรวจยังไม่ครบ",
+  "surveyCheckSaveAnyway": "บันทึกต่อ",
+  "surveyCheckReview": "กลับไปแก้ไข",
+  "surveyCheckNoMeasurement": "ยังไม่มีขนาด",
+  "surveyCheckZeroValue": "มีค่าวัดเป็น 0",
+  "surveyCheckNoPhoto": "ยังไม่มีรูป",
+  "surveyCheckLine": "• {area}: {issue}",
+  "@surveyCheckLine": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      },
+      "issue": {
+        "type": "String"
+      }
+    }
+  },
   "surveyMeasureNotesLabel": "หมายเหตุค่าวัด",
   "surveyMeasureNotesPlaceholder": "เช่น หักเสา 2 ต้น หรือวัดรวมบัว",
   "surveySaveDraft": "บันทึกร่าง",

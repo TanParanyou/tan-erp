@@ -129,6 +129,21 @@ class RoomScanRequest {
   ArMeasureColors colors;
 }
 
+enum RoomOpeningKind { door, window, opening }
+
+/// One door, window or open passage found by RoomPlan.
+class RoomOpening {
+  RoomOpening({
+    required this.kind,
+    required this.widthM,
+    required this.heightM,
+  });
+
+  RoomOpeningKind kind;
+  double widthM;
+  double heightM;
+}
+
 /// Room dimensions from a RoomPlan scan. Width/length are the floor's
 /// bounding box (width ≤ length); height is the tallest wall (null when no
 /// wall was detected).
@@ -137,6 +152,8 @@ class RoomScanResult {
     required this.floorAreaSqm,
     required this.widthM,
     required this.lengthM,
+    required this.grossWallAreaSqm,
+    required this.openings,
     this.ceilingHeightM,
   });
 
@@ -144,6 +161,10 @@ class RoomScanResult {
   double widthM;
   double lengthM;
   double? ceilingHeightM;
+
+  /// Sum of every wall's width × height, openings not subtracted.
+  double grossWallAreaSqm;
+  List<RoomOpening> openings;
 }
 
 /// iOS only (RoomPlan, LiDAR, iOS 17+). Android registers no handler, so
