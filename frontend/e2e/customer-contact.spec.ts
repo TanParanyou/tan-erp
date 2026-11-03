@@ -7,7 +7,7 @@ async function signIn(page: Page): Promise<void> {
   const meResponse = page.waitForResponse(
     (res) => res.url().includes("/api/v1/me") && res.status() === 200,
   );
-  await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
+  await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
   await meResponse;
 }
 

@@ -7,7 +7,7 @@ test.describe("Foundation Login and Current User Journey", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "th");
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       "content",
-      "ระบบบริหารจัดการโครงการและงานผลิต"
+      "ระบบ ERP บริหารจัดการโครงการ งานผลิต และความสัมพันธ์ลูกค้า"
     );
     await expect(page.getByRole("heading", { name: "เข้าสู่ระบบ Project ERP" })).toBeVisible();
 
@@ -21,7 +21,7 @@ test.describe("Foundation Login and Current User Journey", () => {
     const meResponsePromise = page.waitForResponse(
       (response) => response.url().includes("/api/v1/me") && response.status() === 200
     );
-    await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
+    await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
     await meResponsePromise;
 
     // 4. assert TEST_ONLY Project ERP and สาขาทดสอบ are visible
@@ -35,7 +35,7 @@ test.describe("Foundation Login and Current User Journey", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       "content",
-      "Project & Manufacturing ERP"
+      "Enterprise Resource Planning for Project & Manufacturing Management"
     );
     await expect(page.locator('[data-testid="org-name"]')).toHaveText("TEST_ONLY Project ERP");
     await expect(page.locator('[data-testid="branch-name"]')).toHaveText("สาขาทดสอบ");

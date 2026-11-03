@@ -19,7 +19,7 @@ async function signIn(page: Page, email = "foundation-user@example.test", branch
   const meResponse = page.waitForResponse(
     (response) => response.url().includes("/api/v1/me") && response.status() === 200
   );
-  await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
+  await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
   const [request, response] = await Promise.all([meRequest, meResponse]);
   const body = (await response.json()) as CurrentUserResponse;
   const membership = branchId

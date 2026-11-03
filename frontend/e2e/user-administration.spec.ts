@@ -9,7 +9,7 @@ async function signInThroughUi(page: Page, email: string): Promise<void> {
   await page.getByLabel("อีเมล").fill(email);
   await page.locator("input#password").fill(TEST_PASSWORD);
   const meResponse = page.waitForResponse((response) => response.url().includes("/api/v1/me"));
-  await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
+  await page.getByRole("button", { name: "เข้าสู่ระบบ", exact: true }).click();
   expect((await meResponse).status()).toBe(200);
 }
 
