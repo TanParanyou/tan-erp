@@ -75,12 +75,10 @@ class FieldNotificationItem {
         }
       }
     }
-    return parts.join(' · ');
+    return parts.join(' - ');
   }
 
-  FieldNotificationItem copyWith({
-    DateTime? Function()? readAtUtc,
-  }) {
+  FieldNotificationItem copyWith({DateTime? Function()? readAtUtc}) {
     return FieldNotificationItem(
       id: id,
       type: type,

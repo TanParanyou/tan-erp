@@ -217,6 +217,7 @@ Class | Method | HTTP request | Description
 [*EstimateCatalogApi*](doc/EstimateCatalogApi.md) | [**apiV1EstimateCatalogItemsGet**](doc/EstimateCatalogApi.md#apiv1estimatecatalogitemsget) | **GET** /api/v1/estimate-catalog/items | 
 [*EstimateCatalogApi*](doc/EstimateCatalogApi.md) | [**apiV1EstimateCatalogItemsItemIdUnitsGet**](doc/EstimateCatalogApi.md#apiv1estimatecatalogitemsitemidunitsget) | **GET** /api/v1/estimate-catalog/items/{itemId}/units | 
 [*EstimateHistoryApi*](doc/EstimateHistoryApi.md) | [**apiV1EstimatesIdHistoryGet**](doc/EstimateHistoryApi.md#apiv1estimatesidhistoryget) | **GET** /api/v1/estimates/{id}/history | 
+[*EstimateHistoryApi*](doc/EstimateHistoryApi.md) | [**apiV1EstimatesIdHistoryRevisionsRevisionIdLinesGet**](doc/EstimateHistoryApi.md#apiv1estimatesidhistoryrevisionsrevisionidlinesget) | **GET** /api/v1/estimates/{id}/history/revisions/{revisionId}/lines | 
 [*EstimateReviewQueueApi*](doc/EstimateReviewQueueApi.md) | [**apiV1EstimatesReviewQueueGet**](doc/EstimateReviewQueueApi.md#apiv1estimatesreviewqueueget) | **GET** /api/v1/estimates/review-queue | 
 [*EstimatesApi*](doc/EstimatesApi.md) | [**apiV1EstimatesIdCancelPost**](doc/EstimatesApi.md#apiv1estimatesidcancelpost) | **POST** /api/v1/estimates/{id}/cancel | 
 [*EstimatesApi*](doc/EstimatesApi.md) | [**apiV1EstimatesIdGet**](doc/EstimatesApi.md#apiv1estimatesidget) | **GET** /api/v1/estimates/{id} | 
@@ -750,6 +751,8 @@ Class | Method | HTTP request | Description
  - [EstimateReviewQueueReviewerResponse](doc/EstimateReviewQueueReviewerResponse.md)
  - [EstimateReviewReadinessReasonResponse](doc/EstimateReviewReadinessReasonResponse.md)
  - [EstimateReviewRevisionDiffResponse](doc/EstimateReviewRevisionDiffResponse.md)
+ - [EstimateRevisionLineResponse](doc/EstimateRevisionLineResponse.md)
+ - [EstimateRevisionLinesResponse](doc/EstimateRevisionLinesResponse.md)
  - [EstimateRevisionResponse](doc/EstimateRevisionResponse.md)
  - [EstimateRevisionSummaryResponse](doc/EstimateRevisionSummaryResponse.md)
  - [EstimateSectionResponse](doc/EstimateSectionResponse.md)

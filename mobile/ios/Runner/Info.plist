@@ -28,6 +28,10 @@
 	<string>Unlock the app with Face ID.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Take site photos and measure areas.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Speak measurement values instead of typing them.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Turn spoken measurement values into numbers.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo to measure an area.</string>
 	<key>NSAppTransportSecurity</key>

@@ -304,6 +304,8 @@ lib/src/model/estimate_review_queue_response.dart
 lib/src/model/estimate_review_queue_reviewer_response.dart
 lib/src/model/estimate_review_readiness_reason_response.dart
 lib/src/model/estimate_review_revision_diff_response.dart
+lib/src/model/estimate_revision_line_response.dart
+lib/src/model/estimate_revision_lines_response.dart
 lib/src/model/estimate_revision_response.dart
 lib/src/model/estimate_revision_summary_response.dart
 lib/src/model/estimate_section_response.dart

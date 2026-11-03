@@ -24,6 +24,22 @@ public sealed record EstimateHistoryEventResponse(
     [property: Required] string Action,
     [property: Required] EstimateActorResponse Actor);
 
+public sealed record EstimateRevisionLineResponse(
+    [property: Required] string SectionCode,
+    [property: Required] string WorkItemCode,
+    [property: Required] string DescriptionTh,
+    [property: Required] decimal Quantity,
+    [property: Required] string UnitCode,
+    [property: Required] decimal TotalCost,
+    [property: Required] decimal TotalSellingPrice);
+
+public sealed record EstimateRevisionLinesResponse([property: Required] IReadOnlyList<EstimateRevisionLineResponse> Lines)
+{
+    public static EstimateRevisionLinesResponse FromProjection(EstimateRevisionLinesProjection projection) => new(
+        projection.Lines.Select(l => new EstimateRevisionLineResponse(
+            l.SectionCode, l.WorkItemCode, l.DescriptionTh, l.Quantity, l.UnitCode, l.TotalCost, l.TotalSellingPrice)).ToList());
+}
+
 public sealed record EstimateHistoryResponse(
     [property: Required] IReadOnlyList<EstimateRevisionSummaryResponse> Revisions,
     [property: Required] IReadOnlyList<EstimateHistoryEventResponse> Events)

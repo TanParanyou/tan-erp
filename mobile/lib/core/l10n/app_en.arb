@@ -243,8 +243,6 @@
   "todayEmptyTitle": "No surveys scheduled today",
   "todayEmptyBody": "There are no survey tasks in this branch yet. Tap to refresh",
   "todaySelectPrompt": "Select a task to start the survey",
-  "todayOpenSurvey": "Open survey",
-  "todayStartSurvey": "Start field survey",
   "todayStageQualified": "Qualified",
   "todayStageSurveying": "Surveying",
   "todayStageEstimating": "Estimating",
@@ -467,5 +465,12 @@
   "conflictServerColumn": "Server state",
   "conflictKeepLocalAction": "Keep device changes (Retry)",
   "conflictAcceptServerAction": "Accept server version (Discard local)",
-  "conflictResolveAction": "Inspect & resolve conflict"
+  "conflictResolveAction": "Inspect & resolve conflict",
+  "surveyMeasureByVoice": "Speak value",
+  "voiceMeasureListening": "Listening... say the measured number",
+  "voiceMeasureHint": "Say a number, e.g. \"two point five\"",
+  "voiceMeasureNotUnderstood": "No number heard. Try again.",
+  "voiceMeasureUnavailable": "Voice input is unavailable. Check microphone and speech recognition permissions in Settings.",
+  "voiceMeasureUse": "Use this value",
+  "voiceMeasureRetry": "Speak again"
 }

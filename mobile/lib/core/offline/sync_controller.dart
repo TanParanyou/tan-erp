@@ -11,6 +11,7 @@ import 'package:tan_erp_field/core/membership/membership_provider.dart';
 import 'package:tan_erp_field/core/network/api_client.dart';
 import 'package:tan_erp_field/core/network/api_failure.dart';
 import 'package:tan_erp_field/core/offline/offline_store.dart';
+import 'package:tan_erp_field/features/survey/domain/field_survey_models.dart';
 import 'package:uuid/uuid.dart';
 
 @immutable
@@ -254,9 +255,13 @@ class SyncController extends Notifier<SyncState> {
                       ..measurementType =
                           mr['measurementType'] as String? ?? 'area'
                       ..value = valDouble
-                      ..unitCode = mr['unitCode'] as String? ?? 'sqm'
+                      ..unitCode = FieldSurveyMeasurement.normalizeUnit(
+                        mr['unitCode'] as String? ?? 'sqm',
+                      )
                       ..captureMethod =
-                          mr['captureMethod'] as String? ?? 'measured'
+                          FieldSurveyMeasurement.normalizeCaptureMethod(
+                            mr['captureMethod'] as String? ?? 'measured',
+                          )
                       ..notes = mr['notes'] as String?
                       ..sortOrder = j + 1,
                   ),

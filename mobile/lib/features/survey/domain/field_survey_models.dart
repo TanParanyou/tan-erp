@@ -20,11 +20,20 @@ class FieldSurveyMeasurement {
       id: json['id'] as String? ?? '',
       measurementType: json['measurementType'] as String? ?? 'area',
       value: val,
-      unitCode: json['unitCode'] as String? ?? 'sqm',
-      captureMethod: json['captureMethod'] as String? ?? 'measured',
+      unitCode: normalizeUnit(json['unitCode'] as String? ?? 'sqm'),
+      captureMethod: normalizeCaptureMethod(
+        json['captureMethod'] as String? ?? 'measured',
+      ),
       notes: json['notes'] as String?,
     );
   }
+
+  /// Older app builds saved `pcs`, which the backend rejects; it is `unit`.
+  static String normalizeUnit(String code) => code == 'pcs' ? 'unit' : code;
+
+  /// Older app builds saved `laser_measured`, which the backend rejects.
+  static String normalizeCaptureMethod(String code) =>
+      code == 'laser_measured' ? 'measured' : code;
 
   final String id;
 
@@ -32,7 +41,7 @@ class FieldSurveyMeasurement {
   final String measurementType;
   final double value;
 
-  /// `sqm | m | mm | pcs`.
+  /// `sqm | m | mm | unit`.
   final String unitCode;
 
   /// `measured | photo_estimated | derived | customer_provided`.

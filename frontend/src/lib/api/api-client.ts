@@ -83,6 +83,7 @@ export type UpdateSurveyMoodToneRequest = components["schemas"]["UpdateSurveyMoo
 
 export type EstimateDetailResponse = components["schemas"]["EstimateDetailResponse"];
 export type EstimateHistoryResponse = components["schemas"]["EstimateHistoryResponse"];
+export type EstimateRevisionLinesResponse = components["schemas"]["EstimateRevisionLinesResponse"];
 export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionResponse"];
 export type EstimateConversionSnapshotResponse = components["schemas"]["EstimateConversionSnapshotResponse"];
 export type EstimateUnitOptionsResponse = components["schemas"]["EstimateUnitOptionsResponse"];
@@ -1390,6 +1391,18 @@ export class ApiClient {
   ): Promise<EstimateDetailResponse> {
     return this.request<EstimateDetailResponse>(
       `/api/v1/estimates/${encodeURIComponent(id)}`,
+      "GET",
+      options
+    );
+  }
+
+  async getEstimateRevisionLines(
+    id: string,
+    revisionId: string,
+    options: RequestOptions
+  ): Promise<EstimateRevisionLinesResponse> {
+    return this.request<EstimateRevisionLinesResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/history/revisions/${encodeURIComponent(revisionId)}/lines`,
       "GET",
       options
     );

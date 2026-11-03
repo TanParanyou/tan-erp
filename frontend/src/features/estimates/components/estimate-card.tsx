@@ -235,7 +235,7 @@ export function EstimateCard({
               </Button>
             )}
 
-            {canEdit && (revisionStatus === "draft" || revisionStatus === "returned") && (
+            {estimate.currentRevision && (
               <Button
                 type="button"
                 variant="outline"
@@ -244,7 +244,7 @@ export function EstimateCard({
                 className="!rounded-none border-erp-navy text-erp-navy hover:bg-erp-surface-subtle"
               >
                 <IconEdit className="w-4 h-4 mr-1.5" />
-                {t("openWorkspace")}
+                {canEdit && (revisionStatus === "draft" || revisionStatus === "returned") ? t("openWorkspace") : t("viewWorkspace")}
               </Button>
             )}
           </div>
@@ -339,6 +339,7 @@ export function EstimateCard({
         opportunityId={opportunityId}
         estimate={estimate}
         focusTargetId={readinessFocusTargetId}
+        readOnly={!(canEdit && (revisionStatus === "draft" || revisionStatus === "returned"))}
       />
 
       <ConfirmationModal

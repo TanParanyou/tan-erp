@@ -243,8 +243,6 @@
   "todayEmptyTitle": "ไม่มีงานสำรวจวันนี้",
   "todayEmptyBody": "ยังไม่มีรายการนัดสำรวจในสาขานี้ แตะเพื่อโหลดข้อมูลใหม่",
   "todaySelectPrompt": "เลือกงานจากรายการเพื่อเริ่มสำรวจ",
-  "todayOpenSurvey": "เปิดใบสำรวจ",
-  "todayStartSurvey": "เริ่มสำรวจหน้างาน",
   "todayStageQualified": "ผ่านคัดกรอง",
   "todayStageSurveying": "กำลังสำรวจ",
   "todayStageEstimating": "กำลังประเมินราคา",
@@ -467,5 +465,12 @@
   "conflictServerColumn": "ค่าบนเซิร์ฟเวอร์",
   "conflictKeepLocalAction": "ใช้ค่าในเครื่อง (ส่งซ้ำ)",
   "conflictAcceptServerAction": "ใช้ค่าบนเซิร์ฟเวอร์ (ละทิ้งของเครื่อง)",
-  "conflictResolveAction": "ตรวจสอบและแก้ไขข้อขัดแย้ง"
+  "conflictResolveAction": "ตรวจสอบและแก้ไขข้อขัดแย้ง",
+  "surveyMeasureByVoice": "พูดค่าวัด",
+  "voiceMeasureListening": "กำลังฟัง... พูดตัวเลขที่วัดได้",
+  "voiceMeasureHint": "พูดตัวเลข เช่น \"สองจุดห้า\"",
+  "voiceMeasureNotUnderstood": "ไม่พบตัวเลขในสิ่งที่พูด ลองพูดใหม่อีกครั้ง",
+  "voiceMeasureUnavailable": "ใช้การพูดไม่ได้ ตรวจสอบสิทธิ์ไมโครโฟนและการรู้จำเสียงในการตั้งค่า",
+  "voiceMeasureUse": "ใช้ค่านี้",
+  "voiceMeasureRetry": "พูดใหม่"
 }

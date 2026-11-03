@@ -10,6 +10,23 @@ public sealed class EstimateHistoryReader : IEstimateHistoryReader
 
     public EstimateHistoryReader(AppDbContext db) => _db = db;
 
+    public async Task<EstimateRevisionLinesProjection?> GetRevisionLinesAsync(Guid organizationId, Guid estimateId, Guid revisionId, CancellationToken cancellationToken)
+    {
+        var branchId = await (from estimate in _db.Estimates.AsNoTracking()
+            join revision in _db.EstimateRevisions.AsNoTracking() on estimate.Id equals revision.EstimateId
+            where estimate.OrganizationId == organizationId && estimate.Id == estimateId && revision.Id == revisionId
+            select (Guid?)estimate.BranchId).FirstOrDefaultAsync(cancellationToken);
+        if (branchId is null) return null;
+
+        var lines = await (from section in _db.EstimateSections.AsNoTracking()
+            join work in _db.EstimateWorkItems.AsNoTracking() on section.Id equals work.EstimateSectionId
+            where section.OrganizationId == organizationId && section.EstimateRevisionId == revisionId
+            orderby section.SortOrder, work.SortOrder
+            select new EstimateRevisionLineProjection(section.Code, work.Code, work.DescriptionTh, work.Quantity, work.UnitCode, work.TotalCost, work.TotalSellingPrice))
+            .ToListAsync(cancellationToken);
+        return new EstimateRevisionLinesProjection(branchId.Value, lines);
+    }
+
     public async Task<EstimateHistoryProjection?> GetAsync(Guid organizationId, Guid estimateId, CancellationToken cancellationToken)
     {
         var branchId = await _db.Estimates.AsNoTracking()

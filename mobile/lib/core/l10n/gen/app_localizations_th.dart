@@ -641,12 +641,6 @@ class AppLocalizationsTh extends AppLocalizations {
   String get todaySelectPrompt => 'เลือกงานจากรายการเพื่อเริ่มสำรวจ';
 
   @override
-  String get todayOpenSurvey => 'เปิดใบสำรวจ';
-
-  @override
-  String get todayStartSurvey => 'เริ่มสำรวจหน้างาน';
-
-  @override
   String get todayStageQualified => 'ผ่านคัดกรอง';
 
   @override
@@ -1241,4 +1235,27 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get conflictResolveAction => 'ตรวจสอบและแก้ไขข้อขัดแย้ง';
+
+  @override
+  String get surveyMeasureByVoice => 'พูดค่าวัด';
+
+  @override
+  String get voiceMeasureListening => 'กำลังฟัง... พูดตัวเลขที่วัดได้';
+
+  @override
+  String get voiceMeasureHint => 'พูดตัวเลข เช่น \"สองจุดห้า\"';
+
+  @override
+  String get voiceMeasureNotUnderstood =>
+      'ไม่พบตัวเลขในสิ่งที่พูด ลองพูดใหม่อีกครั้ง';
+
+  @override
+  String get voiceMeasureUnavailable =>
+      'ใช้การพูดไม่ได้ ตรวจสอบสิทธิ์ไมโครโฟนและการรู้จำเสียงในการตั้งค่า';
+
+  @override
+  String get voiceMeasureUse => 'ใช้ค่านี้';
+
+  @override
+  String get voiceMeasureRetry => 'พูดใหม่';
 }

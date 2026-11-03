@@ -42,13 +42,14 @@ interface EstimateWorkspaceDrawerProps {
   opportunityId?: string;
   estimate: EstimateDetailResponse;
   focusTargetId?: string;
+  readOnly?: boolean;
 }
 
 export function EstimateWorkspaceDrawer(props: EstimateWorkspaceDrawerProps) {
   return <EstimateWorkspaceSession key={props.estimate.currentRevision?.id ?? props.estimate.id} {...props} />;
 }
 
-function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, focusTargetId }: EstimateWorkspaceDrawerProps) {
+function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, focusTargetId, readOnly = false }: EstimateWorkspaceDrawerProps) {
   const t = useTranslations("estimates");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -104,7 +105,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
       reset(values);
       history.rebase();
       trackVersion(estimate.currentRevision?.rowVersion);
-      const draft = loadWorkspaceDraft(draftKey, estimate.currentRevision?.rowVersion);
+      const draft = readOnly ? null : loadWorkspaceDraft(draftKey, estimate.currentRevision?.rowVersion);
       pendingDraftRef.current = draft !== null;
       setPendingDraft(draft);
       setSelectedKey(values.sections[0]?.workItems[0]?.uiKey ?? null);
@@ -114,13 +115,13 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
       setErrorTarget(null);
     }
     wasOpen.current = isOpen;
-  }, [isOpen, estimate.currentRevision, reset, history, draftKey]);
+  }, [isOpen, estimate.currentRevision, reset, history, draftKey, readOnly]);
 
   useEffect(() => { latestEstimate.current = estimate; });
 
   // Keep unsaved edits in this tab's session so a crash or expired session does not lose them.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || readOnly) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const subscription = methods.watch(() => {
       clearTimeout(timer);
@@ -132,7 +133,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
       }, 800);
     });
     return () => { subscription.unsubscribe(); clearTimeout(timer); };
-  }, [isOpen, methods, draftKey]);
+  }, [isOpen, methods, draftKey, readOnly]);
 
   const updateDraftMutation = useUpdateEstimateDraft(opportunityId ?? "", estimate.id ?? "", revisionId);
   const calculateMutation = useCalculateEstimate(opportunityId ?? "", estimate.id ?? "", revisionId);
@@ -147,7 +148,6 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
     if (window.innerWidth < 992) setDetailOpen(true);
   }
 
-  // The moved work item and its costs are saved as new rows: the server matches existing ids only within their own section.
   function moveWorkItem(workKey: string, targetSectionKey: string) {
     const sections = getValues("sections");
     const from = sections.findIndex((section) => section.workItems.some((work) => work.uiKey === workKey));
@@ -156,7 +156,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
     if (from < 0 || to < 0 || from === to || !work) return;
     replace(sections.map((section, index) => {
       if (index === from) return { ...section, workItems: section.workItems.filter((candidate) => candidate.uiKey !== workKey).map((candidate, order) => ({ ...candidate, sortOrder: order + 1 })) };
-      if (index === to) return { ...section, workItems: [...section.workItems, { ...work, id: null, sortOrder: section.workItems.length + 1, costComponents: work.costComponents.map((cost) => ({ ...cost, id: null })) }] };
+      if (index === to) return { ...section, workItems: [...section.workItems, { ...work, sortOrder: section.workItems.length + 1 }] };
       return section;
     }));
   }
@@ -296,11 +296,11 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
     } finally { busy.current = false; setOperation(null); }
   }, showErrors);
 
-  useKeyboardShortcut({ key: "s", ctrlOrMeta: true, enabled: isOpen && !isPending, preventDefault: true }, () => { void handleSaveDraft(); });
+  useKeyboardShortcut({ key: "s", ctrlOrMeta: true, enabled: isOpen && !isPending && !readOnly, preventDefault: true }, () => { void handleSaveDraft(); });
   // Inside a text field Ctrl+Z keeps its native per-field undo; the form-wide history applies elsewhere.
   const outsideEditable = (e: KeyboardEvent) => !(e.target instanceof Element && e.target.closest("input, textarea, select, [contenteditable='true']"));
-  useKeyboardShortcut({ key: "z", ctrlOrMeta: true, enabled: isOpen && !isPending, preventDefault: false }, (e) => { if (e.shiftKey || !outsideEditable(e)) return; e.preventDefault(); history.undo(); });
-  useKeyboardShortcut({ key: "z", ctrlOrMeta: true, shift: true, enabled: isOpen && !isPending, preventDefault: false }, (e) => { if (!outsideEditable(e)) return; e.preventDefault(); history.redo(); });
+  useKeyboardShortcut({ key: "z", ctrlOrMeta: true, enabled: isOpen && !isPending && !readOnly, preventDefault: false }, (e) => { if (e.shiftKey || !outsideEditable(e)) return; e.preventDefault(); history.undo(); });
+  useKeyboardShortcut({ key: "z", ctrlOrMeta: true, shift: true, enabled: isOpen && !isPending && !readOnly, preventDefault: false }, (e) => { if (!outsideEditable(e)) return; e.preventDefault(); history.redo(); });
 
   const parsedSnapshot = useMemo(() => {
     if (!serverRevision?.calculationSnapshotJson) return null;
@@ -352,7 +352,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
   const hasMatches = watchedSections.some((section) => section.workItems.some((work) => workspaceWorkMatches(section, work, searchQuery, filterMode)) || (filterMode === "all" && [section.code, section.nameTh, section.nameEn].some((value) => value.toLowerCase().includes(searchQuery.trim().toLowerCase()))));
   const snapshotOutdated = isDirty || serverRevision?.calculationOutdated === true;
   const discountFields = (
-        <div className="flex min-w-0 flex-wrap items-end gap-2.5">
+        <div inert={readOnly} className="flex min-w-0 flex-wrap items-end gap-2.5">
           <Controller
             control={control}
             name="discountType"
@@ -437,7 +437,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
   return (
     <Drawer isOpen={isOpen} onClose={handleAttemptClose} title={t("workspaceTitle")} size="full" closeOnOverlayClick={false} showHeader={false} noPadding>
       <FormProvider {...methods}>
-        <EstimateWorkspaceContext.Provider value={{ selectedKey: effectiveSelection, selectWork, inspector, searchQuery, filterMode, openCatalog: setCatalogTarget, catalogTarget, focusTargetId, errorTarget, detailTab, setDetailTab, moveWorkItem }}>
+        <EstimateWorkspaceContext.Provider value={{ selectedKey: effectiveSelection, selectWork, inspector, searchQuery, filterMode, openCatalog: setCatalogTarget, catalogTarget, focusTargetId, errorTarget, detailTab, setDetailTab, moveWorkItem, readOnly }}>
           <fieldset disabled={isPending || catalogTarget !== null} className="flex h-full min-h-0 min-w-0 flex-row border-0 p-0 m-0 bg-erp-canvas min-[992px]:[--erp-min-touch:36px] [&_.erp-input]:text-xs [&_.erp-select]:text-xs [&_.erp-label]:text-xs [&_.erp-form-group]:gap-1">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <div className="flex shrink-0 items-center justify-between gap-3 border-b border-erp-border bg-erp-surface py-1 pl-4 pr-1">
@@ -462,6 +462,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
                       </div>
                     </Alert>
                   )}
+                  {readOnly && <Alert variant="info" className="shrink-0">{t("workspace.readOnlyNotice")}</Alert>}
                   {lastReturn && (
                     <Alert variant="warning" className="shrink-0">
                       <p className="font-semibold">{t("workspace.returnedBy", { name: lastReturn.returnedBy.displayName, date: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(lastReturn.returnedAtUtc)) })}</p>
@@ -484,6 +485,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
                       <Tooltip content={t("viewHistory")} position="bottom">
                         <Button size="icon" variant="outline" onClick={() => setHistoryOpen(true)} aria-label={t("viewHistory")} icon={<IconClock size={16} />} />
                       </Tooltip>
+                      {!readOnly && <>
                       <Tooltip content={t("workspace.undo")} position="bottom">
                         <Button size="icon" variant="outline" onClick={history.undo} disabled={!history.canUndo} aria-label={t("workspace.undo")} icon={<IconRotateCcw size={16} />} />
                       </Tooltip>
@@ -496,13 +498,14 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
                       <Tooltip content={selectedWork ? `${t("workspace.openCatalog")} · ${selectedWork.code}` : t("workspace.selectWork")} position="bottom">
                         <Button size="icon" variant="primary" onClick={() => { if (selectedSection?.uiKey && effectiveSelection) setCatalogTarget({ sectionKey: selectedSection.uiKey, workKey: effectiveSelection }); }} disabled={!selectedWork} aria-label={t("workspace.openCatalog")} icon={<IconList size={16} />} />
                       </Tooltip>
+                      </>}
                     </div>
                   </div>
                   {notice && <Alert variant="warning" className="shrink-0">{t(notice === "invalid" ? "workspace.validationFailed" : "workspace.calculationFailed")}</Alert>}
 
                   <div data-estimate-scroll data-boq-scope="" className="min-h-[320px] min-w-0 shrink-0 overflow-auto p-2 sm:p-3 min-[992px]:min-h-0 min-[992px]:flex-1 min-[992px]:shrink">
                     <h2 className="mb-2 text-sm font-bold text-erp-navy">{t("workspace.boq")}</h2>
-                    {fields.length === 0 && <div className="border border-dashed border-erp-border bg-erp-surface p-6 text-center"><p className="mb-4 text-sm text-erp-text-muted">{t("noSectionsYet")}</p><Button onClick={handleAddSection} icon={<IconPlus size={16} />}>{t("addSection")}</Button></div>}
+                    {fields.length === 0 && <div className="border border-dashed border-erp-border bg-erp-surface p-6 text-center"><p className="mb-4 text-sm text-erp-text-muted">{t("noSectionsYet")}</p>{!readOnly && <Button onClick={handleAddSection} icon={<IconPlus size={16} />}>{t("addSection")}</Button>}</div>}
                     {fields.length > 0 && !hasMatches && <p className="p-6 text-center text-sm text-erp-text-muted">{t("noMatchingItems")}</p>}
                     <div className="space-y-3">{fields.map((field, s) => <EstimateSectionCard key={field.id} sectionIndex={s} currency={currency} branchId={estimate.branchId} onRemoveSection={remove} onMoveSection={(from, delta) => move(from, from + delta)} isFirstSection={s === 0} isLastSection={s === fields.length - 1} />)}</div>
                   </div>
@@ -518,6 +521,11 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
               </div>
 
               {/* Action bar stays pinned below the scrolling workspace */}
+              {readOnly ? (
+                <div className="shrink-0 flex items-center justify-end border-t border-erp-border bg-erp-surface px-3 py-2 sm:px-4">
+                  <Button type="button" variant="outline" size="md" onClick={onClose}>{tc("actions.close")}</Button>
+                </div>
+              ) : (
               <div className="shrink-0 bg-erp-surface border-t border-erp-border px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-3 shadow-lg">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <span role="status" className="text-xs text-erp-text-muted">{isDirty ? t("workspace.unsaved") : t("workspace.saved")}</span>
@@ -555,6 +563,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
                   </Button>
                 </div>
               </div>
+              )}
             </div>
 
             {detailOpen && <div className="fixed inset-0 z-20 bg-black/40 min-[992px]:hidden" aria-hidden="true" onClick={() => setDetailOpen(false)} />}

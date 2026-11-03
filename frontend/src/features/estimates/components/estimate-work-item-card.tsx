@@ -37,6 +37,7 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
   const { options } = useEstimateOptions();
   const { confirm, ConfirmDialog } = useConfirm();
   const workspace = useEstimateWorkspace();
+  const readOnly = workspace?.readOnly ?? false;
   const { control, getValues, setValue, formState: { errors } } = useFormContext<EstimateWorkspaceFormData>();
   const path = `sections.${sectionIndex}.workItems.${itemIndex}` as const;
   const currentItem = useWatch({ control, name: path });
@@ -72,11 +73,11 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
   }
   if (!currentItem) return null;
   const hiddenByFilter = workspace && !workspaceWorkMatches(getValues(`sections.${sectionIndex}`), currentItem, workspace.searchQuery, workspace.filterMode);
-  const panelProps = (tab: DetailTab) => ({ role: "tabpanel", id: `tabpanel-${scope}-${tab}`, "aria-labelledby": `tab-${scope}-${tab}`, className: activeTab === tab ? "p-3" : "hidden p-3" });
+  const panelProps = (tab: DetailTab) => ({ role: "tabpanel", id: `tabpanel-${scope}-${tab}`, "aria-labelledby": `tab-${scope}-${tab}`, className: activeTab === tab ? "p-3" : "hidden p-3", inert: readOnly });
   return (
     <div id={currentItem?.id ? `estimate-target-${currentItem.id}` : undefined} tabIndex={-1} className="bg-erp-surface focus-visible:outline-2 focus-visible:outline-erp-navy">
       {hiddenByFilter && <Alert variant="info">{t("workspace.selectedOutsideFilter")}</Alert>}
-      <FormSection title={currentItem.descriptionTh || t("itemDesc")} description={currentItem.code} className="!border-0 !p-3 !gap-2" headerClassName="pb-2 [&_h2]:text-sm sm:flex-row sm:items-start [&>div:first-child]:flex-1 [&_h2]:whitespace-normal [&_h2]:break-words [&_h2]:normal-case" headerAction={
+      <FormSection title={currentItem.descriptionTh || t("itemDesc")} description={currentItem.code} className="!border-0 !p-3 !gap-2" headerClassName="pb-2 [&_h2]:text-sm sm:flex-row sm:items-start [&>div:first-child]:flex-1 [&_h2]:whitespace-normal [&_h2]:break-words [&_h2]:normal-case" headerAction={readOnly ? undefined :
         <div className="flex flex-wrap gap-1">
           {onMoveUp && <Tooltip content={t("moveUp")} position="bottom"><Button variant="ghost" size="icon" disabled={isFirst} onClick={() => onMoveUp(itemIndex)} aria-label={t("moveUp")} icon={<IconArrowUp size={16} />} /></Tooltip>}
           {onMoveDown && <Tooltip content={t("moveDown")} position="bottom"><Button variant="ghost" size="icon" disabled={isLast} onClick={() => onMoveDown(itemIndex)} aria-label={t("moveDown")} icon={<IconArrowDown size={16} />} /></Tooltip>}
