@@ -31,6 +31,7 @@ dependencies:
   path: ^1.9.1
   path_provider: ^2.1.6
   reactive_forms: ^18.2.2
+  speech_to_text: ^7.5.0
   talker: ^5.2.0
   tan_erp_api:
     path: packages/tan_erp_api

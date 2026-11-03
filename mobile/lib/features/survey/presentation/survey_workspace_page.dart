@@ -34,6 +34,7 @@ import 'package:tan_erp_field/features/quick_estimate/presentation/quick_estimat
 import 'package:tan_erp_field/features/survey/domain/field_survey_checks.dart';
 import 'package:tan_erp_field/features/survey/domain/field_survey_models.dart';
 import 'package:tan_erp_field/features/survey/presentation/survey_controller.dart';
+import 'package:tan_erp_field/features/survey/presentation/voice_measure_sheet.dart';
 import 'package:tan_erp_field/native/laser_meter/laser_meter_service.dart';
 import 'package:tan_erp_field/native/room_scan/room_scan_service.dart';
 import 'package:uuid/uuid.dart';
@@ -423,11 +424,19 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
                 ),
                 SizedBox(height: t.space2),
                 ErpButton(
-                  label: l10n.surveyMeasureByPhoto,
+                  label: l10n.surveyMeasureByVoice,
                   variant: ErpButtonVariant.outline,
-                  onPressed: () => Navigator.of(ctx).pop('photo'),
+                  onPressed: () => Navigator.of(ctx).pop('voice'),
                 ),
-                // AR measures floor area only, on devices that support it.
+                // Photo and AR measure a plane's area only.
+                if (selectedType == 'area') ...[
+                  SizedBox(height: t.space2),
+                  ErpButton(
+                    label: l10n.surveyMeasureByPhoto,
+                    variant: ErpButtonVariant.outline,
+                    onPressed: () => Navigator.of(ctx).pop('photo'),
+                  ),
+                ],
                 if (selectedType == 'area')
                   Consumer(
                     builder: (_, ref, _) {
@@ -492,6 +501,14 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
           unitCode: selectedUnit,
           notes: notes,
         );
+      case 'voice':
+        await _measureWithVoice(
+          area: area,
+          existing: existing,
+          measurementType: selectedType,
+          unitCode: selectedUnit,
+          notes: notes,
+        );
       case 'photo':
         await _measureWithPhoto(
           area: area,
@@ -531,6 +548,34 @@ class _SurveyWorkspacePageState extends ConsumerState<SurveyWorkspacePage> {
         id: existing?.id ?? _uuid.v4(),
         measurementType: measurementType,
         value: val,
+        unitCode: unitCode,
+        captureMethod: 'measured',
+        notes: notes,
+      ),
+    );
+  }
+
+  Future<void> _measureWithVoice({
+    required FieldSurveyArea area,
+    required String measurementType,
+    required String unitCode,
+    FieldSurveyMeasurement? existing,
+    String? notes,
+  }) async {
+    final l10n = context.l10n;
+    final val = await showVoiceMeasureSheet(
+      context,
+      title: _typeLabel(l10n, measurementType),
+      unitLabel: _unitLabel(l10n, unitCode),
+    );
+    if (val == null || !mounted) return;
+    _upsertMeasurement(
+      area: area,
+      existingId: existing?.id,
+      item: FieldSurveyMeasurement(
+        id: existing?.id ?? _uuid.v4(),
+        measurementType: measurementType,
+        value: double.parse(val.toStringAsFixed(2)),
         unitCode: unitCode,
         captureMethod: 'measured',
         notes: notes,

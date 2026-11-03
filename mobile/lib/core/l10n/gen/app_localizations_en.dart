@@ -1248,4 +1248,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get conflictResolveAction => 'Inspect & resolve conflict';
+
+  @override
+  String get surveyMeasureByVoice => 'Speak value';
+
+  @override
+  String get voiceMeasureListening => 'Listening... say the measured number';
+
+  @override
+  String get voiceMeasureHint => 'Say a number, e.g. \"two point five\"';
+
+  @override
+  String get voiceMeasureNotUnderstood => 'No number heard. Try again.';
+
+  @override
+  String get voiceMeasureUnavailable =>
+      'Voice input is unavailable. Check microphone and speech recognition permissions in Settings.';
+
+  @override
+  String get voiceMeasureUse => 'Use this value';
+
+  @override
+  String get voiceMeasureRetry => 'Speak again';
 }

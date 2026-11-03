@@ -465,5 +465,12 @@
   "conflictServerColumn": "Server state",
   "conflictKeepLocalAction": "Keep device changes (Retry)",
   "conflictAcceptServerAction": "Accept server version (Discard local)",
-  "conflictResolveAction": "Inspect & resolve conflict"
+  "conflictResolveAction": "Inspect & resolve conflict",
+  "surveyMeasureByVoice": "Speak value",
+  "voiceMeasureListening": "Listening... say the measured number",
+  "voiceMeasureHint": "Say a number, e.g. \"two point five\"",
+  "voiceMeasureNotUnderstood": "No number heard. Try again.",
+  "voiceMeasureUnavailable": "Voice input is unavailable. Check microphone and speech recognition permissions in Settings.",
+  "voiceMeasureUse": "Use this value",
+  "voiceMeasureRetry": "Speak again"
 }

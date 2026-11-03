@@ -2377,6 +2377,48 @@ abstract class AppLocalizations {
   /// In th, this message translates to:
   /// **'ตรวจสอบและแก้ไขข้อขัดแย้ง'**
   String get conflictResolveAction;
+
+  /// No description provided for @surveyMeasureByVoice.
+  ///
+  /// In th, this message translates to:
+  /// **'พูดค่าวัด'**
+  String get surveyMeasureByVoice;
+
+  /// No description provided for @voiceMeasureListening.
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังฟัง... พูดตัวเลขที่วัดได้'**
+  String get voiceMeasureListening;
+
+  /// No description provided for @voiceMeasureHint.
+  ///
+  /// In th, this message translates to:
+  /// **'พูดตัวเลข เช่น \"สองจุดห้า\"'**
+  String get voiceMeasureHint;
+
+  /// No description provided for @voiceMeasureNotUnderstood.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่พบตัวเลขในสิ่งที่พูด ลองพูดใหม่อีกครั้ง'**
+  String get voiceMeasureNotUnderstood;
+
+  /// No description provided for @voiceMeasureUnavailable.
+  ///
+  /// In th, this message translates to:
+  /// **'ใช้การพูดไม่ได้ ตรวจสอบสิทธิ์ไมโครโฟนและการรู้จำเสียงในการตั้งค่า'**
+  String get voiceMeasureUnavailable;
+
+  /// No description provided for @voiceMeasureUse.
+  ///
+  /// In th, this message translates to:
+  /// **'ใช้ค่านี้'**
+  String get voiceMeasureUse;
+
+  /// No description provided for @voiceMeasureRetry.
+  ///
+  /// In th, this message translates to:
+  /// **'พูดใหม่'**
+  String get voiceMeasureRetry;
 }
 
 class _AppLocalizationsDelegate

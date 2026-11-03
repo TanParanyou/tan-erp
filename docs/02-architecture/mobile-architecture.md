@@ -1,6 +1,6 @@
 # Mobile Architecture (สถาปัตยกรรมแอปภาคสนาม)
 
-> สถานะ: Implemented (2026-10-29) — โครงสร้างหลัก, Offline Outbox/Conflict Diff, Survey (Manual/Laser BLE/Photo/AR วัดพื้น — Android ARCore + iOS ARKit; สแกนห้อง RoomPlan LiDAR — iOS 17+ เครื่องที่มี LiDAR), Quick Estimate, Barcode Scan, Push & In-App Notifications พร้อม Quick Approval และ Backend Companion APIs เสร็จสมบูรณ์. เหตุผลการตัดสินใจ: [ADR 0030](../adr/0030-flutter-field-companion-app.md), [ADR 0031](../adr/0031-cross-platform-design-tokens-and-theming.md). แผนเริ่มต้น: [Mobile Foundation Phase 0](../superpowers/plans/2026-10-26-mobile-foundation-phase-0.md)
+> สถานะ: Implemented (2026-10-29) — โครงสร้างหลัก, Offline Outbox/Conflict Diff, Survey (Manual/Laser BLE/Photo/AR วัดพื้น — Android ARCore + iOS ARKit; สแกนห้อง RoomPlan LiDAR — iOS 17+ เครื่องที่มี LiDAR; พูดค่าวัดภาษาไทยผ่าน `speech_to_text`), Quick Estimate, Barcode Scan, Push & In-App Notifications พร้อม Quick Approval และ Backend Companion APIs เสร็จสมบูรณ์. เหตุผลการตัดสินใจ: [ADR 0030](../adr/0030-flutter-field-companion-app.md), [ADR 0031](../adr/0031-cross-platform-design-tokens-and-theming.md). แผนเริ่มต้น: [Mobile Foundation Phase 0](../superpowers/plans/2026-10-26-mobile-foundation-phase-0.md)
 
 แอป Flutter สำหรับงานภาคสนามบน iOS/Android ทั้งมือถือและแท็บเล็ต ใช้ Backend และ API เดียวกับเว็บ ([Frontend Architecture](frontend-architecture.md), [Backend Architecture](backend-architecture.md)).
 
