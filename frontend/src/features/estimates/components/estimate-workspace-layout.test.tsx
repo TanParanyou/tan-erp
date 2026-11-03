@@ -116,6 +116,9 @@ describe("workspace BOQ and inspector regression", () => {
     fireEvent.change(screen.getByRole("combobox", { name: "เลือกด่วน:" }), { target: { value: "hmr" } });
     expect(screen.getAllByRole("spinbutton", { name: "ต้นทุนต่อหน่วย" })).toHaveLength(2);
     fireEvent.click(screen.getAllByRole("button", { name: "ลบรายการ" })[0]);
+    // The inspector stays on the cost tab after deleting, so return to the info tab to read the selected item
+    await waitFor(() => expect(mocks.confirm).toHaveBeenCalled());
+    tab("ข้อมูลรายการ");
     await waitFor(() => expect(screen.getByRole("textbox", { name: "รายละเอียดงาน" })).toHaveValue("งานหนึ่ง"));
     expect(mocks.confirm).toHaveBeenCalled();
   });
