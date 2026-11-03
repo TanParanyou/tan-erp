@@ -130,10 +130,12 @@ check-ports:
 kill-ports:
 	@echo "ตรวจสอบและเคลียร์โปรเซสที่ค้างบนพอร์ต $(FE_PORT) และ $(BE_PORT)..."
 	@for port in $(FE_PORT) $(BE_PORT); do \
-		pid=$$(lsof -ti :$$port 2>/dev/null); \
-		if [ -n "$$pid" ]; then \
-			echo "กำลังปิด Process บนพอร์ต $$port (PID: $$pid)..."; \
-			kill -9 $$pid 2>/dev/null || true; \
+		pids=$$(lsof -ti :$$port 2>/dev/null); \
+		if [ -n "$$pids" ]; then \
+			for pid in $$pids; do \
+				echo "กำลังปิด Process บนพอร์ต $$port (PID: $$pid)..."; \
+				kill -9 $$pid 2>/dev/null || true; \
+			done; \
 		else \
 			echo "พอร์ต $$port ว่างเรียบร้อย"; \
 		fi; \
@@ -246,6 +248,10 @@ dev-setup: up db-wait db-migrate dev-env
 # รันเฉพาะ Backend API ในโหมด Test + SeedTestData
 dev-backend:
 	@echo "กำลังรัน Backend API บนพอร์ต $(BE_PORT)..."
+	@for pid in $$(lsof -ti :$(BE_PORT) 2>/dev/null); do \
+		echo "พบพอร์ต $(BE_PORT) ถูกใช้งานอยู่ (PID: $$pid) กำลังเคลียร์..."; \
+		kill -9 $$pid 2>/dev/null || true; \
+	done
 	ASPNETCORE_ENVIRONMENT=Test \
 	Authentication__DevelopmentTokens__Enabled=true \
 	SeedTestData=true \
@@ -262,6 +268,10 @@ dev-backend-demo:
 # รันเฉพาะ Frontend Next.js Dev Server
 dev-frontend: dev-env
 	@echo "กำลังรัน Frontend Next.js บนพอร์ต $(FE_PORT)..."
+	@for pid in $$(lsof -ti :$(FE_PORT) 2>/dev/null); do \
+		echo "พบพอร์ต $(FE_PORT) ถูกใช้งานอยู่ (PID: $$pid) กำลังเคลียร์..."; \
+		kill -9 $$pid 2>/dev/null || true; \
+	done
 	npm --prefix $(FRONTEND_DIR) run dev -- -p $(FE_PORT)
 
 # รันทั้ง Backend และ Frontend พร้อมกัน (พร้อมเคลียร์พอร์ตและ Trap Ctrl+C)
