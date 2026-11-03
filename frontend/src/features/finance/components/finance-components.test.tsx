@@ -133,6 +133,7 @@ function renderBilling(data: BillingResponse, granted: string[] = ALL) {
     createNote: { mutateAsync: createNote, isPending: false },
     approveNote: { mutateAsync: approveNote, isPending: false },
     downloadTaxPdf: { mutateAsync: downloadTaxPdf, isPending: false },
+    downloadETaxXml: { mutateAsync: vi.fn(), isPending: false },
     create: { mutateAsync: createBilling, isPending: false },
   } as unknown as ReturnType<typeof financeQueries.useBillingMutations>);
   render(
@@ -165,6 +166,7 @@ function renderEditor(granted: string[] = ALL) {
     createNote: { mutateAsync: createNote, isPending: false },
     approveNote: { mutateAsync: approveNote, isPending: false },
     downloadTaxPdf: { mutateAsync: downloadTaxPdf, isPending: false },
+    downloadETaxXml: { mutateAsync: vi.fn(), isPending: false },
     create: { mutateAsync: createBilling, isPending: false },
   } as unknown as ReturnType<typeof financeQueries.useBillingMutations>);
 
