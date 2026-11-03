@@ -13,6 +13,7 @@ import type {
 } from "../../schemas/field-survey-schema";
 import { resolveFieldSurveyPhotoPurpose, resolveFieldSurveyPhotoTag, resolveGrossAreaSqm, resolveNetAreaSqm } from "../../schemas/field-survey-schema";
 import { evaluateFieldSurveyItems, type FieldSurveyWarning } from "../../schemas/field-survey-checks";
+import { buildFieldSurveySummary } from "../../schemas/field-survey-summary";
 import {
   useOpportunitySurvey,
   useCreateSiteSurvey,
@@ -41,6 +42,7 @@ import { FormContainer } from "@/components/forms/FormContainer";
 import { FormSection } from "@/components/forms/FormSection";
 import { Alert } from "@/components/ui/Alert";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -91,6 +93,7 @@ export function FieldSurveyWorkspace({
   // Non-blocking completeness warnings shown in a confirm modal before saving
   const [pendingWarnings, setPendingWarnings] = useState<FieldSurveyWarning[] | null>(null);
   const skipWarningsRef = useRef(false);
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null);
 
   // Next Action Modal state after save
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
@@ -431,6 +434,16 @@ export function FieldSurveyWorkspace({
           surveyorNotes.trim() || currentRevision.scopeSummary,
         ].filter(Boolean).join("\n\n") || null;
 
+        // Incomplete items stay visible on the revision, which also records warnings the surveyor saved past.
+        const missingTexts = evaluateFieldSurveyItems(items).map((w) =>
+          t("summary.missingLine", {
+            room: roomName.trim(),
+            index: w.itemIndex + 1,
+            title: items[w.itemIndex].title,
+            reason: t(`checks.warnings.${w.code}`),
+          })
+        );
+
         const updatePayload: UpdateSurveyDraftRequest = {
           expectedRevisionVersion: currentRevision.rowVersion,
           visitedAtUtc: currentRevision.visitedAtUtc || new Date().toISOString(),
@@ -442,7 +455,7 @@ export function FieldSurveyWorkspace({
               : []),
           ],
           constraints: [...(currentRevision.constraints || [])],
-          missingDetails: [...(currentRevision.missingDetails || [])],
+          missingDetails: Array.from(new Set([...(currentRevision.missingDetails || []), ...missingTexts])),
           areas: [...existingAreaRequests, newAreaRequest],
         };
 
@@ -580,6 +593,50 @@ export function FieldSurveyWorkspace({
     }
   };
 
+  const getDimensionSummary = (item: FieldSurveyItem): string => {
+    if (item.measurementType === "box" && item.boxDimensions) {
+      const { widthMm, depthMm, heightMm } = item.boxDimensions;
+      if (widthMm || depthMm || heightMm) {
+        return t("dimensions.boxSummary", { w: widthMm, d: depthMm, h: heightMm });
+      }
+    } else if (item.measurementType === "area" && item.areaDimensions) {
+      if (resolveGrossAreaSqm(item.areaDimensions) > 0) {
+        return t("dimensions.areaSummary", { area: resolveNetAreaSqm(item.areaDimensions).toFixed(2) });
+      }
+    } else if (item.measurementType === "custom" && item.customMeasurements) {
+      return t("dimensions.customSummary", { count: item.customMeasurements.length });
+    }
+    return "";
+  };
+
+  const getSpecSummary = (item: FieldSurveyItem): string =>
+    item.specSelection?.coreSkuName || item.specSelection?.finishSkuName || "";
+
+  // Appends the rule-based summary to the notes; never overwrites what the surveyor typed.
+  const handleDraftSummary = () => {
+    const draft = buildFieldSurveySummary(
+      items,
+      (item) =>
+        [
+          categoryOptions.find((c) => c.code === item.category)?.label,
+          getDimensionSummary(item),
+          getSpecSummary(item),
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      {
+        header: (count) => t("summary.header", { count }),
+        itemLine: (index, title, details) =>
+          details
+            ? t("summary.itemLine", { index, title, details })
+            : t("summary.itemLineBare", { index, title }),
+        more: (count) => t("summary.more", { count }),
+      }
+    );
+    if (!draft) return;
+    setSurveyorNotes((prev) => (prev.includes(draft) ? prev : [prev.trim(), draft].filter(Boolean).join("\n\n")));
+  };
+
   const totalPhotosCount = items.reduce((acc, it) => acc + (it.photos?.length ?? 0), 0);
 
   return (
@@ -684,6 +741,17 @@ export function FieldSurveyWorkspace({
               wrapperClassName="!mb-0"
               className="text-xs"
             />
+            <div className="mt-2 flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDraftSummary}
+                disabled={isSaving || items.length === 0}
+              >
+                {t("summary.draftButton")}
+              </Button>
+            </div>
           </div>
         </div>
       </FormSection>
@@ -786,28 +854,8 @@ export function FieldSurveyWorkspace({
             const isCollapsed = collapsedItemIds.has(item.id);
 
             // Summary text for collapsed card
-            let dimensionSummary = "";
-            if (item.measurementType === "box" && item.boxDimensions) {
-              const { widthMm, depthMm, heightMm } = item.boxDimensions;
-              if (widthMm || depthMm || heightMm) {
-                dimensionSummary = t("dimensions.boxSummary", {
-                  w: widthMm,
-                  d: depthMm,
-                  h: heightMm,
-                });
-              }
-            } else if (item.measurementType === "area" && item.areaDimensions) {
-              if (resolveGrossAreaSqm(item.areaDimensions) > 0) {
-                const area = resolveNetAreaSqm(item.areaDimensions).toFixed(2);
-                dimensionSummary = t("dimensions.areaSummary", { area });
-              }
-            } else if (item.measurementType === "custom" && item.customMeasurements) {
-              dimensionSummary = t("dimensions.customSummary", {
-                count: item.customMeasurements.length,
-              });
-            }
-
-            const specSummary = item.specSelection?.coreSkuName || item.specSelection?.finishSkuName || "";
+            const dimensionSummary = getDimensionSummary(item);
+            const specSummary = getSpecSummary(item);
 
             return (
               <div
@@ -869,7 +917,7 @@ export function FieldSurveyWorkspace({
                     <button
                       type="button"
                       disabled={isSaving}
-                      onClick={() => handleRemoveItem(index)}
+                      onClick={() => setItemToDeleteIndex(index)}
                       className="inline-flex min-h-[36px] items-center gap-1 border border-erp-danger-border bg-white px-2.5 py-1 text-xs font-medium text-erp-danger hover:bg-erp-danger-bg"
                     >
                       <IconTrash size={14} />
@@ -956,6 +1004,22 @@ export function FieldSurveyWorkspace({
         </div>
       )}
       </FormSection>
+
+      <ConfirmationModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={() => {
+          if (itemToDeleteIndex !== null) handleRemoveItem(itemToDeleteIndex);
+          setItemToDeleteIndex(null);
+        }}
+        variant="danger"
+        title={t("deleteConfirm.title")}
+        message={t("deleteConfirm.message", {
+          name: (itemToDeleteIndex !== null && items[itemToDeleteIndex]?.title) || t("unnamedItem"),
+        })}
+        confirmText={t("actions.deleteItem")}
+        cancelText={t("deleteConfirm.cancel")}
+      />
 
       {/* Completeness warnings: non-blocking, the user may save anyway */}
       <Modal

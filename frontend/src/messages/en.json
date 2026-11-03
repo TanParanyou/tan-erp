@@ -6233,6 +6233,19 @@
     "roomNameRequired": "Survey area / room name is required",
     "opportunityRequired": "Please select a sales opportunity before saving",
     "cloneReason": "Room added from the field survey page",
+    "summary": {
+      "draftButton": "Draft summary from items",
+      "header": "Items in this room ({count})",
+      "itemLine": "{index}. {title} — {details}",
+      "itemLineBare": "{index}. {title}",
+      "more": "…and {count} more",
+      "missingLine": "{room} · Item {index} {title}: {reason}"
+    },
+    "deleteConfirm": {
+      "title": "Delete this item?",
+      "message": "\"{name}\" will be removed from this room together with its measurements and attached photos. This cannot be undone.",
+      "cancel": "Cancel"
+    },
     "checks": {
       "title": "Review before saving",
       "description": "Some items may be incomplete. You can save anyway, but the estimate will be incomplete without measurements.",

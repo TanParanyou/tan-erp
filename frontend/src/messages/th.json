@@ -6233,6 +6233,19 @@
     "roomNameRequired": "กรุณาระบุชื่อห้อง / บริเวณสำรวจ",
     "opportunityRequired": "กรุณาเลือกโอกาสทางการขายก่อนบันทึก",
     "cloneReason": "เพิ่มห้องจากหน้าสำรวจหน้างาน",
+    "summary": {
+      "draftButton": "ร่างสรุปจากรายการ",
+      "header": "สรุปรายการในห้องนี้ ({count} รายการ)",
+      "itemLine": "{index}. {title} — {details}",
+      "itemLineBare": "{index}. {title}",
+      "more": "…และอีก {count} รายการ",
+      "missingLine": "{room} · รายการที่ {index} {title}: {reason}"
+    },
+    "deleteConfirm": {
+      "title": "ลบรายการนี้ใช่ไหม",
+      "message": "รายการ \"{name}\" จะถูกลบออกจากห้องนี้พร้อมขนาดและรูปที่แนบไว้ ย้อนกลับไม่ได้",
+      "cancel": "ยกเลิก"
+    },
     "checks": {
       "title": "ตรวจสอบก่อนบันทึก",
       "description": "พบรายการที่ข้อมูลอาจยังไม่ครบ บันทึกต่อได้ แต่การประเมินราคาจะไม่สมบูรณ์หากไม่มีขนาด",
