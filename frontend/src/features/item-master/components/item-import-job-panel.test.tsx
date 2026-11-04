@@ -176,4 +176,45 @@ describe("ItemImportJobPanel (G-06 Background Job Progress)", () => {
 
     expect(await screen.findByText(t.job.loadFailed)).toBeDefined();
   });
+
+  it("renders cancel job action when running and calls onCancelJob when provided", async () => {
+    startMutateAsync.mockResolvedValue({ id: "job-123" });
+    mockStatusData = makeJob({ status: "running" });
+    const onCancelJob = vi.fn().mockResolvedValue(undefined);
+
+    const describeField = (field: string | null | undefined, code: string | null | undefined) => `${field}:${code}`;
+    render(
+      <NextIntlClientProvider locale="th" messages={thMessages}>
+        <ItemImportJobPanel
+          content={"line1\nline2"}
+          kind="items"
+          mode="create"
+          describeField={describeField}
+          onCancelJob={onCancelJob}
+        />
+      </NextIntlClientProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: t.job.start }));
+
+    const cancelBtn = await screen.findByRole("button", { name: t.job.cancelJob });
+    expect(cancelBtn).not.toBeDisabled();
+    fireEvent.click(cancelBtn);
+
+    await waitFor(() => {
+      expect(onCancelJob).toHaveBeenCalledWith("job-123");
+    });
+  });
+
+  it("disables cancel button with hint when onCancelJob is not provided", async () => {
+    startMutateAsync.mockResolvedValue({ id: "job-123" });
+    mockStatusData = makeJob({ status: "running" });
+
+    renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: t.job.start }));
+
+    const cancelBtn = await screen.findByRole("button", { name: t.job.cancelJob });
+    expect(cancelBtn).toBeDisabled();
+    expect(cancelBtn).toHaveAttribute("title", t.job.cancelJobHint);
+  });
 });

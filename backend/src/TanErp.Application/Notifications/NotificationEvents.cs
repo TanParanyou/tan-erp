@@ -92,6 +92,15 @@ public static class NotificationEvents
             Fields((NotificationFields.ResourceId, Id(serviceRequestId)), (NotificationFields.DocumentNumber, number)),
             null, []);
 
+    /// <summary>System-generated (no actor): a warranty's remaining validity fell under a reminder threshold.</summary>
+    public static NotificationEvent WarrantyExpiring(
+        Guid organizationId, Guid? branchId, Guid transitionId, Guid warrantyId, Guid projectId, string warrantyNumber, int daysRemaining) =>
+        new(NotificationTypes.WarrantyExpiring, organizationId, branchId, transitionId, null,
+            Fields((NotificationFields.ResourceId, Id(warrantyId)), (NotificationFields.ParentId, Id(projectId)),
+                (NotificationFields.DocumentNumber, Clip(warrantyNumber)),
+                (NotificationFields.DaysRemaining, daysRemaining.ToString(CultureInfo.InvariantCulture))),
+            null, []);
+
 
     /// <summary>A display name can be up to 255 characters; a payload value is limited to 200.</summary>
     private static string Clip(string value)

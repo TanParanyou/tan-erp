@@ -65,6 +65,44 @@ public class ItemImportJobStore : IItemImportJobStore
         return job is null ? null : ToSnapshot(job, replayed: false);
     }
 
+    public async Task<Result<ItemImportJobSnapshot>> CancelAsync(
+        Guid organizationId,
+        Guid requestedByUserId,
+        Guid jobId,
+        string traceId = "",
+        CancellationToken cancellationToken = default)
+    {
+        var job = await _db.ItemImportJobs
+            .FirstOrDefaultAsync(j => j.Id == jobId && j.OrganizationId == organizationId && j.RequestedByUserId == requestedByUserId, cancellationToken);
+        if (job is null)
+        {
+            return Result<ItemImportJobSnapshot>.Failure(new Error("RESOURCE_NOT_FOUND", "Import job not found."));
+        }
+
+        var now = _clock.UtcNow;
+        try
+        {
+            job.Cancel(now);
+        }
+        catch (ItemDomainException ex)
+        {
+            return Result<ItemImportJobSnapshot>.Failure(new Error(ex.Code, ex.Message));
+        }
+
+        var clippedTraceId = string.IsNullOrWhiteSpace(traceId) ? job.TraceId : (traceId.Length > MaxTraceIdLength ? traceId[..MaxTraceIdLength] : traceId);
+        _db.AuditEvents.Add(new AuditEvent(
+            Guid.NewGuid(), organizationId, requestedByUserId, "items.import-job-cancelled", "item-import-job", job.Id.ToString(), now, clippedTraceId,
+            JsonSerializer.Serialize(new
+            {
+                job.Kind, job.Mode, status = job.Status, processedRows = job.ProcessedRows, createdCount = job.CreatedCount,
+                updatedCount = job.UpdatedCount, unchangedCount = job.UnchangedCount
+            }),
+            actorMembershipId: job.RequestedByMembershipId));
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return Result<ItemImportJobSnapshot>.Success(ToSnapshot(job, replayed: false));
+    }
+
     private Task<ItemImportJob?> FindByKeyAsync(Guid orgId, string keyHash, CancellationToken ct) =>
         _db.ItemImportJobs.AsNoTracking().FirstOrDefaultAsync(j => j.OrganizationId == orgId && j.IdempotencyKeyHash == keyHash, ct);
 

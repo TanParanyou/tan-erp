@@ -60,6 +60,20 @@ export function useQuotationDocumentDownload() {
   });
 }
 
+/** Renders the PDF for a quotation that has no generated document yet. */
+export function useRenderQuotationDocument(estimateId: string) {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { quotationId: string; idempotencyKey?: string }) =>
+      apiClient.renderQuotationDocument(input.quotationId, await options(input.idempotencyKey ?? crypto.randomUUID())),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: quotationHistoryKey(membershipId, locale, estimateId) });
+      await queryClient.invalidateQueries({ queryKey: ["business", membershipId, locale, "estimates"] });
+    },
+  });
+}
+
 export function acceptanceLinksKey(membershipId: string | null | undefined, locale: UiLocale, quotationId: string | null | undefined) {
   return ["business", membershipId, locale, "estimates", "acceptance-links", quotationId] as const;
 }

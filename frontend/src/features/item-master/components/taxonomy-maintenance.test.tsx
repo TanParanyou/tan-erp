@@ -54,9 +54,13 @@ describe("TaxonomyMaintenance", () => {
   const createTaxCategory = vi.fn();
   const updateTaxCategory = vi.fn();
   const createConversion = vi.fn();
+  const updateSharedConversion = vi.fn();
+  const deactivateSharedConversion = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    updateSharedConversion.mockResolvedValue({});
+    deactivateSharedConversion.mockResolvedValue({});
     vi.mocked(useItemMasterReferenceData).mockReturnValue({
       data: {
         categories: [
@@ -82,7 +86,11 @@ describe("TaxonomyMaintenance", () => {
       updateTaxCategory: { mutateAsync: updateTaxCategory, isPending: false, isError: false },
     } as unknown as ReturnType<typeof useItemMasterReferenceMutations>);
     vi.mocked(useSharedUnitConversions).mockReturnValue({ data: [], isLoading: false, isError: false } as unknown as ReturnType<typeof useSharedUnitConversions>);
-    vi.mocked(useSharedUnitConversionMutations).mockReturnValue({ create: { mutateAsync: createConversion, isPending: false, isError: false } } as unknown as ReturnType<typeof useSharedUnitConversionMutations>);
+    vi.mocked(useSharedUnitConversionMutations).mockReturnValue({
+      create: { mutateAsync: createConversion, isPending: false, isError: false },
+      update: { mutateAsync: updateSharedConversion, isPending: false, isError: false },
+      deactivate: { mutateAsync: deactivateSharedConversion, isPending: false, isError: false },
+    } as unknown as ReturnType<typeof useSharedUnitConversionMutations>);
     vi.mocked(useCategoryAttributeTemplate).mockReturnValue({
       data: { categoryId: "category-1", templates: [] },
       isLoading: false,
@@ -386,6 +394,76 @@ describe("TaxonomyMaintenance", () => {
           dataType: "text",
         }),
       ],
+    });
+  });
+
+  it("allows editing and deactivating an existing shared unit conversion", async () => {
+    vi.mocked(useSharedUnitConversions).mockReturnValue({
+      data: [
+        {
+          id: "shared-1",
+          fromUnitId: "unit-1",
+          fromUnitCode: "M3",
+          toUnitId: "unit-2",
+          toUnitCode: "PCS",
+          factor: "50",
+          effectiveFrom: "2026-01-01",
+          reason: "แปลงร่วม",
+          status: "active",
+          rowVersion: "version-shared-1",
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useSharedUnitConversions>);
+
+    renderPage();
+    fireEvent.click(screen.getByRole("tab", { name: "หน่วยนับ" }));
+    const tables = screen.getAllByRole("table");
+    const sharedTable = tables[tables.length - 1];
+    expect(within(sharedTable).getByText("M3")).toBeInTheDocument();
+    expect(within(sharedTable).getByText("PCS")).toBeInTheDocument();
+
+    // Click Edit on the shared conversion
+    const editBtn = within(sharedTable).getByRole("button", { name: "แก้ไข" });
+    fireEvent.click(editBtn);
+
+    expect(screen.getByRole("heading", { name: "แก้ไขอัตราแปลงหน่วย" })).toBeInTheDocument();
+    const factorInput = screen.getByDisplayValue("50");
+    fireEvent.change(factorInput, { target: { value: "60" } });
+    const reasonInput = screen.getByDisplayValue("แปลงร่วม");
+    fireEvent.change(reasonInput, { target: { value: "ปรับเป็น 60" } });
+    fireEvent.click(screen.getByRole("button", { name: "บันทึก" }));
+
+    await waitFor(() => expect(updateSharedConversion).toHaveBeenCalledOnce());
+    expect(updateSharedConversion).toHaveBeenCalledWith({
+      id: "shared-1",
+      payload: {
+        factor: "60",
+        effectiveFrom: "2026-01-01",
+        effectiveTo: null,
+        reason: "ปรับเป็น 60",
+      },
+      rowVersion: "version-shared-1",
+    });
+
+    // Click Deactivate on the shared conversion
+    const deactivateBtn = within(sharedTable).getByRole("button", { name: "ปิดใช้งาน" });
+    fireEvent.click(deactivateBtn);
+
+    expect(screen.getByRole("heading", { name: "ปิดใช้งานอัตราแปลงหน่วย" })).toBeInTheDocument();
+    const modal = screen.getByRole("dialog");
+    const deactReason = within(modal).getByPlaceholderText(/ระบุเหตุผลในการปรับปรุงต้นทุน/);
+    fireEvent.change(deactReason, { target: { value: "ยกเลิกอัตราแปลงนี้" } });
+    fireEvent.click(within(modal).getByRole("button", { name: "ยืนยันปิดใช้งาน" }));
+
+    await waitFor(() => expect(deactivateSharedConversion).toHaveBeenCalledOnce());
+    expect(deactivateSharedConversion).toHaveBeenCalledWith({
+      id: "shared-1",
+      payload: {
+        reason: "ยกเลิกอัตราแปลงนี้",
+      },
+      rowVersion: "version-shared-1",
     });
   });
 });

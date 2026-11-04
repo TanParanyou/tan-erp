@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using TanErp.Domain.Common;
 
 namespace TanErp.Domain.QuickEstimates;
@@ -9,6 +10,15 @@ public sealed record TemplateComplexity(string Code, string Name, decimal Factor
 
 public sealed record TemplateAddOn(string Code, string Name, decimal Amount, bool PerLine);
 
+public sealed record TemplateCostRecipeLine(
+    string ComponentType,
+    string DescriptionTh,
+    string? DescriptionEn,
+    string UnitCode,
+    decimal QuantityPerUnit,
+    decimal UnitCost,
+    Guid? ItemId = null);
+
 /// <summary>Everything about a template that changes a price. Stored as one JSON document so a version is one immutable unit.</summary>
 public sealed record TemplateConfig(
     IReadOnlyList<TemplateGrade> Grades,
@@ -18,7 +28,9 @@ public sealed record TemplateConfig(
     decimal MediumConfidenceModifier,
     decimal CustomMaterialModifier,
     IReadOnlyList<string> Assumptions,
-    IReadOnlyList<string> Exclusions)
+    IReadOnlyList<string> Exclusions,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<TemplateCostRecipeLine>? CostRecipe = null)
 {
     public static TemplateConfig Empty { get; } = new(Array.Empty<TemplateGrade>(), Array.Empty<TemplateComplexity>(), Array.Empty<TemplateAddOn>(), 0m, 0m, 0m, Array.Empty<string>(), Array.Empty<string>());
 
@@ -43,6 +55,18 @@ public sealed record TemplateConfig(
         }
 
         if (Assumptions.Count > 20 || Exclusions.Count > 20 || Assumptions.Concat(Exclusions).Any(t => string.IsNullOrWhiteSpace(t) || t.Length > 300)) throw new QuickEstimateException("PRICING_TEMPLATE_INVALID", "Assumptions and exclusions are limited to 20 lines of up to 300 characters.");
+        if (CostRecipe is { Count: > 0 })
+        {
+            if (CostRecipe.Count > 30
+                || CostRecipe.Any(r => string.IsNullOrWhiteSpace(r.ComponentType)
+                    || string.IsNullOrWhiteSpace(r.DescriptionTh)
+                    || string.IsNullOrWhiteSpace(r.UnitCode)
+                    || r.QuantityPerUnit <= 0m
+                    || r.UnitCost < 0m))
+            {
+                throw new QuickEstimateException("PRICING_TEMPLATE_INVALID", "Cost recipe lines (max 30) need a component type, Thai description, unit code, positive quantity per unit and non-negative unit cost.");
+            }
+        }
         _ = codes;
     }
 }

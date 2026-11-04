@@ -1,6 +1,6 @@
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import messages from "@/messages/th.json";
 import type { ItemResponse } from "@/lib/api/api-client";
@@ -30,6 +30,8 @@ function renderEditor() {
 describe("ItemBarcodeMaintenance", () => {
   const createBarcode = vi.fn();
   const createConversion = vi.fn();
+  const updateConversion = vi.fn();
+  const deactivateConversion = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,12 +44,18 @@ describe("ItemBarcodeMaintenance", () => {
     vi.mocked(useSharedUnitConversions).mockReturnValue({ data: [], isLoading: false, isError: false } as unknown as ReturnType<typeof useSharedUnitConversions>);
     createBarcode.mockResolvedValue({ id: "barcode-1" });
     createConversion.mockResolvedValue({ id: "conversion-1" });
+    updateConversion.mockResolvedValue({ id: "conversion-1" });
+    deactivateConversion.mockResolvedValue({ id: "conversion-1" });
     vi.mocked(useItemBarcodeMutations).mockReturnValue({
       create: { mutateAsync: createBarcode, isPending: false, isError: false },
       setPrimary: { mutate: vi.fn(), isPending: false, isError: false },
       deactivate: { mutateAsync: vi.fn(), isPending: false, isError: false },
     } as unknown as ReturnType<typeof useItemBarcodeMutations>);
-    vi.mocked(useItemUnitConversionMutations).mockReturnValue({ create: { mutateAsync: createConversion, isPending: false, isError: false } } as unknown as ReturnType<typeof useItemUnitConversionMutations>);
+    vi.mocked(useItemUnitConversionMutations).mockReturnValue({
+      create: { mutateAsync: createConversion, isPending: false, isError: false },
+      update: { mutateAsync: updateConversion, isPending: false, isError: false },
+      deactivate: { mutateAsync: deactivateConversion, isPending: false, isError: false },
+    } as unknown as ReturnType<typeof useItemUnitConversionMutations>);
   });
 
   it("creates a versioned packaging conversion targeting the item base unit", async () => {
@@ -84,5 +92,90 @@ describe("ItemBarcodeMaintenance", () => {
     await waitFor(() => expect(createBarcode).toHaveBeenCalledTimes(2));
     expect(createBarcode.mock.calls.map(([payload]) => payload.value)).toEqual(["ALT-SKU-01", "ALT-SKU-02"]);
     expect(createBarcode.mock.calls.every(([payload]) => payload.identifierType === "internal")).toBe(true);
+  });
+
+  it("opens edit modal and updates an active packaging conversion", async () => {
+    vi.mocked(useItemUnitConversions).mockReturnValue({
+      data: [
+        {
+          id: "conv-1",
+          itemId: "item-1",
+          fromUnitId: "unit-box",
+          fromUnitCode: "BOX",
+          toUnitId: "unit-each",
+          toUnitCode: "EA",
+          factor: "12",
+          effectiveFrom: "2026-01-01",
+          reason: "กล่อง 12 ชิ้น",
+          status: "active",
+          rowVersion: "version-1",
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useItemUnitConversions>);
+
+    renderEditor();
+    expect(screen.getByText("BOX → EA")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "แก้ไข" }));
+
+    expect(screen.getByRole("heading", { name: "แก้ไขอัตราแปลงหน่วย" })).toBeInTheDocument();
+    const factorInput = screen.getByDisplayValue("12");
+    fireEvent.change(factorInput, { target: { value: "24" } });
+    const reasonInput = screen.getByDisplayValue("กล่อง 12 ชิ้น");
+    fireEvent.change(reasonInput, { target: { value: "ปรับเป็น 24 ชิ้น" } });
+    fireEvent.click(screen.getByRole("button", { name: "บันทึก" }));
+
+    await waitFor(() => expect(updateConversion).toHaveBeenCalledOnce());
+    expect(updateConversion).toHaveBeenCalledWith({
+      id: "conv-1",
+      payload: {
+        factor: "24",
+        effectiveFrom: "2026-01-01",
+        effectiveTo: null,
+        reason: "ปรับเป็น 24 ชิ้น",
+      },
+      rowVersion: "version-1",
+    });
+  });
+
+  it("opens deactivate modal and deactivates a packaging conversion with reason", async () => {
+    vi.mocked(useItemUnitConversions).mockReturnValue({
+      data: [
+        {
+          id: "conv-1",
+          itemId: "item-1",
+          fromUnitId: "unit-box",
+          fromUnitCode: "BOX",
+          toUnitId: "unit-each",
+          toUnitCode: "EA",
+          factor: "12",
+          effectiveFrom: "2026-01-01",
+          reason: "กล่อง 12 ชิ้น",
+          status: "active",
+          rowVersion: "version-1",
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useItemUnitConversions>);
+
+    renderEditor();
+    fireEvent.click(screen.getByRole("button", { name: "ปิดใช้งาน" }));
+
+    expect(screen.getByRole("heading", { name: "ปิดใช้งานอัตราแปลงหน่วย" })).toBeInTheDocument();
+    const modal = screen.getByRole("dialog");
+    const reasonInput = within(modal).getByPlaceholderText(/ระบุเหตุผลในการปรับปรุงต้นทุน/);
+    fireEvent.change(reasonInput, { target: { value: "ยกเลิกกล่องรุ่นนี้" } });
+    fireEvent.click(within(modal).getByRole("button", { name: "ยืนยันปิดใช้งาน" }));
+
+    await waitFor(() => expect(deactivateConversion).toHaveBeenCalledOnce());
+    expect(deactivateConversion).toHaveBeenCalledWith({
+      id: "conv-1",
+      payload: {
+        reason: "ยกเลิกกล่องรุ่นนี้",
+      },
+      rowVersion: "version-1",
+    });
   });
 });

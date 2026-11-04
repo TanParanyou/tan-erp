@@ -1705,4 +1705,28 @@
   <data name="SESSION_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>The requested active session was not found or has already been revoked.</value>
   </data>
+  <data name="BRANCH_OVERRIDE_CAP_EXCEEDED_TITLE" xml:space="preserve">
+    <value>Branch rate override exceeds deviation cap</value>
+  </data>
+  <data name="BRANCH_OVERRIDE_CAP_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>Branch rate override cannot deviate by more than 30% from the template reference rate.</value>
+  </data>
+  <data name="ITEM_IMPORT_JOB_NOT_CANCELLABLE_TITLE" xml:space="preserve">
+    <value>Import job cannot be cancelled</value>
+  </data>
+  <data name="ITEM_IMPORT_JOB_NOT_CANCELLABLE_DETAIL" xml:space="preserve">
+    <value>The import job has already completed, failed, or been cancelled.</value>
+  </data>
+  <data name="UNIT_CONVERSION_INACTIVE_TITLE" xml:space="preserve">
+    <value>Unit conversion is inactive</value>
+  </data>
+  <data name="UNIT_CONVERSION_INACTIVE_DETAIL" xml:space="preserve">
+    <value>An inactive unit conversion cannot be updated or deactivated again.</value>
+  </data>
+  <data name="ITEM_UNIT_CONVERSION_INACTIVE_TITLE" xml:space="preserve">
+    <value>Item unit conversion is inactive</value>
+  </data>
+  <data name="ITEM_UNIT_CONVERSION_INACTIVE_DETAIL" xml:space="preserve">
+    <value>An inactive item unit conversion cannot be updated or deactivated again.</value>
+  </data>
 </root>

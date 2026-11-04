@@ -26,6 +26,7 @@ vi.mock("@/lib/permissions/can", async (importOriginal) => {
 
 const l = thMessages.quotationLifecycle;
 const mutate = vi.fn();
+const renderDocMutate = vi.fn();
 
 function history(statuses: string[]): QuotationHistoryResponse {
   return {
@@ -53,6 +54,8 @@ function renderPanel(data: QuotationHistoryResponse | undefined, granted = ["quo
   permissions.granted = granted;
   vi.spyOn(lifecycleQueries, "useQuotationHistory").mockReturnValue({ data, isLoading: false, isError: false } as unknown as ReturnType<typeof lifecycleQueries.useQuotationHistory>);
   vi.spyOn(lifecycleQueries, "useQuotationLifecycleMutation").mockReturnValue({ mutateAsync: mutate, isPending: false } as unknown as ReturnType<typeof lifecycleQueries.useQuotationLifecycleMutation>);
+  vi.spyOn(lifecycleQueries, "useQuotationDocumentDownload").mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof lifecycleQueries.useQuotationDocumentDownload>);
+  vi.spyOn(lifecycleQueries, "useRenderQuotationDocument").mockReturnValue({ mutateAsync: renderDocMutate, isPending: false } as unknown as ReturnType<typeof lifecycleQueries.useRenderQuotationDocument>);
   return render(
     <NextIntlClientProvider locale="th" messages={thMessages}>
       <QuotationLifecyclePanel estimateId="est-1" />
@@ -124,5 +127,15 @@ describe("QuotationLifecyclePanel", () => {
     fireEvent.change(await screen.findByLabelText(new RegExp(l.reason)), { target: { value: "แก้ไข" } });
     fireEvent.click(screen.getByRole("button", { name: l.confirm }));
     expect(await screen.findByText(thMessages.quotationLifecycle.errors.QUOTATION_ACCEPTED_LOCKED)).toBeDefined();
+  });
+
+  it("renders a PDF generation button for legacy quotations without a document when user has quotations.issue", async () => {
+    renderDocMutate.mockResolvedValue({});
+    renderPanel(history(["issued"]), ["quotations.issue"]);
+    const renderBtn = screen.getByRole("button", { name: thMessages.quotationLifecycle.document.renderPdf });
+    expect(renderBtn).toBeInTheDocument();
+
+    fireEvent.click(renderBtn);
+    await waitFor(() => expect(renderDocMutate).toHaveBeenCalledWith({ quotationId: "q-0" }));
   });
 });

@@ -295,7 +295,16 @@ export function ItemMasterList() {
           </BulkActionToolbar>
         </div>
       )}
-      {canImport && <ItemImportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} canImportItems={writable} canImportCosts={canImportCosts} canUpsert={canUpsertItems} />}
+      {canImport && (
+        <ItemImportModal
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          canImportItems={writable}
+          canImportCosts={canImportCosts}
+          canUpsert={canUpsertItems}
+          defaultKind={writable ? "items" : "costs"}
+        />
+      )}
     </section>
   );
 }

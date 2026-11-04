@@ -9,10 +9,11 @@ public static class ItemImportJobStatus
     public const string Completed = "completed";
     public const string CompletedWithErrors = "completed_with_errors";
     public const string Failed = "failed";
+    public const string Cancelled = "cancelled";
 
-    public static readonly string[] All = [Queued, Running, Completed, CompletedWithErrors, Failed];
+    public static readonly string[] All = [Queued, Running, Completed, CompletedWithErrors, Failed, Cancelled];
 
-    public static bool IsTerminal(string status) => status is Completed or CompletedWithErrors or Failed;
+    public static bool IsTerminal(string status) => status is Completed or CompletedWithErrors or Failed or Cancelled;
 }
 
 /// <summary>
@@ -143,6 +144,17 @@ public class ItemImportJob : Entity
         if (ItemImportJobStatus.IsTerminal(Status)) return;
         Status = ItemImportJobStatus.Failed;
         FailureCode = failureCode;
+        End(now);
+    }
+
+    public void Cancel(DateTimeOffset now)
+    {
+        if (Status is not (ItemImportJobStatus.Queued or ItemImportJobStatus.Running))
+        {
+            throw new ItemDomainException("ITEM_IMPORT_JOB_NOT_CANCELLABLE", "The import job can no longer be cancelled.");
+        }
+
+        Status = ItemImportJobStatus.Cancelled;
         End(now);
     }
 

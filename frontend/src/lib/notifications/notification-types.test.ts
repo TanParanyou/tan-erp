@@ -22,6 +22,7 @@ describe("notification types", () => {
       "role-assignment.approval-requested",
       "service-request.sla-warning",
       "supplier-invoice.approval-requested",
+      "warranty.expiring",
     ]);
   });
 

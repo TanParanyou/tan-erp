@@ -17,6 +17,7 @@ public sealed record RateOverride(Guid Id, decimal ReferenceRate, decimal Minimu
 public class BranchRateOverride : Entity
 {
     public const int MaxPeriodDays = 366;
+    public const decimal MaxDeviationRatio = 0.30m;
     public Guid OrganizationId { get; private set; } public Guid BranchId { get; private set; }
     public Guid TemplateId { get; private set; } public string Status { get; private set; } = OverrideStatus.Requested;
     public decimal ReferenceRate { get; private set; } public decimal MinimumCharge { get; private set; }
@@ -32,7 +33,8 @@ public class BranchRateOverride : Entity
 
     public BranchRateOverride(
         Guid id, Guid organizationId, Guid branchId, Guid templateId, decimal referenceRate, decimal minimumCharge, DateOnly effectiveFrom, DateOnly effectiveTo,
-        string? reasonCode, string? reasonDetail, string? sourceReference, Guid requestedByUserId, DateOnly today, DateTimeOffset now) : base(id)
+        string? reasonCode, string? reasonDetail, string? sourceReference, Guid requestedByUserId, DateOnly today, DateTimeOffset now,
+        decimal? templateReferenceRate = null) : base(id)
     {
         if (organizationId == Guid.Empty || branchId == Guid.Empty || templateId == Guid.Empty || requestedByUserId == Guid.Empty) throw new ArgumentException("Organization, branch, template and actor are required.");
         if (referenceRate <= 0 || referenceRate > 99_999_999m) throw Invalid("The reference rate must be above zero.");
@@ -46,6 +48,19 @@ public class BranchRateOverride : Entity
         OrganizationId = organizationId; BranchId = branchId; TemplateId = templateId; ReferenceRate = referenceRate; MinimumCharge = minimumCharge;
         EffectiveFrom = effectiveFrom; EffectiveTo = effectiveTo; ReasonCode = code; ReasonDetail = detail; SourceReference = source;
         RequestedByUserId = requestedByUserId; RequestedAtUtc = now.ToUniversalTime(); RowVersion = Guid.NewGuid();
+        if (templateReferenceRate.HasValue)
+        {
+            ValidateAgainstTemplateRate(templateReferenceRate.Value);
+        }
+    }
+
+    public void ValidateAgainstTemplateRate(decimal templateReferenceRate)
+    {
+        if (templateReferenceRate <= 0m) return;
+        if (Math.Abs(ReferenceRate - templateReferenceRate) / templateReferenceRate > MaxDeviationRatio)
+        {
+            throw new QuickEstimateException("BRANCH_OVERRIDE_CAP_EXCEEDED", "Branch rate override cannot deviate by more than 30% from the template reference rate.");
+        }
     }
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

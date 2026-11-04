@@ -11,13 +11,17 @@ import { FormContainer } from "@/components/forms/FormContainer";
 import { FormSection } from "@/components/forms/FormSection";
 import { FormActionBar } from "@/components/forms/FormActionBar";
 import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { IconTrash } from "@/components/common/Icons";
 import { useToast } from "@/hooks/useToast";
 import type { RoleDefinitionResponse, RoleGrantRequest } from "@/lib/api/api-client";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can, PERMISSIONS } from "@/lib/permissions/can";
+import { useAdminBranches } from "@/features/settings/organization/api/organization-admin-queries";
 import {
   useAdminPermissionCatalog,
   useCreateRoleDefinition,
@@ -44,7 +48,7 @@ interface ScopedGrant {
 
 const orNull = (value: string): string | null => (value.trim() === "" ? null : value.trim());
 
-/** Branch/own-scope grants cannot be edited here; they are kept and sent back unchanged on save. */
+/** Scoped (branch/own) grants can be added, viewed and removed; they are sent on save. */
 function toScopedGrants(role: RoleDefinitionResponse | undefined): ScopedGrant[] {
   return (role?.permissions ?? []).flatMap((p) =>
     p.permissionKey && p.scope && p.scope !== ORGANIZATION_SCOPE
@@ -64,10 +68,18 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
   const canManage = can(selectedMembership, PERMISSIONS.ROLES_MANAGE);
   const roleQuery = useRoleDefinition(roleId, !isCreate);
   const catalogQuery = useAdminPermissionCatalog();
+  const branchesQuery = useAdminBranches("active");
+  const branches = branchesQuery.data ?? [];
   const createMutation = useCreateRoleDefinition();
   const updateMutation = useUpdateRoleDefinition();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [edited, setEdited] = useState<ReadonlySet<string> | null>(null);
+
+  // Scoped permission grants (branch / own)
+  const [newPermissionKey, setNewPermissionKey] = useState("");
+  const [newScope, setNewScope] = useState<"branch" | "own">("branch");
+  const [newBranchId, setNewBranchId] = useState("");
+
   // One key per submit intent: a retry after a network failure replays the same request instead of creating twice.
   const intentRef = useRef<{ fingerprint: string; key: string } | null>(null);
 
@@ -96,9 +108,24 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
     () => new Set((role?.permissions ?? []).flatMap((p) => (p.permissionKey && p.scope === ORGANIZATION_SCOPE ? [p.permissionKey] : []))),
     [role]
   );
-  const scoped = useMemo(() => toScopedGrants(role), [role]);
+  const baselineScoped = useMemo(() => toScopedGrants(role), [role]);
+  const [editedScoped, setEditedScoped] = useState<ScopedGrant[] | null>(null);
+  const scopedGrants = editedScoped ?? baselineScoped;
+
+  const scopedGrantsChanged = useMemo(() => {
+    if (editedScoped === null) return false;
+    if (editedScoped.length !== baselineScoped.length) return true;
+    const baselineKeys = new Set(
+      baselineScoped.map((g) => `${g.permissionKey}:${g.scope}:${g.branchId ?? ""}`)
+    );
+    return editedScoped.some(
+      (g) => !baselineKeys.has(`${g.permissionKey}:${g.scope}:${g.branchId ?? ""}`)
+    );
+  }, [editedScoped, baselineScoped]);
+
   const selected = edited ?? baseline;
-  const permissionsChanged = edited !== null && (edited.size !== baseline.size || [...edited].some((key) => !baseline.has(key)));
+  const orgPermissionsChanged = edited !== null && (edited.size !== baseline.size || [...edited].some((key) => !baseline.has(key)));
+  const permissionsChanged = orgPermissionsChanged || scopedGrantsChanged;
 
   const schema = useMemo(
     () =>
@@ -145,11 +172,38 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
     setEdited(next);
   };
 
+  const handleAddScoped = () => {
+    if (!newPermissionKey) return;
+    if (newScope === "branch" && !newBranchId) return;
+    const targetBranchId = newScope === "branch" ? newBranchId : null;
+    const duplicate = scopedGrants.some(
+      (g) => g.permissionKey === newPermissionKey && g.scope === newScope && g.branchId === targetBranchId
+    );
+    if (duplicate) {
+      toast.error(t("editor.permissions.duplicateScoped"));
+      return;
+    }
+    const branchObj = newScope === "branch" ? branches.find((b) => b.id === newBranchId) : null;
+    const nextGrant: ScopedGrant = {
+      permissionKey: newPermissionKey,
+      scope: newScope,
+      branchId: targetBranchId,
+      branchName: branchObj?.name ?? branchObj?.code ?? targetBranchId,
+    };
+    setEditedScoped([...scopedGrants, nextGrant]);
+    setNewPermissionKey("");
+    setNewBranchId("");
+  };
+
+  const handleRemoveScoped = (index: number) => {
+    setEditedScoped(scopedGrants.filter((_, i) => i !== index));
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
     const permissions: RoleGrantRequest[] = [
       ...[...selected].sort().map((permissionKey) => ({ permissionKey, scope: ORGANIZATION_SCOPE, branchId: null })),
-      ...scoped.map((g) => ({ permissionKey: g.permissionKey, scope: g.scope, branchId: g.branchId })),
+      ...scopedGrants.map((g) => ({ permissionKey: g.permissionKey, scope: g.scope, branchId: g.branchId })),
     ];
     const payload = { name: values.name.trim(), description: orNull(values.description), permissions };
     try {
@@ -165,6 +219,7 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
         // 202 from the server: the change became a request for a checker and is not in effect yet.
         toast.success(t(result.pendingRequest ? "editor.pendingSubmitted" : "editor.saveSuccess"));
         setEdited(null);
+        setEditedScoped(null);
       }
     } catch (error: unknown) {
       setSubmitError(t(`errors.${roleAdminErrorKey(error)}`));
@@ -244,20 +299,112 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
               onBatchToggle={batchToggle}
             />
           )}
-          {scoped.length > 0 ? (
-            <div className="space-y-1">
+          <div className="space-y-3 pt-4 border-t border-erp-border">
+            <div>
               <p className="text-sm font-semibold text-erp-text-main">{t("editor.permissions.scopedTitle")}</p>
               <p className="text-xs text-erp-text-muted">{t("editor.permissions.scopedHint")}</p>
-              <ul className="list-disc pl-5 text-sm">
-                {scoped.map((g) => (
-                  <li key={`${g.permissionKey}-${g.scope}-${g.branchId ?? "own"}`}>
-                    {g.permissionKey} · {t(`editor.permissions.scope.${g.scope === "branch" ? "branch" : "own"}`)}
-                    {g.branchName ? ` ${g.branchName}` : ""}
+            </div>
+            {canEdit && (
+              <div className="flex flex-wrap items-end gap-2 border border-erp-border bg-erp-surface-subtle p-3">
+                <div className="min-w-52 flex-1">
+                  <Select
+                    label={t("editor.permissions.selectPermission")}
+                    value={newPermissionKey}
+                    onChange={(e) => setNewPermissionKey(e.target.value)}
+                    options={[
+                      { value: "", label: t("editor.permissions.selectPermission") },
+                      ...catalog.map((c) => ({ value: c.key, label: c.key })),
+                    ]}
+                    wrapperClassName="!mb-0"
+                  />
+                </div>
+                <div className="w-36">
+                  <Select
+                    label={t("editor.permissions.selectScope")}
+                    value={newScope}
+                    onChange={(e) => {
+                      const val = e.target.value as "branch" | "own";
+                      setNewScope(val);
+                      if (val !== "branch") setNewBranchId("");
+                    }}
+                    options={[
+                      { value: "branch", label: t("editor.permissions.scope.branch") },
+                      { value: "own", label: t("editor.permissions.scope.own") },
+                    ]}
+                    wrapperClassName="!mb-0"
+                  />
+                </div>
+                {newScope === "branch" && (
+                  <div className="min-w-44 flex-1 sm:flex-none">
+                    <Select
+                      label={t("editor.permissions.selectBranch")}
+                      value={newBranchId}
+                      onChange={(e) => setNewBranchId(e.target.value)}
+                      disabled={branchesQuery.isLoading || branches.length === 0}
+                      options={[
+                        {
+                          value: "",
+                          label: branchesQuery.isLoading
+                            ? tCommon("states.loading")
+                            : branches.length === 0
+                            ? t("editor.permissions.noBranches")
+                            : t("editor.permissions.selectBranch"),
+                        },
+                        ...branches.map((b) => ({ value: b.id ?? "", label: b.name ?? b.code ?? b.id ?? "" })),
+                      ]}
+                      wrapperClassName="!mb-0"
+                    />
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="primary"
+                  className="h-11 min-h-[44px]"
+                  disabled={!newPermissionKey || (newScope === "branch" && !newBranchId)}
+                  onClick={handleAddScoped}
+                >
+                  {t("editor.permissions.addScoped")}
+                </Button>
+              </div>
+            )}
+            {scopedGrants.length > 0 ? (
+              <ul className="divide-y divide-erp-border border border-erp-border">
+                {scopedGrants.map((g, index) => (
+                  <li
+                    key={`${g.permissionKey}-${g.scope}-${g.branchId ?? "own"}`}
+                    className="flex items-center justify-between p-2.5 text-sm"
+                  >
+                    <div>
+                      <span className="font-mono font-medium text-erp-navy">{g.permissionKey}</span>
+                      <span className="mx-2 text-erp-text-muted">·</span>
+                      <span className="text-erp-text-main">
+                        {t(`editor.permissions.scope.${g.scope === "branch" ? "branch" : "own"}`)}
+                      </span>
+                      {g.scope === "branch" && (
+                        <span className="ml-1 text-erp-text-muted">
+                          {g.branchName ? ` ${g.branchName}` : branches.find((b) => b.id === g.branchId)?.name ? ` ${branches.find((b) => b.id === g.branchId)?.name}` : g.branchId ? ` (${g.branchId})` : ""}
+                        </span>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 text-erp-text-muted hover:text-erp-danger"
+                        aria-label={t("editor.permissions.removeScoped")}
+                        onClick={() => handleRemoveScoped(index)}
+                      >
+                        <IconTrash size={16} />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
-            </div>
-          ) : null}
+            ) : (
+              <p className="text-xs text-erp-text-muted italic">{t("editor.permissions.noScopedGrants")}</p>
+            )}
+          </div>
         </FormSection>
       </FormContainer>
       {!isCreate && role ? <RoleActivationPanel role={role} canManage={canManage} /> : null}

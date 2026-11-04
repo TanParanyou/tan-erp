@@ -24,6 +24,8 @@ interface ItemImportJobPanelProps {
   mode: ItemImportMode;
   /** Maps a column/field name to its label; the modal owns the field translations. */
   describeField: (field: string | null | undefined, code: string | null | undefined) => string;
+  /** Optional handler to cancel an active job (prepared for G-06 cancel support). */
+  onCancelJob?: (jobId: string) => Promise<void> | void;
 }
 
 const MAX_VISIBLE_ERROR_ROWS = 50;
@@ -88,14 +90,25 @@ const STATUS_VARIANT: Record<ItemImportJobStatus, BadgeVariant> = {
  * Starts a large import as a background job and shows its progress. Each batch is saved all-or-nothing by the backend, so a
  * batch with a wrong row is skipped and listed here while the other batches still import. The job keeps running if the drawer is closed.
  */
-export function ItemImportJobPanel({ content, kind, mode, describeField }: ItemImportJobPanelProps) {
+export function ItemImportJobPanel({ content, kind, mode, describeField, onCancelJob }: ItemImportJobPanelProps) {
   const t = useTranslations("itemMaster.import");
   const start = useStartItemImportJob();
   const [jobId, setJobId] = useState<string | undefined>(undefined);
   const [startFailed, setStartFailed] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   // One key per file/option choice, so a retried click replays the same job instead of queueing a second one.
   const keyRef = useRef<string>(crypto.randomUUID());
   const status = useItemImportJobStatus(jobId);
+
+  async function handleCancel(): Promise<void> {
+    if (!job || !onCancelJob) return;
+    setIsCancelling(true);
+    try {
+      await onCancelJob(job.id);
+    } finally {
+      setIsCancelling(false);
+    }
+  }
 
   async function handleStart(): Promise<void> {
     setStartFailed(false);
@@ -149,7 +162,21 @@ export function ItemImportJobPanel({ content, kind, mode, describeField }: ItemI
             {t("summaryOutcome", { created: job.createdCount, updated: job.updatedCount, unchanged: job.unchangedCount })}
           </p>
           {job.status === "running" || job.status === "queued" ? (
-            <p className="text-xs text-erp-text-muted">{t("job.closeHint")}</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-erp-text-muted">{t("job.closeHint")}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="min-h-9 text-xs"
+                disabled={!onCancelJob || isCancelling}
+                isLoading={isCancelling}
+                onClick={() => void handleCancel()}
+                title={onCancelJob ? undefined : t("job.cancelJobHint")}
+              >
+                {t("job.cancelJob")}
+              </Button>
+            </div>
           ) : null}
           {job.status === "failed" && (
             <Alert variant="danger">

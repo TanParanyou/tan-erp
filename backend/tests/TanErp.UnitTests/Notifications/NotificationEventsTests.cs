@@ -28,6 +28,7 @@ public class NotificationEventsTests
         NotificationEvents.MembershipExpiring(Org, Branch, Guid.NewGuid(), Guid.NewGuid(), Subject, "สมหญิง ทดสอบ", 7),
         NotificationEvents.ProjectBudgetOverrun(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "PRJ-2026-0001"),
         NotificationEvents.ServiceRequestSlaWarning(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "SR-2026-0001"),
+        NotificationEvents.WarrantyExpiring(Org, Branch, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "WAR-2026-0001", 30),
     };
 
     [Theory]

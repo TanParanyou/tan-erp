@@ -25,6 +25,13 @@ vi.mock("@/lib/membership/selected-membership-context", () => ({
   }),
 }));
 vi.mock("./role-activation-panel", () => ({ RoleActivationPanel: () => <div>activation-panel</div> }));
+vi.mock("@/features/settings/organization/api/organization-admin-queries", () => ({
+  useAdminBranches: () => ({
+    data: [{ id: "b1", code: "BR-01", name: "สาขา 1", status: "active" }],
+    isLoading: false,
+    isError: false,
+  }),
+}));
 vi.mock("../api/role-management-queries", () => ({
   useRoleDefinition: () => mocks.role,
   useAdminPermissionCatalog: () => ({
@@ -146,5 +153,37 @@ describe("RoleDefinitionEditor", () => {
     rerender(<RoleDefinitionEditor roleId="r1" />);
     expect(screen.getByText(/มีคำขอแก้ไขรออนุมัติ/)).toBeInTheDocument();
     expect(screen.getByLabelText(/ชื่อบทบาท/)).toBeDisabled();
+  });
+
+  it("supports adding and removing scoped permission grants", async () => {
+    render(<RoleDefinitionEditor roleId="r1" />);
+
+    // Add own-scoped grant
+    fireEvent.change(screen.getByLabelText("เลือกสิทธิ์"), { target: { value: "customers.read" } });
+    fireEvent.change(screen.getByLabelText("เลือกขอบเขต"), { target: { value: "own" } });
+    fireEvent.click(screen.getByRole("button", { name: "เพิ่มสิทธิ์" }));
+
+    expect(screen.getAllByText("ของตนเอง").length).toBeGreaterThanOrEqual(2);
+
+    // Remove the existing branch grant
+    const removeButtons = screen.getAllByRole("button", { name: "ลบสิทธิ์จำกัดขอบเขต" });
+    fireEvent.click(removeButtons[0]);
+
+    // Save changes
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกการเปลี่ยนแปลง" }));
+
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+    expect(mocks.update).toHaveBeenCalledWith({
+      roleId: "r1",
+      ifMatch: "v1",
+      payload: {
+        name: "Sales Lead",
+        description: "เดิม",
+        permissions: [
+          { permissionKey: "customers.read", scope: "organization", branchId: null },
+          { permissionKey: "customers.read", scope: "own", branchId: null },
+        ],
+      },
+    });
   });
 });

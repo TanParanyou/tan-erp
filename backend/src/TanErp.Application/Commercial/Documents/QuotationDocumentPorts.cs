@@ -4,8 +4,16 @@ using TanErp.Domain.Commercial;
 
 namespace TanErp.Application.Commercial.Documents;
 
-/// <summary>What is recorded about a stored quotation PDF. The storage path and file id are never exposed.</summary>
-public sealed record QuotationDocumentSummary(string Sha256, long ByteCount, string RendererVersion, DateTimeOffset RenderedAtUtc);
+/// <summary>What is recorded about a stored quotation PDF. The storage path is never exposed.</summary>
+public sealed record QuotationDocumentSummary(
+    string Sha256,
+    long ByteCount,
+    string RendererVersion,
+    DateTimeOffset RenderedAtUtc,
+    Guid? QuotationId = null,
+    Guid? FileId = null);
+
+public sealed record QuotationDocumentBackfillResult(QuotationDocumentSummary Summary, bool WasCreated);
 
 /// <summary>The stored bytes (hash-verified on read) with the name to offer to the client.</summary>
 public sealed record QuotationDocumentFile(byte[] Content, string FileName, QuotationDocumentSummary Summary);
@@ -21,6 +29,9 @@ public sealed class QuotationDocumentRenderException(string message, Exception i
 public interface IQuotationDocumentWriter
 {
     Task<Result<QuotationDocumentSummary>> StageAsync(Quotation quotation, Guid actorUserId, string traceId, CancellationToken cancellationToken = default);
+
+    Task<Result<QuotationDocumentSummary>> RenderAndStoreAsync(Quotation quotation, Guid actorUserId, string traceId, CancellationToken cancellationToken = default) =>
+        StageAsync(quotation, actorUserId, traceId, cancellationToken);
 }
 
 public interface IQuotationDocumentStore
@@ -32,4 +43,12 @@ public interface IQuotationDocumentStore
 
     /// <summary>For the public acceptance link only (the token already proved access). Null when there is no document.</summary>
     Task<QuotationDocumentFile?> OpenForAcceptanceAsync(Guid organizationId, Guid quotationId, CancellationToken cancellationToken = default);
+
+    /// <summary>Renders and stores the PDF once for a legacy quotation that has no stored document row yet, or returns the existing summary.</summary>
+    Task<Result<QuotationDocumentBackfillResult>> EnsureRenderedAsync(
+        RequestAccessContext access,
+        Guid quotationId,
+        string idempotencyKey,
+        string traceId,
+        CancellationToken cancellationToken = default);
 }

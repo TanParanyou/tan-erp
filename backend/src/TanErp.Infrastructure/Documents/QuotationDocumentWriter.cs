@@ -54,6 +54,9 @@ public sealed partial class QuotationDocumentWriter(
         db.AddAuditEvent(new AuditEvent(Guid.NewGuid(), organizationId, actorUserId, "quotations.document-rendered", "Quotation", quotationId.ToString(), now, traceId,
             JsonSerializer.Serialize(new { quotationNumber = number, sha256, byteCount = bytes.Length, rendererVersion = renderer.Version })));
 
-        return Result<QuotationDocumentSummary>.Success(new QuotationDocumentSummary(sha256, bytes.Length, renderer.Version, now));
+        return Result<QuotationDocumentSummary>.Success(new QuotationDocumentSummary(sha256, bytes.Length, renderer.Version, now, quotationId, file.Id));
     }
+
+    public Task<Result<QuotationDocumentSummary>> RenderAndStoreAsync(Quotation quotation, Guid actorUserId, string traceId, CancellationToken cancellationToken = default) =>
+        StageAsync(quotation, actorUserId, traceId, cancellationToken);
 }

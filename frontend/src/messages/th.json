@@ -2217,6 +2217,15 @@
     "sharedUnitConversionHelp": "ใช้กับหน่วยที่มีความหมายแน่นอนร่วมกัน เช่น 1 โหล = 12 ชิ้น; ระบบปฏิเสธเส้นทางที่เกิดวงจร",
     "toUnit": "หน่วยปลายทาง",
     "conversionSaved": "บันทึกอัตราแปลงหน่วยแล้ว",
+    "editConversion": "แก้ไขอัตราแปลงหน่วย",
+    "conversionUpdated": "อัปเดตอัตราแปลงหน่วยแล้ว",
+    "conversionUpdateFailed": "อัปเดตอัตราแปลงหน่วยไม่สำเร็จ",
+    "deactivateConversion": "ปิดใช้งาน",
+    "deactivateConversionTitle": "ปิดใช้งานอัตราแปลงหน่วย",
+    "deactivateConversionMessage": "ยืนยันการปิดใช้งานอัตราแปลงหน่วย {from} → {to} หรือไม่?",
+    "deactivateConversionConfirm": "ยืนยันปิดใช้งาน",
+    "conversionDeactivated": "ปิดใช้งานอัตราแปลงหน่วยแล้ว",
+    "conversionDeactivateFailed": "ปิดใช้งานอัตราแปลงหน่วยไม่สำเร็จ",
     "noUnitConversions": "ยังไม่มีอัตราแปลงหน่วยกลาง",
     "identifierType": "ชนิดรหัส",
     "internalBarcode": "รหัสภายใน",
@@ -2425,6 +2434,7 @@
     "codeLengthError": "รหัสยาวเกินจำนวนตัวอักษรที่กำหนด",
     "costHistory": "ประวัติต้นทุน",
     "createCostDraft": "สร้างฉบับร่างต้นทุน",
+    "importCostCsv": "นำเข้าต้นทุน CSV",
     "costStatusDraft": "ฉบับร่าง",
     "costStatusPublished": "เผยแพร่แล้ว",
     "costStatusReturned": "ส่งกลับแก้ไข",
@@ -2615,6 +2625,9 @@
         "progressLabel": "ความคืบหน้าการนำเข้า",
         "batches": "ชุดที่สำเร็จ {done} จาก {total} • ชุดที่ถูกปฏิเสธ {rejected}",
         "closeHint": "ปิดหน้าต่างนี้ได้ งานจะทำต่อเบื้องหลัง",
+        "cancelJob": "ยกเลิกงานนำเข้า",
+        "cancelSuccess": "ยกเลิกงานนำเข้าแล้ว",
+        "cancelJobHint": "การยกเลิกงานนำเข้าจะพร้อมใช้งานในรุ่นถัดไป (ชุดที่กำลังประมวลผลอยู่จะดำเนินการต่อจนเสร็จ)",
         "status": {
           "queued": "รอคิว",
           "running": "กำลังนำเข้า",
@@ -4407,7 +4420,9 @@
     "amended": "ออกใบเสนอราคาฉบับใหม่แล้ว",
     "document": {
       "download": "ดาวน์โหลด PDF",
-      "hash": "SHA-256 {hash}…"
+      "hash": "SHA-256 {hash}…",
+      "renderPdf": "สร้างเอกสาร PDF",
+      "renderPdfSuccess": "สร้างเอกสาร PDF สำเร็จแล้ว"
     },
     "errors": {
       "failed": "ดำเนินการไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -5619,7 +5634,8 @@
       "roleAssignmentApprovalRequested": "{actorDisplayName} ขอมอบบทบาท {roleName} ให้ {subjectDisplayName}",
       "membershipExpiring": "สิทธิ์เข้าใช้งานของ {subjectDisplayName} จะหมดอายุภายใน {daysRemaining} วัน",
       "projectBudgetOverrun": "โครงการ {documentNumber} มีต้นทุนและภาระผูกพันเกินงบประมาณ (รายการล่าสุดโดย {actorDisplayName})",
-      "serviceRequestSlaWarning": "คำขอบริการ {documentNumber} ใกล้ถึงหรือเกินกำหนดเวลาข้อตกลงระดับบริการ (SLA) (รับเรื่องโดย {actorDisplayName})"
+      "serviceRequestSlaWarning": "คำขอบริการ {documentNumber} ใกล้ถึงหรือเกินกำหนดเวลาข้อตกลงระดับบริการ (SLA) (รับเรื่องโดย {actorDisplayName})",
+      "warrantyExpiring": "การรับประกัน {documentNumber} จะหมดอายุภายใน {daysRemaining} วัน"
     },
     "list": {
       "title": "การแจ้งเตือน",
@@ -6060,8 +6076,16 @@
         },
         "noMatch": "ไม่พบสิทธิ์ที่ค้นหา",
         "selectedCount": "เลือกแล้ว {count} สิทธิ์",
-        "scopedTitle": "สิทธิ์ที่จำกัดขอบเขต (คงไว้ตามเดิม)",
-        "scopedHint": "สิทธิ์ระดับสาขาหรือของตนเองเพิ่มผ่านหน้านี้ไม่ได้ แต่จะถูกคงไว้เมื่อบันทึก",
+        "scopedTitle": "สิทธิ์ที่จำกัดขอบเขต (สาขา / ของตนเอง)",
+        "scopedHint": "กำหนดสิทธิ์ระดับสาขาหรือเฉพาะข้อมูลของตนเองสำหรับบทบาทนี้",
+        "addScoped": "เพิ่มสิทธิ์",
+        "removeScoped": "ลบสิทธิ์จำกัดขอบเขต",
+        "selectPermission": "เลือกสิทธิ์",
+        "selectScope": "เลือกขอบเขต",
+        "selectBranch": "เลือกสาขา",
+        "noBranches": "ไม่มีสาขาที่เปิดใช้งาน",
+        "noScopedGrants": "ยังไม่มีสิทธิ์ที่จำกัดขอบเขต",
+        "duplicateScoped": "มีสิทธิ์นี้ในขอบเขตที่เลือกแล้ว",
         "scope": {
           "branch": "สาขา",
           "own": "ของตนเอง"

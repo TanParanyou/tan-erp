@@ -104,7 +104,7 @@ public class CreateUploadSessionHandler
             {
                 return Result<UploadSessionProjection>.Failure(
                     new Error("FILE_UPLOAD_SESSION_INVALID",
-                        $"Media type '{slot.MediaType}' is not allowed. Accepted: image/webp, image/jpeg, image/png."));
+                        $"Media type '{slot.MediaType}' is not allowed. Accepted: image/webp, image/jpeg, image/png, application/pdf."));
             }
 
             if (slot.FileSizeBytes <= 0 || slot.FileSizeBytes > MaxFileSizeBytes)

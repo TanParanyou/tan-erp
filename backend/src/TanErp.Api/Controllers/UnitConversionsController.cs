@@ -58,4 +58,48 @@ public sealed class UnitConversionsController : ControllerBase
         Response.Headers.ETag = $"\"{response.RowVersion}\"";
         return CreatedAtAction(nameof(List), null, response);
     }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType<UnitConversionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUnitConversionRequest request, CancellationToken ct)
+    {
+        var auth = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return ProblemDetailsMapper.CreateProblemResult(auth.Error.Code, HttpContext);
+        var access = await _accessResolver.ResolveAsync(auth.Value!.FirebaseUid, auth.Value.MembershipId, "units.manage", ct);
+        if (access.IsFailure) return ProblemDetailsMapper.CreateProblemResult(access.Error.Code, HttpContext);
+        if (!decimal.TryParse(request.Factor, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var factor))
+            return ProblemDetailsMapper.CreateProblemResult("UNIT_CONVERSION_FACTOR_INVALID", HttpContext);
+        var result = await _store.UpdateUnitConversionAsync(
+            new UpdateUnitConversionData(id, auth.Value.IfMatchRowVersion, factor, request.EffectiveFrom, request.EffectiveTo, request.Reason),
+            access.Value!, ct);
+        if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        var response = UnitConversionResponseMapper.ToResponse(result.Value!);
+        Response.Headers.ETag = $"\"{response.RowVersion}\"";
+        return Ok(response);
+    }
+
+    [HttpPost("{id:guid}/deactivate")]
+    [ProducesResponseType<UnitConversionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Deactivate(Guid id, [FromBody] DeactivateUnitConversionRequest? request, CancellationToken ct)
+    {
+        var auth = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return ProblemDetailsMapper.CreateProblemResult(auth.Error.Code, HttpContext);
+        var access = await _accessResolver.ResolveAsync(auth.Value!.FirebaseUid, auth.Value.MembershipId, "units.manage", ct);
+        if (access.IsFailure) return ProblemDetailsMapper.CreateProblemResult(access.Error.Code, HttpContext);
+        var result = await _store.DeactivateUnitConversionAsync(
+            new DeactivateUnitConversionData(id, auth.Value.IfMatchRowVersion, request?.EffectiveTo, request?.Reason ?? string.Empty),
+            access.Value!, ct);
+        if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        var response = UnitConversionResponseMapper.ToResponse(result.Value!);
+        Response.Headers.ETag = $"\"{response.RowVersion}\"";
+        return Ok(response);
+    }
 }

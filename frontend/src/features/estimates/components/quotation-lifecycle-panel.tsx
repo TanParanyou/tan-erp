@@ -30,6 +30,7 @@ export function QuotationLifecyclePanel({ estimateId }: QuotationLifecyclePanelP
   const { selectedMembership } = useSelectedMembership();
   const canVoid = can(selectedMembership, PERMISSIONS.QUOTATIONS_VOID);
   const canAmend = can(selectedMembership, PERMISSIONS.QUOTATIONS_AMEND);
+  const canIssue = can(selectedMembership, "quotations.issue");
   const history = useQuotationHistory(estimateId);
   const mutation = useQuotationLifecycleMutation(estimateId);
 
@@ -97,7 +98,7 @@ export function QuotationLifecyclePanel({ estimateId }: QuotationLifecyclePanelP
                 {t("voidedBy", { name: item.voidedBy?.displayName ?? "-", date: item.voidedAtUtc ? formatDateTime(item.voidedAtUtc, locale) : "-" })} · {item.voidReason}
               </div>
             )}
-            {item.document && <QuotationDocumentActions item={item} />}
+            {(item.document || canIssue) && <QuotationDocumentActions item={item} estimateId={estimateId} canIssue={canIssue} />}
             {item.status === "issued" && (canAmend || canVoid) && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {canAmend && <Button type="button" size="sm" variant="outline" className="min-h-11" disabled={busy} onClick={() => open(item, "amend")}>{t("amend")}</Button>}

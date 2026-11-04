@@ -11,8 +11,9 @@ import { Input } from "@/components/ui/Input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can } from "@/lib/permissions/can";
-import type { ItemResponse } from "@/lib/api/api-client";
+import type { DeactivateUnitConversionRequest, ItemResponse, UpdateUnitConversionRequest } from "@/lib/api/api-client";
 import { useItemBarcodeMutations, useItemBarcodes, useItemMasterLookups, useItemUnitConversionMutations, useItemUnitConversions, useSharedUnitConversions } from "@/features/item-master/api/item-master-queries";
+import { UnitConversionEditModal, UnitConversionDeactivateModal, type ConversionItemTarget } from "@/features/item-master/components/unit-conversion-modals";
 
 interface ItemBarcodeMaintenanceProps {
   itemId: string;
@@ -42,9 +43,19 @@ export function ItemBarcodeMaintenance({ itemId, item }: ItemBarcodeMaintenanceP
   const [conversionEffectiveTo, setConversionEffectiveTo] = useState("");
   const [conversionReason, setConversionReason] = useState("");
   const [deactivateTarget, setDeactivateTarget] = useState<{ id: string; rowVersion: string; value: string } | null>(null);
+  const [editingConversion, setEditingConversion] = useState<ConversionItemTarget | null>(null);
+  const [deactivatingConversion, setDeactivatingConversion] = useState<ConversionItemTarget | null>(null);
   const canManage = can(selectedMembership, "items.manage-barcodes");
-  const busy = mutations.create.isPending || mutations.setPrimary.isPending || mutations.deactivate.isPending || conversionMutations.create.isPending;
+  const busy = mutations.create.isPending || mutations.setPrimary.isPending || mutations.deactivate.isPending || conversionMutations.create.isPending || (conversionMutations.update?.isPending ?? false) || (conversionMutations.deactivate?.isPending ?? false);
   const baseUnit = item.baseUnit;
+
+  const handleUpdateConversion = async (id: string, payload: UpdateUnitConversionRequest, rowVersion: string) => {
+    await conversionMutations.update.mutateAsync({ id, payload, rowVersion });
+  };
+
+  const handleDeactivateConversion = async (id: string, payload: DeactivateUnitConversionRequest, rowVersion: string) => {
+    await conversionMutations.deactivate.mutateAsync({ id, payload, rowVersion });
+  };
 
   const create = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -136,6 +147,7 @@ export function ItemBarcodeMaintenance({ itemId, item }: ItemBarcodeMaintenanceP
                   <TableHead className="p-2 text-xs">{t("effectiveFrom")}</TableHead>
                   <TableHead className="p-2 text-xs">{t("effectiveTo")}</TableHead>
                   <TableHead className="p-2 text-xs">{t("reason")}</TableHead>
+                  {canManage && <TableHead className="p-2 text-xs text-right w-28">{t("rowActions")}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -146,6 +158,30 @@ export function ItemBarcodeMaintenance({ itemId, item }: ItemBarcodeMaintenanceP
                     <TableCell className="p-2 text-xs">{conversion.effectiveFrom ?? "-"}</TableCell>
                     <TableCell className="p-2 text-xs">{conversion.effectiveTo ?? "-"}</TableCell>
                     <TableCell className="p-2 text-xs">{conversion.reason ?? "-"}</TableCell>
+                    {canManage && (
+                      <TableCell className="p-2 text-xs text-right">
+                        {conversion.id && conversion.rowVersion ? (
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingConversion(conversion as ConversionItemTarget)}
+                            >
+                              {common("actions.edit")}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="danger"
+                              onClick={() => setDeactivatingConversion(conversion as ConversionItemTarget)}
+                            >
+                              {t("deactivateConversion")}
+                            </Button>
+                          </div>
+                        ) : null}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -278,6 +314,20 @@ export function ItemBarcodeMaintenance({ itemId, item }: ItemBarcodeMaintenanceP
         </Table>
       )}
       <ConfirmationModal isOpen={Boolean(deactivateTarget)} onClose={() => { if (!mutations.deactivate.isPending) setDeactivateTarget(null); }} onConfirm={() => { void confirmDeactivate(); }} title={t("deactivateBarcodeTitle")} message={t("deactivateBarcodeMessage", { value: deactivateTarget?.value ?? "" })} confirmText={t("deactivate")} cancelText={common("actions.cancel")} isLoading={mutations.deactivate.isPending} />
+      <UnitConversionEditModal
+        isOpen={Boolean(editingConversion)}
+        onClose={() => setEditingConversion(null)}
+        conversion={editingConversion}
+        onSave={handleUpdateConversion}
+        isLoading={conversionMutations.update?.isPending ?? false}
+      />
+      <UnitConversionDeactivateModal
+        isOpen={Boolean(deactivatingConversion)}
+        onClose={() => setDeactivatingConversion(null)}
+        conversion={deactivatingConversion}
+        onConfirm={handleDeactivateConversion}
+        isLoading={conversionMutations.deactivate?.isPending ?? false}
+      />
     </section>
   );
 }

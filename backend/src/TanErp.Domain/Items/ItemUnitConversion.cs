@@ -49,4 +49,38 @@ public sealed class ItemUnitConversion : Entity
     public bool IsEffectiveOn(DateOnly date) => Status == ItemStatus.Active
         && EffectiveFrom <= date
         && (!EffectiveTo.HasValue || EffectiveTo.Value >= date);
+
+    public void Update(decimal factor, DateOnly? effectiveFrom, DateOnly? effectiveTo, string reason, DateTimeOffset now)
+    {
+        if (Status != ItemStatus.Active)
+            throw new ItemValidationException("ITEM_UNIT_CONVERSION_INACTIVE", "Inactive item unit conversion cannot be updated.");
+        if (factor <= 0 || factor >= 1_000_000_000_000m || decimal.Round(factor, 6) != factor)
+            throw new ItemValidationException("ITEM_UNIT_CONVERSION_FACTOR_INVALID", "Conversion factor must be greater than zero.");
+        var resolvedFrom = effectiveFrom ?? EffectiveFrom;
+        if (effectiveTo.HasValue && effectiveTo.Value < resolvedFrom)
+            throw new ItemValidationException("ITEM_UNIT_CONVERSION_PERIOD_INVALID", "Conversion end date cannot be before its start date.");
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ItemValidationException("ITEM_UNIT_CONVERSION_REASON_REQUIRED", "Conversion reason is required.");
+
+        Factor = factor;
+        EffectiveFrom = resolvedFrom;
+        EffectiveTo = effectiveTo;
+        Reason = reason.Trim();
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void Deactivate(DateOnly effectiveTo, string reason, DateTimeOffset now)
+    {
+        if (Status != ItemStatus.Active)
+            throw new ItemValidationException("ITEM_UNIT_CONVERSION_INACTIVE", "Item unit conversion is already inactive.");
+        if (effectiveTo < EffectiveFrom)
+            throw new ItemValidationException("ITEM_UNIT_CONVERSION_PERIOD_INVALID", "Conversion end date cannot be before its start date.");
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ItemValidationException("ITEM_UNIT_CONVERSION_REASON_REQUIRED", "Conversion reason is required.");
+
+        EffectiveTo = effectiveTo;
+        Reason = reason.Trim();
+        Status = ItemStatus.Inactive;
+        RowVersion = Guid.NewGuid();
+    }
 }

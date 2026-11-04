@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import { IconDownload, IconFileText } from "@/components/common/Icons";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import type { ItemImportPreviewResponse, ItemImportRowResponse } from "@/lib/api/api-client";
-import { useItemImport } from "../api/item-master-queries";
+import { useCancelItemImportJob, useItemImport } from "../api/item-master-queries";
 import {
   buildCostImportTemplate,
   buildItemImportTemplate,
@@ -42,6 +42,8 @@ interface ItemImportModalProps {
   canImportCosts: boolean;
   /** Offered only with items.update (upsert changes existing Items). */
   canUpsert?: boolean;
+  /** Default import kind ("items" | "costs"). */
+  defaultKind?: ItemImportKind;
 }
 
 type RowFilter = "all" | "invalid" | "valid";
@@ -104,23 +106,34 @@ function toStrictPreview(response: ItemImportPreviewResponse): StrictPreview {
  * Item CSV import: pick a file, preview per-row validation (nothing is written), then commit all rows at once.
  * Commit is only offered when every row is valid, mirroring the backend's all-or-nothing rule.
  */
-export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCosts, canUpsert = false }: ItemImportModalProps) {
+export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCosts, canUpsert = false, defaultKind }: ItemImportModalProps) {
   const t = useTranslations("itemMaster.import");
   const tCommon = useTranslations("common");
   const { toast } = useToast();
   const { preview, commit } = useItemImport();
+  const cancelJob = useCancelItemImportJob();
   const inputRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [result, setResult] = useState<StrictPreview | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [kind, setKind] = useState<ItemImportKind>(canImportItems ? "items" : "costs");
+  const resolvedDefaultKind: ItemImportKind = defaultKind ?? (canImportItems ? "items" : "costs");
+  const [kind, setKind] = useState<ItemImportKind>(resolvedDefaultKind);
   const [mode, setMode] = useState<ItemImportMode>("create");
   const [rowFilter, setRowFilter] = useState<RowFilter>("all");
   // A file too big for the immediate preview is sent as a background job instead (no preview).
   const [isLargeFile, setIsLargeFile] = useState(false);
   // One idempotency key per previewed content, so a retried commit of the same file replays instead of duplicating.
   const commitKeyRef = useRef<{ hash: string; key: string } | null>(null);
+
+  const prevDefaultKindRef = useRef(defaultKind);
+  useEffect(() => {
+    if (defaultKind !== undefined && defaultKind !== prevDefaultKindRef.current) {
+      prevDefaultKindRef.current = defaultKind;
+      setKind(defaultKind);
+    }
+  }, [defaultKind]);
+
   const kindOptions = [
     ...(canImportItems ? [{ value: "items", label: t("kindItems") }] : []),
     ...(canImportCosts ? [{ value: "costs", label: t("kindCosts") }] : []),
@@ -146,6 +159,8 @@ export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCost
   function close(): void {
     if (isBusy) return;
     reset();
+    setKind(resolvedDefaultKind);
+    setMode("create");
     onClose();
   }
 
@@ -339,7 +354,17 @@ export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCost
         {errorMessage && <Alert variant="danger" onClose={() => setErrorMessage(null)}>{errorMessage}</Alert>}
 
         {isLargeFile && content !== null && (
-          <ItemImportJobPanel key={`${fileName}:${kind}:${mode}`} content={content} kind={kind} mode={mode} describeField={describeCell} />
+          <ItemImportJobPanel
+            key={`${fileName}:${kind}:${mode}`}
+            content={content}
+            kind={kind}
+            mode={mode}
+            describeField={describeCell}
+            onCancelJob={async (jobId) => {
+              await cancelJob.mutateAsync(jobId);
+              toast.success(t("job.cancelSuccess"));
+            }}
+          />
         )}
 
         {result && (

@@ -285,6 +285,16 @@ if (!builder.Environment.IsEnvironment("Test") && membershipExpiryOptions.Enable
 {
     builder.Services.AddHostedService<TanErp.Api.Background.MembershipExpiryReminderWorker>();
 }
+var systemMaintenanceOptions = builder.Configuration
+    .GetSection(TanErp.Application.Notifications.SystemMaintenanceAndReminderOptions.SectionName)
+    .Get<TanErp.Application.Notifications.SystemMaintenanceAndReminderOptions>()
+    ?? new TanErp.Application.Notifications.SystemMaintenanceAndReminderOptions();
+builder.Services.AddSingleton(systemMaintenanceOptions);
+builder.Services.AddScoped<TanErp.Application.Notifications.ISystemMaintenanceAndReminderService, TanErp.Infrastructure.Persistence.Notifications.SystemMaintenanceAndReminderService>();
+if (!builder.Environment.IsEnvironment("Test") && systemMaintenanceOptions.Enabled)
+{
+    builder.Services.AddHostedService<TanErp.Api.Background.SystemMaintenanceAndReminderWorker>();
+}
 builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infrastructure.Persistence.Service.ServiceStore>();
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
 builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();

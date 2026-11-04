@@ -8,7 +8,16 @@ public sealed record ComplexityResponse(string Code, string Name, decimal Factor
 
 public sealed record AddOnResponse(string Code, string Name, decimal Amount, bool PerLine);
 
-public sealed record PricingTemplateResponse(Guid Id, string Code, int Version, string WorkType, string Name, string Status, string MeasurementRule, string UnitCode, decimal ReferenceRate, decimal MinimumCharge, decimal BaseRangeRate, decimal MaxRangeRate, decimal RoundingStep, int ValidityDays, decimal TaxRate, string TaxDisplay, decimal DirectShareLimit, DateOnly? EffectiveFrom, DateOnly? EffectiveTo, IReadOnlyList<GradeResponse> Grades, IReadOnlyList<ComplexityResponse> Complexities, IReadOnlyList<AddOnResponse> AddOns, decimal LowConfidenceModifier, decimal MediumConfidenceModifier, decimal CustomMaterialModifier, IReadOnlyList<string> Assumptions, IReadOnlyList<string> Exclusions, QePersonResponse CreatedBy, QePersonResponse? DecidedBy, string? DecisionNote, DateTimeOffset CreatedAtUtc, Guid RowVersion);
+public sealed record CostRecipeLineResponse(
+    string ComponentType,
+    string DescriptionTh,
+    string? DescriptionEn,
+    string UnitCode,
+    decimal QuantityPerUnit,
+    decimal UnitCost,
+    Guid? ItemId = null);
+
+public sealed record PricingTemplateResponse(Guid Id, string Code, int Version, string WorkType, string Name, string Status, string MeasurementRule, string UnitCode, decimal ReferenceRate, decimal MinimumCharge, decimal BaseRangeRate, decimal MaxRangeRate, decimal RoundingStep, int ValidityDays, decimal TaxRate, string TaxDisplay, decimal DirectShareLimit, DateOnly? EffectiveFrom, DateOnly? EffectiveTo, IReadOnlyList<GradeResponse> Grades, IReadOnlyList<ComplexityResponse> Complexities, IReadOnlyList<AddOnResponse> AddOns, decimal LowConfidenceModifier, decimal MediumConfidenceModifier, decimal CustomMaterialModifier, IReadOnlyList<string> Assumptions, IReadOnlyList<string> Exclusions, QePersonResponse CreatedBy, QePersonResponse? DecidedBy, string? DecisionNote, DateTimeOffset CreatedAtUtc, Guid RowVersion, IReadOnlyList<CostRecipeLineResponse>? CostRecipe = null);
 
 public sealed record PricingTemplateListItemResponse(Guid Id, string Code, int Version, string WorkType, string Name, string Status, DateTimeOffset UpdatedAtUtc);
 
@@ -48,6 +57,15 @@ public sealed record ComplexityRequest(string? Code, string? Name, decimal Facto
 
 public sealed record AddOnRequest(string? Code, string? Name, decimal Amount, bool PerLine);
 
+public sealed record CostRecipeLineRequest(
+    string? ComponentType,
+    string? DescriptionTh,
+    string? DescriptionEn,
+    string? UnitCode,
+    decimal QuantityPerUnit,
+    decimal UnitCost,
+    Guid? ItemId = null);
+
 public sealed record PricingTemplateRequest(
     string? Code,
     string? WorkType,
@@ -72,7 +90,8 @@ public sealed record PricingTemplateRequest(
     decimal MediumConfidenceModifier,
     decimal CustomMaterialModifier,
     List<string>? Assumptions,
-    List<string>? Exclusions);
+    List<string>? Exclusions,
+    List<CostRecipeLineRequest>? CostRecipe = null);
 
 public sealed record TemplateDecisionRequest(string? Decision, string? Note);
 

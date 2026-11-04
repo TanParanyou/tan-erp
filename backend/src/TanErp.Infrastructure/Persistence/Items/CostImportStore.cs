@@ -7,6 +7,7 @@ using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
 using TanErp.Application.Items;
 using TanErp.Application.Items.Import;
+using TanErp.Application.Notifications;
 using TanErp.Domain.Common;
 using TanErp.Domain.Items;
 
@@ -29,11 +30,13 @@ public class CostImportStore : ICostImportStore
 
     private readonly AppDbContext _db;
     private readonly IClock _clock;
+    private readonly INotificationPublisher? _notifications;
 
-    public CostImportStore(AppDbContext db, IClock clock)
+    public CostImportStore(AppDbContext db, IClock clock, INotificationPublisher? notifications = null)
     {
         _db = db;
         _clock = clock;
+        _notifications = notifications;
     }
 
     public async Task<IReadOnlyList<ItemImportRowResult>> ValidateAsync(
@@ -180,6 +183,9 @@ public class CostImportStore : ICostImportStore
             .ToDictionaryAsync(x => x.ItemId, x => x.Max, cancellationToken);
 
         int created = 0, unchanged = 0;
+        CostRecord? firstCreatedRecord = null;
+        string? firstCreatedItemCode = null;
+        Guid? firstCreatedBranchId = null;
         foreach (var entry in evaluated)
         {
             if (entry.IsKnown)
@@ -211,7 +217,27 @@ public class CostImportStore : ICostImportStore
                 Guid.NewGuid(), orgId, access.ActorUserId, "items.create-cost-draft", "cost_record", record.Id.ToString(), now, traceId,
                 JsonSerializer.Serialize(new { record.ItemId, record.Amount, record.Currency, record.Scope, record.Version, importBatchId }),
                 branchId: access.BranchId, actorMembershipId: access.MembershipId, requestId: null, rowVersionAfter: record.RowVersion));
+            if (firstCreatedRecord is null)
+            {
+                firstCreatedRecord = record;
+                firstCreatedItemCode = row.ItemCode.Trim().ToUpperInvariant();
+                firstCreatedBranchId = entry.BranchId ?? access.BranchId;
+            }
             created++;
+        }
+
+        if (created > 0 && _notifications is not null && firstCreatedRecord is not null && firstCreatedItemCode is not null)
+        {
+            await _notifications.PublishAsync(
+                NotificationEvents.CostRecordSubmitted(
+                    orgId,
+                    firstCreatedBranchId,
+                    importBatchId,
+                    access.ActorUserId,
+                    firstCreatedRecord.Id,
+                    firstCreatedItemCode,
+                    [access.ActorUserId]),
+                cancellationToken);
         }
 
         return Result<StageCounts>.Success(new StageCounts(created, unchanged));

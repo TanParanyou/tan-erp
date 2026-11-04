@@ -176,6 +176,32 @@ public class ItemImportsController : ControllerBase
         return Ok(ToJobResponse(result.Value!));
     }
 
+    [HttpPost("jobs/{jobId:guid}/cancel")]
+    [ProducesResponseType<ItemImportJobResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CancelJob([FromRoute] Guid jobId, CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var result = await _getJobHandler.Cancel(
+            new CancelItemImportJobCommand(auth.FirebaseUid, auth.MembershipId, jobId, HttpContext.TraceIdentifier),
+            cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        return Ok(ToJobResponse(result.Value!));
+    }
+
     private static ItemImportJobResponse ToJobResponse(ItemImportJobSnapshot job) => new(
         job.Id, job.Kind, job.Mode, job.Status, job.ContentSha256, job.TotalRows, job.ProcessedRows, job.BatchSize,
         job.TotalBatches, job.CompletedBatches, job.RejectedBatches, job.CreatedCount, job.UpdatedCount, job.UnchangedCount,

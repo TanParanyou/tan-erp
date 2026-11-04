@@ -22,7 +22,8 @@ export type NotificationMessageKey =
   | "roleAssignmentApprovalRequested"
   | "membershipExpiring"
   | "projectBudgetOverrun"
-  | "serviceRequestSlaWarning";
+  | "serviceRequestSlaWarning"
+  | "warrantyExpiring";
 
 export interface NotificationTypeDescriptor {
   messageKey: NotificationMessageKey;
@@ -74,6 +75,10 @@ export const NOTIFICATION_TYPES = {
   "service-request.sla-warning": {
     messageKey: "serviceRequestSlaWarning",
     fields: ["documentNumber", "actorDisplayName"],
+  },
+  "warranty.expiring": {
+    messageKey: "warrantyExpiring",
+    fields: ["documentNumber", "daysRemaining"],
   },
 } as const satisfies Record<string, NotificationTypeDescriptor>;
 

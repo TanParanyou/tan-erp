@@ -130,4 +130,20 @@ describe("NotificationListPage", () => {
     renderPage();
     expect(within(document.body).getByText(thMessages.notifications.list.empty)).toBeDefined();
   });
+
+  it("renders warranty.expiring notification and routes to /service/warranties when deepLink is missing", () => {
+    state.items = [
+      row({
+        id: "n-warranty",
+        type: "warranty.expiring",
+        payload: { documentNumber: "WAR-2026-001", daysRemaining: "15" },
+        deepLink: null,
+      }),
+    ];
+    state.totalCount = 1;
+    renderPage();
+    expect(screen.getByText("การรับประกัน WAR-2026-001 จะหมดอายุภายใน 15 วัน")).toBeInTheDocument();
+    const openLink = screen.getByRole("link", { name: thMessages.notifications.list.open });
+    expect(openLink).toHaveAttribute("href", "/th/service/warranties");
+  });
 });

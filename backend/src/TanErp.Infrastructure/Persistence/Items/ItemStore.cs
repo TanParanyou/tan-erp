@@ -1477,6 +1477,176 @@ public class ItemStore : IItemStore
         return Result<UnitConversionProjection>.Success((await LoadUnitConversionAsync(organizationId, conversion.Id, ct))!);
     }
 
+    public async Task<Result<UnitConversionProjection>> UpdateUnitConversionAsync(UpdateUnitConversionData data, RequestAccessContext access, CancellationToken ct)
+    {
+        var organizationId = access.OrganizationId;
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        var lockKey = $"unit-conversion:{organizationId:N}";
+        await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", ct);
+
+        var conversion = await _db.UnitConversions.FirstOrDefaultAsync(x => x.Id == data.Id && x.OrganizationId == organizationId, ct);
+        if (conversion is null) return Result<UnitConversionProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Unit conversion not found."));
+        if (conversion.RowVersion != data.ExpectedRowVersion)
+            return Result<UnitConversionProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Unit conversion has been modified by another user."));
+
+        var now = DateTimeOffset.UtcNow;
+        try
+        {
+            conversion.Update(data.Factor, data.EffectiveFrom, data.EffectiveTo, data.Reason, now);
+        }
+        catch (ItemDomainException error)
+        {
+            return Result<UnitConversionProjection>.Failure(new Error(error.Code, error.Message));
+        }
+
+        var overlaps = await _db.UnitConversions.AnyAsync(x => x.OrganizationId == organizationId
+            && x.Id != conversion.Id && x.FromUnitId == conversion.FromUnitId && x.ToUnitId == conversion.ToUnitId && x.Status == ItemStatus.Active
+            && (!conversion.EffectiveTo.HasValue || x.EffectiveFrom <= conversion.EffectiveTo.Value)
+            && (!x.EffectiveTo.HasValue || x.EffectiveTo.Value >= conversion.EffectiveFrom), ct);
+        if (overlaps)
+        {
+            await tx.RollbackAsync(ct);
+            return Result<UnitConversionProjection>.Failure(new Error("UNIT_CONVERSION_PERIOD_OVERLAP", "An active conversion already covers part of this period."));
+        }
+
+        _db.AuditEvents.Add(new AuditEvent(Guid.NewGuid(), organizationId, access.ActorUserId, "unit-conversion.updated", "unit-conversion", conversion.Id.ToString(), now,
+            string.Empty, JsonSerializer.Serialize(new { conversion.FromUnitId, conversion.ToUnitId, conversion.Factor, conversion.EffectiveFrom, conversion.EffectiveTo, conversion.Reason }),
+            branchId: access.BranchId, actorMembershipId: access.MembershipId, rowVersionAfter: conversion.RowVersion));
+        try { await _db.SaveChangesAsync(ct); }
+        catch (DbUpdateException error) when (error.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+        {
+            await tx.RollbackAsync(ct);
+            return Result<UnitConversionProjection>.Failure(new Error("UNIT_CONVERSION_PERIOD_OVERLAP", "An active conversion already covers part of this period."));
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await tx.RollbackAsync(ct);
+            return Result<UnitConversionProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Unit conversion has been modified by another user."));
+        }
+        await tx.CommitAsync(ct);
+        return Result<UnitConversionProjection>.Success((await LoadUnitConversionAsync(organizationId, conversion.Id, ct))!);
+    }
+
+    public async Task<Result<UnitConversionProjection>> DeactivateUnitConversionAsync(DeactivateUnitConversionData data, RequestAccessContext access, CancellationToken ct)
+    {
+        var organizationId = access.OrganizationId;
+        var conversion = await _db.UnitConversions.FirstOrDefaultAsync(x => x.Id == data.Id && x.OrganizationId == organizationId, ct);
+        if (conversion is null) return Result<UnitConversionProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Unit conversion not found."));
+        if (conversion.RowVersion != data.ExpectedRowVersion)
+            return Result<UnitConversionProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Unit conversion has been modified by another user."));
+
+        var now = DateTimeOffset.UtcNow;
+        var effectiveTo = data.EffectiveTo ?? conversion.EffectiveTo ?? DateOnly.FromDateTime(now.UtcDateTime);
+        if (!data.EffectiveTo.HasValue && effectiveTo < conversion.EffectiveFrom)
+        {
+            effectiveTo = conversion.EffectiveFrom;
+        }
+        var reason = string.IsNullOrWhiteSpace(data.Reason) ? conversion.Reason : data.Reason;
+        try
+        {
+            conversion.Deactivate(effectiveTo, reason, now);
+        }
+        catch (ItemDomainException error)
+        {
+            return Result<UnitConversionProjection>.Failure(new Error(error.Code, error.Message));
+        }
+
+        _db.AuditEvents.Add(new AuditEvent(Guid.NewGuid(), organizationId, access.ActorUserId, "unit-conversion.deactivated", "unit-conversion", conversion.Id.ToString(), now,
+            string.Empty, JsonSerializer.Serialize(new { conversion.FromUnitId, conversion.ToUnitId, conversion.EffectiveTo, conversion.Reason }),
+            branchId: access.BranchId, actorMembershipId: access.MembershipId, rowVersionAfter: conversion.RowVersion));
+        try { await _db.SaveChangesAsync(ct); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<UnitConversionProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Unit conversion has been modified by another user."));
+        }
+        return Result<UnitConversionProjection>.Success((await LoadUnitConversionAsync(organizationId, conversion.Id, ct))!);
+    }
+
+    public async Task<Result<ItemUnitConversionProjection>> UpdateItemUnitConversionAsync(UpdateItemUnitConversionData data, RequestAccessContext access, CancellationToken ct)
+    {
+        var organizationId = access.OrganizationId;
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        var itemLockKey = $"item-unit-conversion:{organizationId:N}:{data.ItemId:N}";
+        await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({itemLockKey}, 0))", ct);
+
+        var conversion = await _db.ItemUnitConversions.FirstOrDefaultAsync(x => x.Id == data.Id && x.ItemId == data.ItemId && x.OrganizationId == organizationId, ct);
+        if (conversion is null) return Result<ItemUnitConversionProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Item unit conversion not found."));
+        if (conversion.RowVersion != data.ExpectedRowVersion)
+            return Result<ItemUnitConversionProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Item unit conversion has been modified by another user."));
+
+        var now = DateTimeOffset.UtcNow;
+        try
+        {
+            conversion.Update(data.Factor, data.EffectiveFrom, data.EffectiveTo, data.Reason, now);
+        }
+        catch (ItemDomainException error)
+        {
+            return Result<ItemUnitConversionProjection>.Failure(new Error(error.Code, error.Message));
+        }
+
+        var overlap = await _db.ItemUnitConversions.AnyAsync(x => x.OrganizationId == organizationId && x.ItemId == data.ItemId
+            && x.Id != conversion.Id && x.FromUnitId == conversion.FromUnitId && x.Status == ItemStatus.Active
+            && (!conversion.EffectiveTo.HasValue || x.EffectiveFrom <= conversion.EffectiveTo.Value)
+            && (!x.EffectiveTo.HasValue || x.EffectiveTo.Value >= conversion.EffectiveFrom), ct);
+        if (overlap)
+        {
+            await tx.RollbackAsync(ct);
+            return Result<ItemUnitConversionProjection>.Failure(new Error("ITEM_UNIT_CONVERSION_PERIOD_OVERLAP", "An active conversion already covers part of this period."));
+        }
+
+        _db.AuditEvents.Add(new AuditEvent(Guid.NewGuid(), organizationId, access.ActorUserId, "item-unit-conversion.updated", "item-unit-conversion", conversion.Id.ToString(), now,
+            string.Empty, JsonSerializer.Serialize(new { conversion.ItemId, conversion.FromUnitId, conversion.ToUnitId, conversion.Factor, conversion.EffectiveFrom, conversion.EffectiveTo, conversion.Reason }),
+            branchId: access.BranchId, actorMembershipId: access.MembershipId, rowVersionAfter: conversion.RowVersion));
+        try { await _db.SaveChangesAsync(ct); }
+        catch (DbUpdateException error) when (error.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+        {
+            await tx.RollbackAsync(ct);
+            return Result<ItemUnitConversionProjection>.Failure(new Error("ITEM_UNIT_CONVERSION_PERIOD_OVERLAP", "An active conversion already covers part of this period."));
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await tx.RollbackAsync(ct);
+            return Result<ItemUnitConversionProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Item unit conversion has been modified by another user."));
+        }
+        await tx.CommitAsync(ct);
+        return Result<ItemUnitConversionProjection>.Success((await LoadItemUnitConversionAsync(organizationId, data.ItemId, conversion.Id, ct))!);
+    }
+
+    public async Task<Result<ItemUnitConversionProjection>> DeactivateItemUnitConversionAsync(DeactivateItemUnitConversionData data, RequestAccessContext access, CancellationToken ct)
+    {
+        var organizationId = access.OrganizationId;
+        var conversion = await _db.ItemUnitConversions.FirstOrDefaultAsync(x => x.Id == data.Id && x.ItemId == data.ItemId && x.OrganizationId == organizationId, ct);
+        if (conversion is null) return Result<ItemUnitConversionProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Item unit conversion not found."));
+        if (conversion.RowVersion != data.ExpectedRowVersion)
+            return Result<ItemUnitConversionProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Item unit conversion has been modified by another user."));
+
+        var now = DateTimeOffset.UtcNow;
+        var effectiveTo = data.EffectiveTo ?? conversion.EffectiveTo ?? DateOnly.FromDateTime(now.UtcDateTime);
+        if (!data.EffectiveTo.HasValue && effectiveTo < conversion.EffectiveFrom)
+        {
+            effectiveTo = conversion.EffectiveFrom;
+        }
+        var reason = string.IsNullOrWhiteSpace(data.Reason) ? conversion.Reason : data.Reason;
+        try
+        {
+            conversion.Deactivate(effectiveTo, reason, now);
+        }
+        catch (ItemDomainException error)
+        {
+            return Result<ItemUnitConversionProjection>.Failure(new Error(error.Code, error.Message));
+        }
+
+        _db.AuditEvents.Add(new AuditEvent(Guid.NewGuid(), organizationId, access.ActorUserId, "item-unit-conversion.deactivated", "item-unit-conversion", conversion.Id.ToString(), now,
+            string.Empty, JsonSerializer.Serialize(new { conversion.ItemId, conversion.FromUnitId, conversion.ToUnitId, conversion.EffectiveTo, conversion.Reason }),
+            branchId: access.BranchId, actorMembershipId: access.MembershipId, rowVersionAfter: conversion.RowVersion));
+        try { await _db.SaveChangesAsync(ct); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<ItemUnitConversionProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Item unit conversion has been modified by another user."));
+        }
+        return Result<ItemUnitConversionProjection>.Success((await LoadItemUnitConversionAsync(organizationId, data.ItemId, conversion.Id, ct))!);
+    }
+
     private static bool HasPath(IReadOnlyDictionary<Guid, Guid[]> edges, Guid start, Guid target)
     {
         var pending = new Stack<Guid>();

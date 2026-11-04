@@ -38,6 +38,10 @@ function mockHook() {
     preview: { mutateAsync: previewMutateAsync, isPending: false },
     commit: { mutateAsync: commitMutateAsync, isPending: false },
   } as unknown as ReturnType<typeof itemQueries.useItemImport>);
+  vi.spyOn(itemQueries, "useCancelItemImportJob").mockReturnValue({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  } as unknown as ReturnType<typeof itemQueries.useCancelItemImportJob>);
 }
 
 function renderModal(

@@ -36,7 +36,7 @@ export interface AttachmentListProps {
 
 const DEFAULT_PURPOSES: readonly AttachmentPurpose[] = ["general"];
 
-function isAcceptedImage(file: File): boolean {
+function isAcceptedFile(file: File): boolean {
   return ATTACHMENT_ACCEPTED_MEDIA_TYPES.some((type) => type === file.type) && file.size > 0 && file.size <= ATTACHMENT_MAX_FILE_BYTES;
 }
 
@@ -71,9 +71,9 @@ export function AttachmentList({ ownerType, ownerId, canManage, purposes = DEFAU
   function handleSelect(event: ChangeEvent<HTMLInputElement>): void {
     const selected = Array.from(event.target.files ?? []);
     event.target.value = "";
-    const rejected = selected.find((file) => !isAcceptedImage(file));
+    const rejected = selected.find((file) => !isAcceptedFile(file));
     setError(rejected ? t("fileRejected", { name: rejected.name }) : null);
-    const accepted = selected.filter(isAcceptedImage);
+    const accepted = selected.filter(isAcceptedFile);
     if (accepted.length > 0) setPending((current) => [...current, ...accepted]);
   }
 
@@ -139,26 +139,38 @@ export function AttachmentList({ ownerType, ownerId, canManage, purposes = DEFAU
         <p className="py-4 text-sm text-erp-text-muted">{t("empty")}</p>
       ) : (
         <ul className="divide-y divide-erp-border border border-erp-border">
-          {items.map((item) => (
-            <li key={item.id} className="flex items-center gap-3 p-3">
-              <AuthenticatedFileImage fileId={item.fileId ?? ""} alt={item.filename ?? ""} className="h-16 w-16 border border-erp-border object-cover" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-erp-navy">{item.filename}</p>
-                <p className="text-xs text-erp-text-muted">
-                  {item.purpose && isAttachmentPurpose(item.purpose) ? t(`purposes.${item.purpose}`) : "-"}
-                </p>
-                <p className="flex flex-wrap gap-x-2 text-xs text-erp-text-muted">
-                  <span>{t("createdBy", { name: item.createdBy?.displayName ?? "-" })}</span>
-                  <span>{item.createdAtUtc ? formatDateTime(item.createdAtUtc, locale) : "-"}</span>
-                </p>
-              </div>
-              {canManage && (
-                <Button type="button" size="sm" variant="outline" className="min-h-11 min-w-11" aria-label={t("unlink.action")} onClick={() => setToRemove(item)}>
-                  <IconTrash size={16} />
-                </Button>
-              )}
-            </li>
-          ))}
+          {items.map((item) => {
+            const isPdf = item.mediaType === "application/pdf" || item.filename?.toLowerCase().endsWith(".pdf");
+            return (
+              <li key={item.id} className="flex items-center gap-3 p-3">
+                {isPdf ? (
+                  <div
+                    className="h-16 w-16 border border-erp-border bg-erp-surface-subtle flex items-center justify-center font-mono text-xs font-bold text-erp-navy select-none"
+                    aria-label="PDF"
+                  >
+                    PDF
+                  </div>
+                ) : (
+                  <AuthenticatedFileImage fileId={item.fileId ?? ""} alt={item.filename ?? ""} className="h-16 w-16 border border-erp-border object-cover" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-erp-navy">{item.filename}</p>
+                  <p className="text-xs text-erp-text-muted">
+                    {item.purpose && isAttachmentPurpose(item.purpose) ? t(`purposes.${item.purpose}`) : "-"}
+                  </p>
+                  <p className="flex flex-wrap gap-x-2 text-xs text-erp-text-muted">
+                    <span>{t("createdBy", { name: item.createdBy?.displayName ?? "-" })}</span>
+                    <span>{item.createdAtUtc ? formatDateTime(item.createdAtUtc, locale) : "-"}</span>
+                  </p>
+                </div>
+                {canManage && (
+                  <Button type="button" size="sm" variant="outline" className="min-h-11 min-w-11" aria-label={t("unlink.action")} onClick={() => setToRemove(item)}>
+                    <IconTrash size={16} />
+                  </Button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 

@@ -38,7 +38,8 @@ import { uploadVerifiedItemImage } from "@/features/item-master/api/upload-item-
 import { ITEM_IMAGE_MAX_BYTES } from "@/features/item-master/item-image-constants";
 import { useItemMasterReferenceData, useItemMasterReferenceMutations, useSharedUnitConversionMutations, useSharedUnitConversions } from "@/features/item-master/api/item-master-queries";
 import { CategoryAttributeTemplateDrawer } from "@/features/item-master/components/category-attribute-template-drawer";
-import type { ItemBrandResponse, ItemCategoryResponse, UnitOfMeasureResponse } from "@/lib/api/api-client";
+import { UnitConversionEditModal, UnitConversionDeactivateModal, type ConversionItemTarget } from "@/features/item-master/components/unit-conversion-modals";
+import type { DeactivateUnitConversionRequest, ItemBrandResponse, ItemCategoryResponse, UnitOfMeasureResponse, UpdateUnitConversionRequest } from "@/lib/api/api-client";
 
 type Kind = "categories" | "brands" | "units" | "taxCategories";
 
@@ -172,11 +173,14 @@ export function TaxonomyMaintenance() {
   const sharedConversions = useSharedUnitConversions();
   const sharedConversionMutations = useSharedUnitConversionMutations();
   const canManage = can(selectedMembership, "items.manage-taxonomy");
+  const canManageUnits = can(selectedMembership, "units.manage") || canManage;
   const list = useListState<ReferenceFilters>({
     schema: { single: ["status"], defaultSort: "code", defaultOrder: "asc", allowedSorts: ["code", "name", "status"] },
   });
   const [kind, setKind] = useState<Kind>("categories");
   const [editing, setEditing] = useState<ReferenceRow | null>(null);
+  const [editingConversion, setEditingConversion] = useState<ConversionItemTarget | null>(null);
+  const [deactivatingConversion, setDeactivatingConversion] = useState<ConversionItemTarget | null>(null);
   const [templateCategory, setTemplateCategory] = useState<ReferenceRow | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [open, setOpen] = useState(false);
@@ -468,6 +472,16 @@ export function TaxonomyMaintenance() {
     }
   };
 
+  const handleUpdateSharedConversion = async (id: string, payload: UpdateUnitConversionRequest, rowVersion: string) => {
+    await sharedConversionMutations.update.mutateAsync({ id, payload, rowVersion });
+    toast.success(t("conversionUpdated"));
+  };
+
+  const handleDeactivateSharedConversion = async (id: string, payload: DeactivateUnitConversionRequest, rowVersion: string) => {
+    await sharedConversionMutations.deactivate.mutateAsync({ id, payload, rowVersion });
+    toast.success(t("conversionDeactivated"));
+  };
+
   const isDirty = form.formState.isDirty;
   const requestClose = () => {
     if (savingReference || imagePreparing) return;
@@ -507,30 +521,76 @@ export function TaxonomyMaintenance() {
         ) : (sharedConversions.data?.length ?? 0) === 0 ? (
           <p className="py-3 text-sm text-erp-muted">{t("noUnitConversions")}</p>
         ) : (
-          <Table wrapperClassName="min-w-[560px]">
+          <Table wrapperClassName="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>{t("fromUnit")}</TableHead>
                 <TableHead>{t("toUnit")}</TableHead>
                 <TableHead>{t("conversionFactor")}</TableHead>
                 <TableHead>{t("effectiveFrom")}</TableHead>
+                <TableHead>{t("effectiveTo")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
                 <TableHead>{t("reason")}</TableHead>
+                {canManageUnits && <TableHead className="w-32 text-right">{t("rowActions")}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sharedConversions.data?.map((conversion) => (
-                <TableRow key={conversion.id}>
-                  <TableCell>{conversion.fromUnitCode ?? "-"}</TableCell>
-                  <TableCell>{conversion.toUnitCode ?? "-"}</TableCell>
-                  <TableCell>{conversion.factor ?? "-"}</TableCell>
-                  <TableCell>{conversion.effectiveFrom ?? "-"}</TableCell>
-                  <TableCell>{conversion.reason ?? "-"}</TableCell>
-                </TableRow>
-              ))}
+              {sharedConversions.data?.map((conversion) => {
+                const isActive = conversion.status !== "inactive";
+                return (
+                  <TableRow key={conversion.id}>
+                    <TableCell>{conversion.fromUnitCode ?? "-"}</TableCell>
+                    <TableCell>{conversion.toUnitCode ?? "-"}</TableCell>
+                    <TableCell>{conversion.factor ?? "-"}</TableCell>
+                    <TableCell>{conversion.effectiveFrom ?? "-"}</TableCell>
+                    <TableCell>{conversion.effectiveTo ?? "-"}</TableCell>
+                    <TableCell>{conversion.status === "inactive" ? t("statusInactive") : t("statusActive")}</TableCell>
+                    <TableCell>{conversion.reason ?? "-"}</TableCell>
+                    {canManageUnits && (
+                      <TableCell className="text-right">
+                        {isActive && conversion.id && conversion.rowVersion ? (
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingConversion(conversion as ConversionItemTarget)}
+                            >
+                              {common("actions.edit")}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="danger"
+                              onClick={() => setDeactivatingConversion(conversion as ConversionItemTarget)}
+                            >
+                              {t("deactivateConversion")}
+                            </Button>
+                          </div>
+                        ) : null}
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}
       </FormSection>}
+      <UnitConversionEditModal
+        isOpen={Boolean(editingConversion)}
+        onClose={() => setEditingConversion(null)}
+        conversion={editingConversion}
+        onSave={handleUpdateSharedConversion}
+        isLoading={sharedConversionMutations.update?.isPending ?? false}
+      />
+      <UnitConversionDeactivateModal
+        isOpen={Boolean(deactivatingConversion)}
+        onClose={() => setDeactivatingConversion(null)}
+        conversion={deactivatingConversion}
+        onConfirm={handleDeactivateSharedConversion}
+        isLoading={sharedConversionMutations.deactivate?.isPending ?? false}
+      />
       <Drawer
         isOpen={open}
         onClose={requestClose}

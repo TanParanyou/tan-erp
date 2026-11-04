@@ -14,6 +14,20 @@ public sealed class CreateItemUnitConversionRequest
     [Required, MaxLength(500)] public string Reason { get; set; } = string.Empty;
 }
 
+public sealed class UpdateUnitConversionRequest
+{
+    [Required] public string Factor { get; set; } = string.Empty;
+    public DateOnly? EffectiveFrom { get; set; }
+    public DateOnly? EffectiveTo { get; set; }
+    [Required, MaxLength(500)] public string Reason { get; set; } = string.Empty;
+}
+
+public sealed class DeactivateUnitConversionRequest
+{
+    public DateOnly? EffectiveTo { get; set; }
+    [MaxLength(500)] public string? Reason { get; set; }
+}
+
 public sealed record ItemUnitConversionResponse(
     Guid Id,
     Guid ItemId,

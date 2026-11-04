@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Drawer } from "@/components/ui/Drawer";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { IconUpload } from "@/components/common/Icons";
 import { useToast } from "@/hooks/useToast";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can } from "@/lib/permissions/can";
 import { useItemCostMutations, useItemCosts, useItemMasterLookups, useCostSources } from "@/features/item-master/api/item-master-queries";
+import { ItemImportModal } from "./item-import-modal";
 import type { CostRecordResponse } from "@/lib/api/api-client";
 import { fileClient } from "@/lib/api/file-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -55,7 +57,10 @@ export function CostRecordMaintenance({ itemId }: CostRecordMaintenanceProps) {
   const mutations = useItemCostMutations(itemId);
   const mayCreate = can(selectedMembership, "cost-records.create");
   const maySubmit = can(selectedMembership, "cost-records.submit");
+  const canImportItems = can(selectedMembership, "items.create");
+  const canUpsertItems = can(selectedMembership, "items.update");
   const [open, setOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [verifiedEvidenceFileId, setVerifiedEvidenceFileId] = useState<string | null>(null);
   const [createdDraft, setCreatedDraft] = useState<CostRecordResponse | null>(null);
@@ -150,7 +155,28 @@ export function CostRecordMaintenance({ itemId }: CostRecordMaintenanceProps) {
   const activeUnits = (lookups.data?.units ?? []).filter((unit) => unit.status === "active");
   return (
     <section className="space-y-3 border-t border-erp-border pt-5" aria-labelledby="item-costs-heading">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="item-costs-heading" className="text-lg font-semibold text-erp-text-main">{t("costHistory")}</h2>{mayCreate && <Button type="button" onClick={() => setOpen(true)}>{createdDraft ? t("finishCostDraft") : t("createCostDraft")}</Button>}</div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="item-costs-heading" className="text-lg font-semibold text-erp-text-main">
+          {t("costHistory")}
+        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          {mayCreate && (
+            <Button
+              type="button"
+              variant="outline"
+              icon={<IconUpload size={16} />}
+              onClick={() => setIsImportOpen(true)}
+            >
+              {t("importCostCsv")}
+            </Button>
+          )}
+          {mayCreate && (
+            <Button type="button" onClick={() => setOpen(true)}>
+              {createdDraft ? t("finishCostDraft") : t("createCostDraft")}
+            </Button>
+          )}
+        </div>
+      </div>
       {(costs.isError || lookups.isError || sources.isError) && <Alert variant="danger">{t("createFailed")}</Alert>}
       <DataTable<CostRecordResponse> columns={columns} data={rows} isLoading={costs.isLoading} isError={costs.isError} error={costs.error} onRetry={() => { void costs.refetch(); }} emptyTitle={t("noCostRecords")} hidePagination />
       <Drawer
@@ -271,6 +297,16 @@ export function CostRecordMaintenance({ itemId }: CostRecordMaintenanceProps) {
           />
         </form>
       </Drawer>
+      {mayCreate && (
+        <ItemImportModal
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          canImportItems={canImportItems}
+          canImportCosts={mayCreate}
+          canUpsert={canUpsertItems}
+          defaultKind="costs"
+        />
+      )}
     </section>
   );
 }

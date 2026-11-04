@@ -154,6 +154,15 @@ public class ItemImportJobRunner : IItemImportJobRunner
         for (var index = job.NextBatchIndex; index < job.TotalBatches; index++)
         {
             ct.ThrowIfCancellationRequested();
+            var currentStatus = await _db.ItemImportJobs.AsNoTracking()
+                .Where(j => j.Id == job.Id)
+                .Select(j => j.Status)
+                .FirstOrDefaultAsync(ct);
+            if (currentStatus == ItemImportJobStatus.Cancelled)
+            {
+                return Result<Guid>.Failure(new Error(JobLostCode, "The job was cancelled."));
+            }
+
             var slice = drafts.Skip(index * job.BatchSize).Take(job.BatchSize).ToList();
 
             Result<ItemImportBatchOutcome> result = Result<ItemImportBatchOutcome>.Failure(new Error(BatchConflictCode, "The batch conflicted."));

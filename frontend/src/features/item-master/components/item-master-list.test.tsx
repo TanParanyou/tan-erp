@@ -26,6 +26,10 @@ vi.mock("@/features/item-master/api/item-master-queries", () => ({
     preview: { mutateAsync: vi.fn(), isPending: false },
     commit: { mutateAsync: vi.fn(), isPending: false },
   }),
+  useCancelItemImportJob: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
 }));
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({ selectedMembership: { id: "membership-1", permissions: state.permissions } }),
@@ -100,6 +104,18 @@ describe("ItemMasterList", () => {
     renderList();
 
     expect(screen.queryByRole("button", { name: messagesTh.itemMaster.import.action })).toBeNull();
+  });
+
+  it("offers CSV import to users with only cost-records.create permission", () => {
+    state.permissions = ["items.read", "cost-records.create"];
+    mockItems([item]);
+    renderList();
+
+    const importBtn = screen.getByRole("button", { name: messagesTh.itemMaster.import.action });
+    expect(importBtn).toBeInTheDocument();
+    fireEvent.click(importBtn);
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("uses shared table actions, filters, row selection and current-page selected export", () => {

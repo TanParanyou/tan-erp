@@ -57,7 +57,11 @@ public static partial class NotificationTypeRegistry
             Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName)),
         new NotificationTypeDescriptor(
             NotificationTypes.ServiceRequestSlaWarning, "service-requests.manage", "/service/requests/{resourceId}", NotificationFields.DocumentNumber,
-            Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName))
+            Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName)),
+        new NotificationTypeDescriptor(
+            NotificationTypes.WarrantyExpiring, "service-requests.manage", "/projects/{parentId}", NotificationFields.DocumentNumber,
+            Fields(NotificationFields.ResourceId, NotificationFields.ParentId, NotificationFields.DocumentNumber, NotificationFields.DaysRemaining),
+            SystemGenerated: true)
     }.ToDictionary(d => d.Type, StringComparer.Ordinal);
 
     public static IReadOnlyCollection<string> Types { get; } = Descriptors.Keys.ToArray();

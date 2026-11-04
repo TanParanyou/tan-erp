@@ -1,15 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TanErp.Application.Commercial.Documents;
+using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
 using TanErp.Application.Files;
+using TanErp.Domain.Common;
 using TanErp.Infrastructure.Persistence;
 
 namespace TanErp.Infrastructure.Documents;
 
-public sealed class QuotationDocumentStore(AppDbContext db, IFileStorageProvider storage, ILogger<QuotationDocumentStore> logger) : IQuotationDocumentStore
+public sealed class QuotationDocumentStore(
+    AppDbContext db,
+    IFileStorageProvider storage,
+    IQuotationDocumentWriter writer,
+    IClock clock,
+    ILogger<QuotationDocumentStore> logger) : IQuotationDocumentStore
 {
     public async Task<Result<QuotationDocumentFile>> OpenAsync(RequestAccessContext access, Guid quotationId, CancellationToken cancellationToken = default)
     {
@@ -29,8 +36,65 @@ public sealed class QuotationDocumentStore(AppDbContext db, IFileStorageProvider
     public async Task<QuotationDocumentSummary?> FindSummaryAsync(Guid organizationId, Guid quotationId, CancellationToken cancellationToken = default) =>
         await db.QuotationDocuments.AsNoTracking()
             .Where(d => d.OrganizationId == organizationId && d.QuotationId == quotationId)
-            .Select(d => new QuotationDocumentSummary(d.Sha256, d.ByteCount, d.RendererVersion, d.RenderedAtUtc))
+            .Select(d => new QuotationDocumentSummary(d.Sha256, d.ByteCount, d.RendererVersion, d.RenderedAtUtc, d.QuotationId, d.FileId))
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<Result<QuotationDocumentBackfillResult>> EnsureRenderedAsync(
+        RequestAccessContext access,
+        Guid quotationId,
+        string idempotencyKey,
+        string traceId,
+        CancellationToken cancellationToken = default)
+    {
+        const string operation = "quotations.render-document";
+        var orgId = access.OrganizationId;
+        var keyHash = Sha256Hex.Compute(idempotencyKey);
+        var payloadHash = Sha256Hex.Compute(quotationId.ToString("N"));
+
+        var quotation = await db.Quotations.AsNoTracking()
+            .FirstOrDefaultAsync(q => q.OrganizationId == orgId && q.Id == quotationId, cancellationToken);
+        if (quotation is null || !access.HasBranchAccess(quotation.BranchId))
+            return Result<QuotationDocumentBackfillResult>.Failure(new Error("RESOURCE_NOT_FOUND", "Quotation not found."));
+
+        var strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await db.Database.BeginTransactionAsync(cancellationToken);
+
+            var lockKey = $"{orgId:N}:{operation}:{keyHash}";
+            await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
+            var docLockKey = $"{orgId:N}:quotation-document:{quotationId:N}";
+            await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({docLockKey}, 0))", cancellationToken);
+
+            var replay = await db.IdempotencyRecords.AsNoTracking()
+                .FirstOrDefaultAsync(r => r.OrganizationId == orgId && r.Operation == operation && r.KeyHash == keyHash, cancellationToken);
+            if (replay is not null && replay.PayloadHash != payloadHash)
+            {
+                return Result<QuotationDocumentBackfillResult>.Failure(
+                    new Error("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload."));
+            }
+
+            var existing = await FindSummaryAsync(orgId, quotationId, cancellationToken);
+            if (existing is not null)
+            {
+                return Result<QuotationDocumentBackfillResult>.Success(new QuotationDocumentBackfillResult(existing, WasCreated: false));
+            }
+
+            var rendered = await writer.RenderAndStoreAsync(quotation, access.ActorUserId, traceId, cancellationToken);
+            if (rendered.IsFailure)
+            {
+                return Result<QuotationDocumentBackfillResult>.Failure(rendered.Error);
+            }
+
+            db.IdempotencyRecords.Add(new IdempotencyRecord(
+                Guid.NewGuid(), orgId, operation, keyHash, payloadHash, quotationId.ToString(), clock.UtcNow));
+
+            await db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+
+            return Result<QuotationDocumentBackfillResult>.Success(new QuotationDocumentBackfillResult(rendered.Value!, WasCreated: true));
+        });
+    }
 
     private async Task<QuotationDocumentFile?> LoadAsync(Guid organizationId, Guid quotationId, CancellationToken cancellationToken)
     {

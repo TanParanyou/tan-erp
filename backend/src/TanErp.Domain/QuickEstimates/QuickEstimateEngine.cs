@@ -151,6 +151,16 @@ public static class QuickEstimateEngine
             reasons
         };
         var snapshotJson = JsonSerializer.Serialize(snapshot, Json);
+        if (config.CostRecipe is { Count: > 0 })
+        {
+            var node = System.Text.Json.Nodes.JsonNode.Parse(snapshotJson)!.AsObject();
+            var templateNode = node["template"]!.AsObject();
+            templateNode["config"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["costRecipe"] = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(config.CostRecipe, Json))
+            };
+            snapshotJson = node.ToJsonString(Json);
+        }
         if (rateOverride is not null)
         {
             // Only an applied override adds this node, so snapshots without one are unchanged.

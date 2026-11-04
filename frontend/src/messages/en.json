@@ -2217,6 +2217,15 @@
     "sharedUnitConversionHelp": "Use for exact shared relationships such as 1 dozen = 12 each; cyclic paths are rejected.",
     "toUnit": "To unit",
     "conversionSaved": "Unit conversion saved",
+    "editConversion": "Edit Unit Conversion",
+    "conversionUpdated": "Unit conversion updated",
+    "conversionUpdateFailed": "Failed to update unit conversion",
+    "deactivateConversion": "Deactivate",
+    "deactivateConversionTitle": "Deactivate Unit Conversion",
+    "deactivateConversionMessage": "Are you sure you want to deactivate unit conversion {from} → {to}?",
+    "deactivateConversionConfirm": "Deactivate",
+    "conversionDeactivated": "Unit conversion deactivated",
+    "conversionDeactivateFailed": "Failed to deactivate unit conversion",
     "noUnitConversions": "No shared unit conversions yet",
     "identifierType": "Identifier type",
     "internalBarcode": "Internal code",
@@ -2425,6 +2434,7 @@
     "codeLengthError": "Code exceeds the allowed length",
     "costHistory": "Cost History",
     "createCostDraft": "Create Cost Draft",
+    "importCostCsv": "Import Cost CSV",
     "costStatusDraft": "Draft",
     "costStatusPublished": "Published",
     "costStatusReturned": "Returned",
@@ -2615,6 +2625,9 @@
         "progressLabel": "Import progress",
         "batches": "Batches saved {done} of {total} • Batches rejected {rejected}",
         "closeHint": "You can close this window. The job keeps running in the background.",
+        "cancelJob": "Cancel import job",
+        "cancelSuccess": "Import job cancelled",
+        "cancelJobHint": "Job cancellation will be available in the next release (currently running batches will complete)",
         "status": {
           "queued": "Queued",
           "running": "Importing",
@@ -4407,7 +4420,9 @@
     "amended": "Replacement quotation issued.",
     "document": {
       "download": "Download PDF",
-      "hash": "SHA-256 {hash}…"
+      "hash": "SHA-256 {hash}…",
+      "renderPdf": "Generate PDF",
+      "renderPdfSuccess": "PDF generated successfully"
     },
     "errors": {
       "failed": "The action failed. Please try again.",
@@ -5619,7 +5634,8 @@
       "roleAssignmentApprovalRequested": "{actorDisplayName} requested role {roleName} for {subjectDisplayName}",
       "membershipExpiring": "Access for {subjectDisplayName} expires within {daysRemaining} day(s)",
       "projectBudgetOverrun": "Project {documentNumber} exceeded its budget (latest entry by {actorDisplayName})",
-      "serviceRequestSlaWarning": "Service request {documentNumber} reached SLA warning or breach threshold (assigned to {actorDisplayName})"
+      "serviceRequestSlaWarning": "Service request {documentNumber} reached SLA warning or breach threshold (assigned to {actorDisplayName})",
+      "warrantyExpiring": "Warranty {documentNumber} expires in {daysRemaining} days"
     },
     "list": {
       "title": "Notifications",
@@ -6060,8 +6076,16 @@
         },
         "noMatch": "No permissions match",
         "selectedCount": "{count} selected",
-        "scopedTitle": "Scoped permissions (kept as they are)",
-        "scopedHint": "Branch or own-scope permissions cannot be added here but are preserved when you save.",
+        "scopedTitle": "Scoped permissions (Branch / Own)",
+        "scopedHint": "Grant permissions limited to specific branches or user's own records for this role.",
+        "addScoped": "Add permission",
+        "removeScoped": "Remove scoped permission",
+        "selectPermission": "Select permission",
+        "selectScope": "Select scope",
+        "selectBranch": "Select branch",
+        "noBranches": "No active branches",
+        "noScopedGrants": "No scoped permissions granted",
+        "duplicateScoped": "This scoped permission has already been added",
         "scope": {
           "branch": "Branch",
           "own": "Own"

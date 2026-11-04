@@ -75,13 +75,14 @@ public class NotificationRegistryTests
         Assert.Equal("memberships.manage", NotificationTypeRegistry.Find(NotificationTypes.MembershipExpiring)!.TargetPermission);
         Assert.Equal("projects.change-orders.approve", NotificationTypeRegistry.Find(NotificationTypes.ProjectBudgetOverrun)!.TargetPermission);
         Assert.Equal("service-requests.manage", NotificationTypeRegistry.Find(NotificationTypes.ServiceRequestSlaWarning)!.TargetPermission);
+        Assert.Equal("service-requests.manage", NotificationTypeRegistry.Find(NotificationTypes.WarrantyExpiring)!.TargetPermission);
     }
 
     [Fact]
     public void OnlyMembershipExpiring_IsSystemGenerated()
     {
         var system = NotificationTypeRegistry.Types.Where(t => NotificationTypeRegistry.Find(t)!.SystemGenerated).ToArray();
-        Assert.Equal([NotificationTypes.MembershipExpiring], system);
+        Assert.Equal([NotificationTypes.MembershipExpiring, NotificationTypes.WarrantyExpiring], system);
     }
 
     [Fact]

@@ -682,6 +682,8 @@ export type ItemBarcodeResponse = components["schemas"]["ItemBarcodeResponse"];
 export type CreateItemBarcodeRequest = components["schemas"]["CreateItemBarcodeRequest"];
 export type ItemUnitConversionResponse = components["schemas"]["ItemUnitConversionResponse"];
 export type CreateItemUnitConversionRequest = components["schemas"]["CreateItemUnitConversionRequest"];
+export type UpdateUnitConversionRequest = components["schemas"]["UpdateUnitConversionRequest"];
+export type DeactivateUnitConversionRequest = components["schemas"]["DeactivateUnitConversionRequest"];
 export type UnitConversionResponse = components["schemas"]["UnitConversionResponse"];
 export type CostReviewQueueResponse = components["schemas"]["CostReviewQueueResponse"];
 export type CostRecordResponse = components["schemas"]["CostRecordResponse"];
@@ -1562,6 +1564,10 @@ export class ApiClient {
     return this.requestBlob(`/api/v1/quotations/${encodeURIComponent(quotationId)}/document`, options);
   }
 
+  async renderQuotationDocument(quotationId: string, options: RequestOptions): Promise<QuotationDocumentSummaryResponse> {
+    return this.request<QuotationDocumentSummaryResponse>(`/api/v1/quotations/${encodeURIComponent(quotationId)}/document`, "POST", options);
+  }
+
   async getQuotationHistory(estimateId: string, options: RequestOptions): Promise<QuotationHistoryResponse> {
     return this.request<QuotationHistoryResponse>(`/api/v1/estimates/${encodeURIComponent(estimateId)}/quotations`, "GET", options);
   }
@@ -2124,6 +2130,10 @@ export class ApiClient {
 
   async getItemImportJob(jobId: string, options: RequestOptions): Promise<ItemImportJobResponse> {
     return this.request<ItemImportJobResponse>(`/api/v1/items/imports/jobs/${encodeURIComponent(jobId)}`, "GET", options);
+  }
+
+  async cancelItemImportJob(jobId: string, options: RequestOptions): Promise<ItemImportJobResponse> {
+    return this.request<ItemImportJobResponse>(`/api/v1/items/imports/jobs/${encodeURIComponent(jobId)}/cancel`, "POST", options);
   }
 
   async listProjects(options: RequestOptions, query: ListProjectsParams): Promise<ProjectListResponse> {
@@ -3182,12 +3192,28 @@ export class ApiClient {
     return this.request<ItemUnitConversionResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/unit-conversions`, "POST", options, payload);
   }
 
+  async updateItemUnitConversion(itemId: string, id: string, payload: UpdateUnitConversionRequest, options: RequestOptions): Promise<ItemUnitConversionResponse> {
+    return this.request<ItemUnitConversionResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/unit-conversions/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async deactivateItemUnitConversion(itemId: string, id: string, payload: DeactivateUnitConversionRequest, options: RequestOptions): Promise<ItemUnitConversionResponse> {
+    return this.request<ItemUnitConversionResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/unit-conversions/${encodeURIComponent(id)}/deactivate`, "POST", options, payload);
+  }
+
   async listUnitConversions(options: RequestOptions): Promise<UnitConversionResponse[]> {
     return this.request<UnitConversionResponse[]>("/api/v1/unit-conversions", "GET", options);
   }
 
   async createUnitConversion(payload: CreateItemUnitConversionRequest, options: RequestOptions): Promise<UnitConversionResponse> {
     return this.request<UnitConversionResponse>("/api/v1/unit-conversions", "POST", options, payload);
+  }
+
+  async updateUnitConversion(id: string, payload: UpdateUnitConversionRequest, options: RequestOptions): Promise<UnitConversionResponse> {
+    return this.request<UnitConversionResponse>(`/api/v1/unit-conversions/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async deactivateUnitConversion(id: string, payload: DeactivateUnitConversionRequest, options: RequestOptions): Promise<UnitConversionResponse> {
+    return this.request<UnitConversionResponse>(`/api/v1/unit-conversions/${encodeURIComponent(id)}/deactivate`, "POST", options, payload);
   }
 
   async listCostSources(options: RequestOptions): Promise<CostSourceResponse[]> {

@@ -8,10 +8,24 @@ import { useCostSources, useItemCostMutations, useItemCosts, useItemMasterLookup
 
 const fileMocks = vi.hoisted(() => ({ createSession: vi.fn(), completeSession: vi.fn() }));
 vi.mock("@/features/item-master/api/item-master-queries", () => ({
-  useCostSources: vi.fn(), useItemCostMutations: vi.fn(), useItemCosts: vi.fn(), useItemMasterLookups: vi.fn(),
+  useCostSources: vi.fn(),
+  useItemCostMutations: vi.fn(),
+  useItemCosts: vi.fn(),
+  useItemMasterLookups: vi.fn(),
+  useItemImport: () => ({
+    preview: { mutateAsync: vi.fn(), isPending: false },
+    commit: { mutateAsync: vi.fn(), isPending: false },
+  }),
+  useCancelItemImportJob: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
 }));
 vi.mock("@/lib/membership/selected-membership-context", () => ({ useSelectedMembership: () => ({ selectedMembership: { id: "membership-1", permissions: ["cost-records.create", "cost-records.submit"] } }) }));
-vi.mock("@/lib/permissions/can", () => ({ can: () => true }));
+vi.mock("@/lib/permissions/can", () => ({
+  can: () => true,
+  PERMISSIONS: { ITEMS_CREATE: "items.create" },
+}));
 vi.mock("@/hooks/useToast", () => ({ useToast: () => ({ toast: { success: vi.fn(), error: vi.fn() } }) }));
 vi.mock("@/lib/auth/auth-session", () => ({ getAuthToken: vi.fn().mockResolvedValue("token") }));
 vi.mock("@/lib/api/file-client", () => ({ fileClient: fileMocks }));
@@ -80,5 +94,15 @@ describe("CostRecordMaintenance", () => {
     expect(fileMocks.createSession.mock.invocationCallOrder[0]).toBeLessThan(fileMocks.completeSession.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER);
     expect(fileMocks.completeSession.mock.invocationCallOrder[0]).toBeLessThan(update.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER);
     expect(update.mock.calls[0]?.[0].payload.evidenceFileId).toBe("file-1");
+  });
+
+  it("allows cost maintainers to open the CSV import modal directly", () => {
+    renderEditor();
+
+    const importBtn = screen.getByRole("button", { name: messages.itemMaster.importCostCsv });
+    expect(importBtn).toBeInTheDocument();
+    fireEvent.click(importBtn);
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

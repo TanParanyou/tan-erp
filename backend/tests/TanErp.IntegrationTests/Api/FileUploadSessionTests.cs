@@ -715,7 +715,7 @@ public class FileUploadSessionTests : IAsyncLifetime
             oppId,
             null,
             [
-                new FileSlotRequest("document.pdf", "application/pdf", 512 * 1024)
+                new FileSlotRequest("archive.zip", "application/zip", 512 * 1024)
             ]);
         var msg = CreateRequest(HttpMethod.Post, "/api/v1/files/upload-sessions", "token-org-a", MembershipAId, $"file-key-invalid-mime-{Guid.NewGuid():N}");
         msg.Content = JsonContent.Create(body);
@@ -725,6 +725,45 @@ public class FileUploadSessionTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
         var problem = await res.Content.ReadFromJsonAsync<ApiProblemDetails>();
         Assert.Equal("FILE_UPLOAD_SESSION_INVALID", problem?.Code);
+    }
+
+    [Fact]
+    public async Task CompleteSession_ValidPdfHeader_CompletesAndStreamsPdf()
+    {
+        var oppId = await SetupOpportunityAsync();
+        var pdfBytes = System.Text.Encoding.ASCII.GetBytes("%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n");
+
+        var createReq = new CreateUploadSessionRequest(
+            "opportunity",
+            oppId,
+            null,
+            [new FileSlotRequest("drawing.pdf", "application/pdf", pdfBytes.Length)]);
+
+        var createMsg = CreateRequest(HttpMethod.Post, "/api/v1/files/upload-sessions", "token-org-a", MembershipAId, $"pdf-slot-key-{Guid.NewGuid():N}");
+        createMsg.Content = JsonContent.Create(createReq);
+        var createRes = await _client.SendAsync(createMsg);
+        Assert.Equal(HttpStatusCode.Created, createRes.StatusCode);
+        var session = await createRes.Content.ReadFromJsonAsync<CreateUploadSessionResponse>();
+        Assert.NotNull(session);
+
+        using var form = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(pdfBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        form.Add(fileContent, session.Slots[0].SlotId.ToString(), "drawing.pdf");
+
+        var compMsg = CreateRequest(HttpMethod.Post, $"/api/v1/files/upload-sessions/{session.SessionId}/complete", "token-org-a", MembershipAId);
+        compMsg.Content = form;
+        var compRes = await _client.SendAsync(compMsg);
+        Assert.Equal(HttpStatusCode.OK, compRes.StatusCode);
+        var compData = await compRes.Content.ReadFromJsonAsync<CompleteUploadSessionResponse>();
+        Assert.NotNull(compData);
+        Assert.Equal("application/pdf", compData.Files[0].MediaType);
+
+        var readMsg = CreateRequest(HttpMethod.Get, $"/api/v1/files/{compData.Files[0].FileId}/content", "token-org-a", MembershipAId);
+        var readRes = await _client.SendAsync(readMsg);
+        Assert.Equal(HttpStatusCode.OK, readRes.StatusCode);
+        Assert.Equal("application/pdf", readRes.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(pdfBytes, await readRes.Content.ReadAsByteArrayAsync());
     }
 
     [Fact]

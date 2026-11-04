@@ -83,7 +83,7 @@ public class BranchRateOverrideStore : IBranchRateOverrideStore
             try
             {
                 entity = new BranchRateOverride(Guid.NewGuid(), orgId, branchId, templateId, input.ReferenceRate, input.MinimumCharge, input.EffectiveFrom, input.EffectiveTo,
-                    input.ReasonCode, input.ReasonDetail, input.SourceReference, access.ActorUserId, Today, now);
+                    input.ReasonCode, input.ReasonDetail, input.SourceReference, access.ActorUserId, Today, now, template.ReferenceRate);
             }
             catch (QuickEstimateException ex)
             {

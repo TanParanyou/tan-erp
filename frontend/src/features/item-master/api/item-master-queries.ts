@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
-import { apiClient, type AttachItemImageRequest, type CategoryAttributeTemplateResponse, type CostRecordResponse, type CostReviewQueueParams, type CostReviewQueueResponse, type CostSourceRequest, type CostSourceResponse, type CreateCostRecordRequest, type CreateItemBarcodeRequest, type CreateItemBrandRequest, type CreateItemCategoryRequest, type CreateItemRequest, type CreateItemUnitConversionRequest, type CreateItemTaxCategoryRequest, type CreateUnitOfMeasureRequest, type ItemBarcodeResponse, type ItemBrandResponse, type ItemCategoryResponse, type ItemImageDetailResponse, type ItemImportJobResponse, type ItemResponse, type ItemTaxCategoryResponse, type ItemUnitConversionResponse, type ListItemsParams, type OrganizationBranchResponse, type PagedItemsResponse, type RequestOptions, type SetCategoryAttributeTemplatesRequest, type UnitConversionResponse, type UnitOfMeasureResponse, type UpdateCostRecordRequest, type UpdateCostSourceRequest, type UpdateItemBrandRequest, type UpdateItemCategoryRequest, type UpdateItemRequest, type UpdateItemTaxCategoryRequest, type UpdateUnitOfMeasureRequest } from "@/lib/api/api-client";
+import { apiClient, type AttachItemImageRequest, type CategoryAttributeTemplateResponse, type CostRecordResponse, type CostReviewQueueParams, type CostReviewQueueResponse, type CostSourceRequest, type CostSourceResponse, type CreateCostRecordRequest, type CreateItemBarcodeRequest, type CreateItemBrandRequest, type CreateItemCategoryRequest, type CreateItemRequest, type CreateItemUnitConversionRequest, type CreateItemTaxCategoryRequest, type CreateUnitOfMeasureRequest, type DeactivateUnitConversionRequest, type ItemBarcodeResponse, type ItemBrandResponse, type ItemCategoryResponse, type ItemImageDetailResponse, type ItemImportJobResponse, type ItemResponse, type ItemTaxCategoryResponse, type ItemUnitConversionResponse, type ListItemsParams, type OrganizationBranchResponse, type PagedItemsResponse, type RequestOptions, type SetCategoryAttributeTemplatesRequest, type UnitConversionResponse, type UnitOfMeasureResponse, type UpdateCostRecordRequest, type UpdateCostSourceRequest, type UpdateItemBrandRequest, type UpdateItemCategoryRequest, type UpdateItemRequest, type UpdateItemTaxCategoryRequest, type UpdateUnitConversionRequest, type UpdateUnitOfMeasureRequest } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
@@ -123,7 +123,31 @@ export function useItemUnitConversionMutations(itemId: string) {
       await queryClient.invalidateQueries({ queryKey: itemBarcodesQueryKey(membershipId, locale, itemId) });
     },
   });
-  return { create };
+  const update = useMutation({
+    mutationFn: async ({ id, payload, rowVersion }: { id: string; payload: UpdateUnitConversionRequest; rowVersion: string }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.updateItemUnitConversion(itemId, id, payload, { token, membershipId, locale, ifMatch: rowVersion });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: itemUnitConversionsQueryKey(membershipId, locale, itemId) });
+      await queryClient.invalidateQueries({ queryKey: itemBarcodesQueryKey(membershipId, locale, itemId) });
+    },
+  });
+  const deactivate = useMutation({
+    mutationFn: async ({ id, payload, rowVersion }: { id: string; payload: DeactivateUnitConversionRequest; rowVersion: string }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.deactivateItemUnitConversion(itemId, id, payload, { token, membershipId, locale, ifMatch: rowVersion });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: itemUnitConversionsQueryKey(membershipId, locale, itemId) });
+      await queryClient.invalidateQueries({ queryKey: itemBarcodesQueryKey(membershipId, locale, itemId) });
+    },
+  });
+  return { create, update, deactivate };
 }
 
 export function useSharedUnitConversions(): UseQueryResult<UnitConversionResponse[], Error> {
@@ -160,7 +184,33 @@ export function useSharedUnitConversionMutations() {
       await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "item-barcodes"] });
     },
   });
-  return { create };
+  const update = useMutation({
+    mutationFn: async ({ id, payload, rowVersion }: { id: string; payload: UpdateUnitConversionRequest; rowVersion: string }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.updateUnitConversion(id, payload, { token, membershipId, locale, ifMatch: rowVersion });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: sharedUnitConversionsQueryKey(membershipId, locale) });
+      await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "item-unit-conversions"] });
+      await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "item-barcodes"] });
+    },
+  });
+  const deactivate = useMutation({
+    mutationFn: async ({ id, payload, rowVersion }: { id: string; payload: DeactivateUnitConversionRequest; rowVersion: string }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.deactivateUnitConversion(id, payload, { token, membershipId, locale, ifMatch: rowVersion });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: sharedUnitConversionsQueryKey(membershipId, locale) });
+      await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "item-unit-conversions"] });
+      await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "item-barcodes"] });
+    },
+  });
+  return { create, update, deactivate };
 }
 
 export function useItemBarcodeMutations(itemId: string) {
@@ -580,6 +630,27 @@ export function useItemImportJobStatus(jobId: string | undefined): UseQueryResul
         await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "items"] });
       }
       return job;
+    },
+  });
+}
+
+/** Cancels an in-progress or queued background import job. */
+export function useCancelItemImportJob() {
+  const queryClient = useQueryClient();
+  const locale: "th" | "en" = useSafeLocale() === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.cancelItemImportJob(jobId, { token, membershipId, locale });
+    },
+    onSuccess: async (data, jobId) => {
+      queryClient.setQueryData([...itemMasterKey(membershipId, locale), "import-jobs", jobId], data);
+      await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "import-jobs", jobId] });
+      await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "items"] });
     },
   });
 }

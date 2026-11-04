@@ -10,6 +10,15 @@ public sealed record ComplexityInput(string Code, string Name, decimal Factor, d
 
 public sealed record AddOnInput(string Code, string Name, decimal Amount, bool PerLine);
 
+public sealed record CostRecipeLineInput(
+    string ComponentType,
+    string DescriptionTh,
+    string? DescriptionEn,
+    string UnitCode,
+    decimal QuantityPerUnit,
+    decimal UnitCost,
+    Guid? ItemId = null);
+
 public sealed record TemplateInput(
     string Code,
     string WorkType,
@@ -34,7 +43,8 @@ public sealed record TemplateInput(
     decimal MediumConfidenceModifier,
     decimal CustomMaterialModifier,
     IReadOnlyList<string> Assumptions,
-    IReadOnlyList<string> Exclusions);
+    IReadOnlyList<string> Exclusions,
+    IReadOnlyList<CostRecipeLineInput>? CostRecipe = null);
 
 public sealed record PricingTemplateProjection(
     Guid Id,
@@ -68,7 +78,8 @@ public sealed record PricingTemplateProjection(
     QePerson? DecidedBy,
     string? DecisionNote,
     DateTimeOffset CreatedAtUtc,
-    Guid RowVersion);
+    Guid RowVersion,
+    IReadOnlyList<CostRecipeLineInput>? CostRecipe = null);
 
 public sealed record PricingTemplateListItemProjection(Guid Id, string Code, int Version, string WorkType, string Name, string Status, DateTimeOffset UpdatedAtUtc);
 

@@ -28,6 +28,7 @@ public static class NotificationTypes
     public const string MembershipExpiring = "membership.expiring";
     public const string ProjectBudgetOverrun = "project.budget-overrun";
     public const string ServiceRequestSlaWarning = "service-request.sla-warning";
+    public const string WarrantyExpiring = "warranty.expiring";
 
     private static readonly HashSet<string> Registered = new(StringComparer.Ordinal)
     {
@@ -41,7 +42,8 @@ public static class NotificationTypes
         RoleAssignmentApprovalRequested,
         MembershipExpiring,
         ProjectBudgetOverrun,
-        ServiceRequestSlaWarning
+        ServiceRequestSlaWarning,
+        WarrantyExpiring
     };
 
     public static IReadOnlyCollection<string> All => Registered;

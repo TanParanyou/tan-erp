@@ -1867,4 +1867,28 @@
   <data name="SESSION_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>ไม่พบเซสชันที่ระบุ หรือเซสชันนี้ถูกยกเลิกไปแล้ว</value>
   </data>
+  <data name="BRANCH_OVERRIDE_CAP_EXCEEDED_TITLE" xml:space="preserve">
+    <value>อัตราปรับแก้ประจำสาขาเกินเพดานที่กำหนด</value>
+  </data>
+  <data name="BRANCH_OVERRIDE_CAP_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>อัตราอ้างอิงประจำสาขาต้องไม่เบี่ยงเบนเกินกว่า 30% จากอัตราอ้างอิงมาตรฐานของเทมเพลต</value>
+  </data>
+  <data name="ITEM_IMPORT_JOB_NOT_CANCELLABLE_TITLE" xml:space="preserve">
+    <value>ไม่สามารถยกเลิกงานนำเข้าข้อมูลนี้ได้</value>
+  </data>
+  <data name="ITEM_IMPORT_JOB_NOT_CANCELLABLE_DETAIL" xml:space="preserve">
+    <value>งานนำเข้าที่ประมวลผลเสร็จสิ้น ล้มเหลว หรือถูกยกเลิกไปแล้ว ไม่สามารถยกเลิกซ้ำได้</value>
+  </data>
+  <data name="UNIT_CONVERSION_INACTIVE_TITLE" xml:space="preserve">
+    <value>อัตราแปลงหน่วยนับถูกปิดใช้งานแล้ว</value>
+  </data>
+  <data name="UNIT_CONVERSION_INACTIVE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถแก้ไขหรือปิดใช้งานซ้ำกับอัตราแปลงหน่วยนับที่อยู่ในสถานะปิดใช้งาน</value>
+  </data>
+  <data name="ITEM_UNIT_CONVERSION_INACTIVE_TITLE" xml:space="preserve">
+    <value>อัตราแปลงหน่วยนับเฉพาะสินค้าถูกปิดใช้งานแล้ว</value>
+  </data>
+  <data name="ITEM_UNIT_CONVERSION_INACTIVE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถแก้ไขหรือปิดใช้งานซ้ำกับอัตราแปลงหน่วยนับเฉพาะสินค้าที่อยู่ในสถานะปิดใช้งาน</value>
+  </data>
 </root>

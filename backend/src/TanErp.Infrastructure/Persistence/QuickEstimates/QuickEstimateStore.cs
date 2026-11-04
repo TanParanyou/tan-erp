@@ -63,7 +63,10 @@ public class QuickEstimateStore : IQuickEstimateStore
         t.Complexities.Select(c => new TemplateComplexity(c.Code.Trim(), c.Name.Trim(), c.Factor, c.RiskModifier)).ToList(),
         t.AddOns.Select(a => new TemplateAddOn(a.Code.Trim(), a.Name.Trim(), a.Amount, a.PerLine)).ToList(),
         t.LowConfidenceModifier, t.MediumConfidenceModifier, t.CustomMaterialModifier,
-        t.Assumptions.Select(a => a.Trim()).ToList(), t.Exclusions.Select(e => e.Trim()).ToList());
+        t.Assumptions.Select(a => a.Trim()).ToList(), t.Exclusions.Select(e => e.Trim()).ToList(),
+        t.CostRecipe is { Count: > 0 }
+            ? t.CostRecipe.Select(r => new TemplateCostRecipeLine(r.ComponentType.Trim(), r.DescriptionTh.Trim(), string.IsNullOrWhiteSpace(r.DescriptionEn) ? null : r.DescriptionEn.Trim(), r.UnitCode.Trim(), r.QuantityPerUnit, r.UnitCost, r.ItemId)).ToList()
+            : null);
 
     private PricingTemplateProjection ToProjection(PricingTemplate t, Dictionary<Guid, QePerson> people)
     {
@@ -76,7 +79,8 @@ public class QuickEstimateStore : IQuickEstimateStore
             c.Complexities.Select(x => new ComplexityInput(x.Code, x.Name, x.Factor, x.RiskModifier)).ToList(),
             c.AddOns.Select(a => new AddOnInput(a.Code, a.Name, a.Amount, a.PerLine)).ToList(),
             c.LowConfidenceModifier, c.MediumConfidenceModifier, c.CustomMaterialModifier, c.Assumptions, c.Exclusions,
-            Person(t.CreatedByUserId), t.DecidedByUserId.HasValue ? Person(t.DecidedByUserId.Value) : null, t.DecisionNote, t.CreatedAtUtc, t.RowVersion);
+            Person(t.CreatedByUserId), t.DecidedByUserId.HasValue ? Person(t.DecidedByUserId.Value) : null, t.DecisionNote, t.CreatedAtUtc, t.RowVersion,
+            c.CostRecipe?.Select(r => new CostRecipeLineInput(r.ComponentType, r.DescriptionTh, r.DescriptionEn, r.UnitCode, r.QuantityPerUnit, r.UnitCost, r.ItemId)).ToList());
     }
 
     private async Task<PricingTemplateProjection> ProjectAsync(PricingTemplate t, CancellationToken ct) =>

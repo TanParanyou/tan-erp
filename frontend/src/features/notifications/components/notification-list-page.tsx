@@ -88,7 +88,8 @@ export function NotificationListPage() {
       sticky: "right",
       isAction: true,
       cell: (_value, n) => {
-        const href = localizedNotificationHref(locale, n.deepLink ?? null);
+        const targetDeepLink = n.deepLink ?? (n.type === "warranty.expiring" ? "/service/warranties" : null);
+        const href = localizedNotificationHref(locale, targetDeepLink);
         const notificationId = n.id;
         return (
           <TableActionGroup>

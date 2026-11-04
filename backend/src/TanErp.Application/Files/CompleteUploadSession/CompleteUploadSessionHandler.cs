@@ -144,7 +144,7 @@ public class CompleteUploadSessionHandler
                 {
                     return await RollbackAndFail(savedPaths,
                         new Error("FILE_UPLOAD_SESSION_INVALID",
-                            $"File '{fileInput.OriginalFilename}' does not match an allowed image format (WebP, JPEG, PNG)."),
+                            $"File '{fileInput.OriginalFilename}' does not match an allowed file format (WebP, JPEG, PNG, PDF)."),
                         cancellationToken);
                 }
 
@@ -269,6 +269,11 @@ public class CompleteUploadSessionHandler
             header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 &&
             header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50)
             return "image/webp";
+
+        // PDF: %PDF- (25 50 44 46 2D)
+        if (header.Length >= 5 &&
+            header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46 && header[4] == 0x2D)
+            return AllowedMediaTypes.Pdf;
 
         return null;
     }

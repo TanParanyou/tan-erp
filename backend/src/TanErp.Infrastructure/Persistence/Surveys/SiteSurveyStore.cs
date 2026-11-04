@@ -477,10 +477,25 @@ public class SiteSurveyStore : ISiteSurveyStore
             // Update Areas & Measurements
             var existingAreas = revision.Areas.ToList();
             var commandAreaIds = command.Areas.Where(a => a.Id.HasValue).Select(a => a.Id!.Value).ToHashSet();
+            var removedAreas = existingAreas.Where(a => !commandAreaIds.Contains(a.Id)).ToList();
 
-            foreach (var ea in existingAreas.Where(a => !commandAreaIds.Contains(a.Id)))
+            foreach (var ea in removedAreas)
             {
                 _db.SiteSurveyAreas.Remove(ea);
+            }
+
+            if (removedAreas.Count > 0)
+            {
+                var removedAreaIds = removedAreas.Select(a => a.Id).ToList();
+                var orphanLinks = await _db.AttachmentLinks
+                    .Where(l => l.OrganizationId == orgId
+                        && l.OwnerType == AttachmentOwnerTypes.SurveyArea
+                        && removedAreaIds.Contains(l.OwnerId))
+                    .ToListAsync(cancellationToken);
+                if (orphanLinks.Count > 0)
+                {
+                    _db.AttachmentLinks.RemoveRange(orphanLinks);
+                }
             }
 
             foreach (var aInput in command.Areas)
@@ -949,6 +964,44 @@ public class SiteSurveyStore : ISiteSurveyStore
             }
 
             _db.SiteSurveyRevisions.Add(clone);
+
+            var sourceAreas = source.Areas.OrderBy(a => a.SortOrder).ToList();
+            var cloneAreas = clone.Areas.OrderBy(a => a.SortOrder).ToList();
+            if (sourceAreas.Count > 0 && sourceAreas.Count == cloneAreas.Count)
+            {
+                var areaIdMap = new Dictionary<Guid, Guid>(sourceAreas.Count);
+                for (var i = 0; i < sourceAreas.Count; i++)
+                {
+                    areaIdMap[sourceAreas[i].Id] = cloneAreas[i].Id;
+                }
+
+                var sourceAreaIds = areaIdMap.Keys.ToList();
+                var sourceLinks = await _db.AttachmentLinks.AsNoTracking()
+                    .Where(l => l.OrganizationId == orgId
+                        && l.OwnerType == AttachmentOwnerTypes.SurveyArea
+                        && sourceAreaIds.Contains(l.OwnerId)
+                        && l.RemovedAtUtc == null)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var link in sourceLinks)
+                {
+                    if (areaIdMap.TryGetValue(link.OwnerId, out var targetAreaId))
+                    {
+                        _db.AttachmentLinks.Add(new AttachmentLink(
+                            Guid.NewGuid(),
+                            orgId,
+                            AttachmentOwnerTypes.SurveyArea,
+                            targetAreaId,
+                            orgId,
+                            link.FileId,
+                            link.Purpose,
+                            access.ActorUserId,
+                            now,
+                            link.Tag,
+                            link.Caption));
+                    }
+                }
+            }
 
             _db.AddAuditEvent(new AuditEvent(
                 Guid.NewGuid(),

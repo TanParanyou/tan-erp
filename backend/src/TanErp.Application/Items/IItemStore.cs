@@ -171,6 +171,36 @@ public sealed record CreateUnitConversionData(
     DateOnly? EffectiveTo,
     string Reason);
 
+public sealed record UpdateUnitConversionData(
+    Guid Id,
+    Guid ExpectedRowVersion,
+    decimal Factor,
+    DateOnly? EffectiveFrom,
+    DateOnly? EffectiveTo,
+    string Reason);
+
+public sealed record DeactivateUnitConversionData(
+    Guid Id,
+    Guid ExpectedRowVersion,
+    DateOnly? EffectiveTo,
+    string Reason);
+
+public sealed record UpdateItemUnitConversionData(
+    Guid ItemId,
+    Guid Id,
+    Guid ExpectedRowVersion,
+    decimal Factor,
+    DateOnly? EffectiveFrom,
+    DateOnly? EffectiveTo,
+    string Reason);
+
+public sealed record DeactivateItemUnitConversionData(
+    Guid ItemId,
+    Guid Id,
+    Guid ExpectedRowVersion,
+    DateOnly? EffectiveTo,
+    string Reason);
+
 public sealed record UnitConversionProjection(
     Guid Id,
     Guid FromUnitId,
@@ -226,6 +256,10 @@ public interface IItemStore
     Task<ItemBarcodeProjection?> FindActiveBarcodeAsync(Guid organizationId, Guid? branchId, string value, CancellationToken ct);
     Task<IReadOnlyList<ItemUnitConversionProjection>> ListItemUnitConversionsAsync(Guid organizationId, Guid itemId, CancellationToken ct);
     Task<Result<ItemUnitConversionProjection>> CreateItemUnitConversionAsync(CreateItemUnitConversionData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
+    Task<Result<ItemUnitConversionProjection>> UpdateItemUnitConversionAsync(UpdateItemUnitConversionData data, RequestAccessContext access, CancellationToken ct);
+    Task<Result<ItemUnitConversionProjection>> DeactivateItemUnitConversionAsync(DeactivateItemUnitConversionData data, RequestAccessContext access, CancellationToken ct);
     Task<IReadOnlyList<UnitConversionProjection>> ListUnitConversionsAsync(Guid organizationId, CancellationToken ct);
     Task<Result<UnitConversionProjection>> CreateUnitConversionAsync(CreateUnitConversionData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
+    Task<Result<UnitConversionProjection>> UpdateUnitConversionAsync(UpdateUnitConversionData data, RequestAccessContext access, CancellationToken ct);
+    Task<Result<UnitConversionProjection>> DeactivateUnitConversionAsync(DeactivateUnitConversionData data, RequestAccessContext access, CancellationToken ct);
 }

@@ -24,7 +24,13 @@ public sealed record QuotationHistoryItemResponse(
     Guid RowVersion,
     QuotationDocumentSummaryResponse? Document);
 
-/// <summary>The stored PDF of a quotation. The hash is the evidence; the file id and storage path are never exposed.</summary>
-public sealed record QuotationDocumentSummaryResponse(string Sha256, long ByteCount, string RendererVersion, DateTimeOffset RenderedAtUtc);
+/// <summary>The stored PDF of a quotation. The hash is the evidence; the storage path is never exposed.</summary>
+public sealed record QuotationDocumentSummaryResponse(
+    string Sha256,
+    long ByteCount,
+    string RendererVersion,
+    DateTimeOffset RenderedAtUtc,
+    Guid? QuotationId = null,
+    Guid? FileId = null);
 
 public sealed record QuotationHistoryResponse(Guid EstimateId, IReadOnlyList<QuotationHistoryItemResponse> Items);

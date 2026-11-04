@@ -27,7 +27,8 @@ public class PricingTemplatesController : QuickEstimateControllerBase
         r.Complexities?.Select(c => new ComplexityInput(c.Code ?? string.Empty, c.Name ?? string.Empty, c.Factor, c.RiskModifier)).ToList() ?? new List<ComplexityInput>(),
         r.AddOns?.Select(a => new AddOnInput(a.Code ?? string.Empty, a.Name ?? string.Empty, a.Amount, a.PerLine)).ToList() ?? new List<AddOnInput>(),
         r.LowConfidenceModifier, r.MediumConfidenceModifier, r.CustomMaterialModifier,
-        r.Assumptions ?? new List<string>(), r.Exclusions ?? new List<string>());
+        r.Assumptions ?? new List<string>(), r.Exclusions ?? new List<string>(),
+        r.CostRecipe?.Select(c => new CostRecipeLineInput(c.ComponentType ?? string.Empty, c.DescriptionTh ?? string.Empty, c.DescriptionEn, c.UnitCode ?? string.Empty, c.QuantityPerUnit, c.UnitCost, c.ItemId)).ToList());
 
     [HttpPost]
     [ProducesResponseType<PricingTemplateResponse>(StatusCodes.Status201Created)]

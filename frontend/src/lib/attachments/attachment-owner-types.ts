@@ -20,8 +20,8 @@ export const SIGNATURE_CONSENT_VERSIONS = {
   handover: "handover-2026-10-v1",
 } as const satisfies Record<SignaturePurpose, string>;
 
-/** Files module limits (TEST_ONLY): JPEG/PNG/WebP up to 10 MB each. */
-export const ATTACHMENT_ACCEPTED_MEDIA_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+/** Files module limits: JPEG/PNG/WebP/PDF up to 10 MB each. */
+export const ATTACHMENT_ACCEPTED_MEDIA_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
 export const ATTACHMENT_MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export const ATTACHMENT_ERROR_CODES = [

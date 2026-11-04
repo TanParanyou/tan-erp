@@ -166,12 +166,41 @@ describe("AttachmentList", () => {
     expect(screen.getByText("a.jpg")).toBeInTheDocument();
   });
 
-  it("rejects files that are not accepted images before anything is sent", () => {
+  it("rejects files that are not accepted media types before anything is sent", () => {
     renderList();
-    pick([new File(["x"], "notes.pdf", { type: "application/pdf" })]);
+    pick([new File(["x"], "notes.txt", { type: "text/plain" })]);
 
-    expect(screen.getByText(t.fileRejected.replace("{name}", "notes.pdf"))).toBeInTheDocument();
+    expect(screen.getByText(t.fileRejected.replace("{name}", "notes.txt"))).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: t.save })).not.toBeInTheDocument();
+  });
+
+  it("accepts application/pdf files and uploads them on save", async () => {
+    renderList();
+    const pdfFile = new File(["pdf-binary"], "contract.pdf", { type: "application/pdf" });
+    pick([pdfFile]);
+
+    expect(screen.getByText("contract.pdf")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: t.save }));
+
+    await waitFor(() => expect(mocks.attach).toHaveBeenCalledTimes(1));
+    expect(mocks.uploadFiles).toHaveBeenCalledTimes(1);
+    expect(mocks.uploadFiles.mock.calls[0][0][0].name).toBe("contract.pdf");
+  });
+
+  it("renders a PDF badge/box instead of AuthenticatedFileImage for PDF items", () => {
+    mocks.links.data = {
+      items: [
+        {
+          ...link("l-pdf", "drawing.pdf"),
+          mediaType: "application/pdf",
+        },
+      ],
+    };
+    renderList();
+
+    expect(screen.getByText("drawing.pdf")).toBeInTheDocument();
+    expect(screen.getByText("PDF")).toBeInTheDocument();
+    expect(screen.queryByAltText("drawing.pdf")).not.toBeInTheDocument();
   });
 
   it("asks for confirmation before unlinking and only unlinks after confirming", async () => {

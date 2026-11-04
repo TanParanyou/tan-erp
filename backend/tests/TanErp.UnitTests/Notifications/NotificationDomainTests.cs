@@ -29,7 +29,8 @@ public class NotificationDomainTests
             "purchase-request.approval-requested",
             "role-assignment.approval-requested",
             "service-request.sla-warning",
-            "supplier-invoice.approval-requested"
+            "supplier-invoice.approval-requested",
+            "warranty.expiring"
         };
         Assert.Equal(expected, NotificationTypes.All.OrderBy(t => t, StringComparer.Ordinal).ToArray());
     }

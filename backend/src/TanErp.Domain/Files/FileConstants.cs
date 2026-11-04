@@ -18,8 +18,9 @@ public static class AllowedMediaTypes
     public const string WebP = "image/webp";
     public const string Jpeg = "image/jpeg";
     public const string Png = "image/png";
+    public const string Pdf = "application/pdf";
 
-    private static readonly HashSet<string> Allowed = [WebP, Jpeg, Png];
+    private static readonly HashSet<string> Allowed = [WebP, Jpeg, Png, Pdf];
 
     public static bool IsAllowed(string mediaType) =>
         Allowed.Contains(mediaType.Trim().ToLowerInvariant());
