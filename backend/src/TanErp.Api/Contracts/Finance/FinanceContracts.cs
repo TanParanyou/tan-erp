@@ -241,5 +241,5 @@ public sealed record JournalExportResultResponse(
     IReadOnlyList<JournalExportLineResponse> Lines,
     string CsvContent);
 
-public sealed record JournalExportRequest(int? BatchSize);
+public sealed record JournalExportRequest(int? BatchSize = null, string? Format = null);
 

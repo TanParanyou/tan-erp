@@ -22,10 +22,27 @@ export function isOutboxStatus(value: string | null | undefined): value is Outbo
   return OUTBOX_STATUSES.some((status) => status === value);
 }
 
-export const OUTBOX_KINDS = ["billing.issued", "billing.voided", "payment.recorded", "payment.reversed", "billing-note.approved"] as const;
+export const OUTBOX_KINDS = [
+  "billing.issued",
+  "billing.voided",
+  "billing.retention-released",
+  "billing.credit-note.approved",
+  "billing.debit-note.approved",
+  "payment.recorded",
+  "payment.reversed",
+  "billing-note.approved",
+  "supplier-invoice.posted",
+  "supplier-invoice.voided",
+] as const;
 export type OutboxKindValue = (typeof OUTBOX_KINDS)[number];
 export function isOutboxKind(value: string | null | undefined): value is OutboxKindValue {
   return OUTBOX_KINDS.some((kind) => kind === value);
+}
+
+export const JOURNAL_EXPORT_FORMATS = ["standard", "peak", "flowaccount", "express"] as const;
+export type JournalExportFormatValue = (typeof JOURNAL_EXPORT_FORMATS)[number];
+export function isJournalExportFormat(value: string | null | undefined): value is JournalExportFormatValue {
+  return JOURNAL_EXPORT_FORMATS.some((fmt) => fmt === value);
 }
 
 export const RECONCILIATION_ISSUES = ["unsynced", "awaiting_confirmation", "amount_mismatch", "missing_message"] as const;

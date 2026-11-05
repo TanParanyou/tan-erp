@@ -96,4 +96,19 @@ public sealed class AdminApprovalLimitsController : ControllerBase
             new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), limitId, conditional.Value.IfMatchRowVersion,
             request.ToInput(), HttpContext.TraceIdentifier, cancellationToken));
     }
+
+    [HttpPost("seed-defaults")]
+    [ProducesResponseType<ApprovalLimitListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> SeedDefaults(CancellationToken cancellationToken)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        var result = await _handler.SeedDefaultsAsync(
+            new AdminCaller(auth.Value!.FirebaseUid, auth.Value.MembershipId),
+            HttpContext.TraceIdentifier,
+            cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(ApprovalLimitListResponse.From(result.Value!));
+    }
 }

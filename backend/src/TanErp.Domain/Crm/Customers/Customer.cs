@@ -33,6 +33,17 @@ public class Customer : Entity
     private readonly List<CustomerContact> _contacts = new();
     public IReadOnlyCollection<CustomerContact> Contacts => _contacts.AsReadOnly();
 
+    private readonly List<CustomerAddress> _addresses = new();
+    public IReadOnlyCollection<CustomerAddress> Addresses => _addresses.AsReadOnly();
+
+    public void AddAddress(CustomerAddress address)
+    {
+        if (address is not null && !_addresses.Any(a => a.Id == address.Id))
+        {
+            _addresses.Add(address);
+        }
+    }
+
     protected Customer() { }
 
     private Customer(

@@ -1,6 +1,6 @@
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ApprovalLimitList } from "./approval-limit-list";
 
 const mocks = vi.hoisted(() => ({
@@ -8,6 +8,13 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   params: undefined as Record<string, unknown> | undefined,
   result: {} as Record<string, unknown>,
+  seedMutate: vi.fn(),
+  toastSuccess: vi.fn(),
+  toastError: vi.fn(),
+}));
+
+vi.mock("@/hooks/useToast", () => ({
+  useToast: () => ({ toast: { success: mocks.toastSuccess, error: mocks.toastError } }),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -25,6 +32,10 @@ vi.mock("../api/approval-limit-queries", () => ({
     mocks.params = params;
     return mocks.result;
   },
+  useSeedDefaultApprovalLimits: () => ({
+    mutateAsync: mocks.seedMutate,
+    isPending: false,
+  }),
 }));
 
 const items = [
@@ -59,5 +70,20 @@ describe("ApprovalLimitList", () => {
     mocks.permissions = [];
     render(<ApprovalLimitList />);
     expect(screen.queryByRole("button", { name: "เพิ่มวงเงิน" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "ตั้งค่าวงเงินมาตรฐาน" })).toBeNull();
+  });
+
+  it("triggers seedDefaultApprovalLimits and shows toast when preset button is clicked", async () => {
+    mocks.seedMutate.mockResolvedValueOnce({ items: [] });
+    render(<ApprovalLimitList />);
+
+    const seedButton = screen.getByRole("button", { name: "ตั้งค่าวงเงินมาตรฐาน" });
+    expect(seedButton).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(seedButton);
+    });
+
+    expect(mocks.seedMutate).toHaveBeenCalledTimes(1);
+    expect(mocks.toastSuccess).toHaveBeenCalledWith("ตั้งค่าวงเงินอนุมัติมาตรฐานเรียบร้อยแล้ว");
   });
 });

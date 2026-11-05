@@ -185,6 +185,7 @@ export interface RequestOptions {
   locale?: "th" | "en";
   signal?: AbortSignal;
 }
+export type ApiRequestOptions = RequestOptions;
 
 export interface OrganizationBranchResponse {
   id: string;
@@ -1970,6 +1971,10 @@ export class ApiClient {
       `/api/v1/admin/approval-limits/${encodeURIComponent(limitId)}`, "PUT", options, payload);
   }
 
+  async seedDefaultApprovalLimits(options: RequestOptions): Promise<ApprovalLimitListResponse> {
+    return this.request<ApprovalLimitListResponse>("/api/v1/admin/approval-limits/seed-defaults", "POST", options);
+  }
+
   async listDocumentSequences(
     options: RequestOptions
   ): Promise<import("@/features/settings/document-numbering/types").DocumentSequenceItem[]> {
@@ -2833,9 +2838,22 @@ export class ApiClient {
     return this.request<AccountMappingResponse>("/api/v1/finance/account-mappings", "PUT", options, payload);
   }
 
-  async exportAccountingJournal(options: RequestOptions, batchSize?: number): Promise<JournalExportResultResponse> {
-    const q = batchSize !== undefined ? `?batchSize=${encodeURIComponent(String(batchSize))}` : "";
-    return this.request<JournalExportResultResponse>(`/api/v1/finance/outbox/export-journal${q}`, "POST", options, { batchSize });
+  async seedDefaultAccountMappings(options: RequestOptions): Promise<AccountMappingListResponse> {
+    return this.request<AccountMappingListResponse>("/api/v1/finance/account-mappings/seed-defaults", "POST", options);
+  }
+
+  async exportAccountingJournal(options: RequestOptions, batchSize?: number, format?: string): Promise<JournalExportResultResponse> {
+    const params = new URLSearchParams();
+    if (batchSize !== undefined) params.set("batchSize", String(batchSize));
+    if (format) params.set("format", format);
+    const suffix = params.toString();
+    const q = suffix ? `?${suffix}` : "";
+    return this.request<JournalExportResultResponse>(
+      `/api/v1/finance/outbox/export-journal${q}`,
+      "POST",
+      options,
+      { batchSize, format }
+    );
   }
 
   async listPricingTemplates(options: RequestOptions, query: ListPricingTemplatesParams): Promise<PricingTemplateListResponse> {

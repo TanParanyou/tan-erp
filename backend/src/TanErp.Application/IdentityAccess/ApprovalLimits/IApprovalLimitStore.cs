@@ -19,4 +19,7 @@ public interface IApprovalLimitStore
     Task<Result<ApprovalLimitView>> UpdateAsync(
         Guid organizationId, Guid limitId, Guid ifMatch, bool isUnlimited, decimal? maxAmount, bool isActive,
         AdminActor actor, string traceId, CancellationToken ct);
+
+    Task<ApprovalLimitPage> SeedDefaultsAsync(
+        Guid organizationId, AdminActor actor, string traceId, CancellationToken ct = default);
 }

@@ -34,7 +34,7 @@ public sealed class CustomerAddressConfiguration : IEntityTypeConfiguration<Cust
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
         builder.HasIndex(x => x.CustomerId).HasFilter("status = 'active' AND is_primary = true AND address_type = 'billing'").IsUnique();
-        builder.HasOne<Customer>().WithMany().HasForeignKey(x => new { x.CustomerId, x.OrganizationId }).HasPrincipalKey(x => new { x.Id, x.OrganizationId }).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Customer>().WithMany(c => c.Addresses).HasForeignKey(x => new { x.CustomerId, x.OrganizationId }).HasPrincipalKey(x => new { x.Id, x.OrganizationId }).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
     }
 }

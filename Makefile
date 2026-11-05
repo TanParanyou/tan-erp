@@ -32,7 +32,7 @@ MOBILE_DIR    := mobile
 .PHONY: help \
         check-ports kill-ports tunnel \
         dev dev-setup dev-backend dev-backend-demo dev-frontend dev-env \
-        up down stop restart logs ps db-up db-stop \
+        ensure-docker up down stop restart logs ps db-up db-stop \
         db-wait db-migrate db-rollback db-status db-seed seed seed-users seed-quotation-demo db-reset fresh \
         api-gen api-check \
         verify verify-backend verify-frontend \
@@ -150,8 +150,35 @@ tunnel:
 # -----------------------------------------------------------------
 # 3. โครงสร้างพื้นฐาน Docker (Infrastructure)
 # -----------------------------------------------------------------
+# ตรวจสอบและบูต Docker daemon อัตโนมัติหากยังไม่เปิด
+ensure-docker:
+	@if ! docker info >/dev/null 2>&1; then \
+		echo "⚠️  ไม่พบ Docker daemon ที่พร้อมทำงาน กำลังตรวจสอบบนเครื่อง..."; \
+		if [ -d "/Applications/Docker.app" ]; then \
+			echo "🐳 กำลังเปิด Docker Desktop อัตโนมัติในพื้นหลัง..."; \
+			open -g -a Docker 2>/dev/null || open -a Docker 2>/dev/null || true; \
+		elif [ -d "/Applications/OrbStack.app" ]; then \
+			echo "🐳 กำลังเปิด OrbStack อัตโนมัติในพื้นหลัง..."; \
+			open -g -a OrbStack 2>/dev/null || open -a OrbStack 2>/dev/null || true; \
+		fi; \
+		echo "⏳ รอให้ Docker daemon บูตพร้อมใช้งาน (สูงสุด 60 วินาที)..."; \
+		ready=0; \
+		for i in $$(seq 1 60); do \
+			if docker info >/dev/null 2>&1; then \
+				echo "✅ Docker daemon พร้อมใช้งานแล้ว ($$i วินาที)"; \
+				ready=1; \
+				break; \
+			fi; \
+			sleep 1; \
+		done; \
+		if [ $$ready -ne 1 ]; then \
+			echo "❌ ไม่สามารถเชื่อมต่อ Docker daemon ได้ภายใน 60 วินาที กรุณาเปิด Docker Desktop ด้วยตนเอง"; \
+			exit 1; \
+		fi; \
+	fi
+
 # สตาร์ต PostgreSQL ใน Background
-up:
+up: ensure-docker
 	@echo "กำลังสตาร์ตคอนเทนเนอร์ PostgreSQL..."
 	docker compose -f $(COMPOSE_FILE) up -d
 
@@ -179,7 +206,7 @@ ps:
 	docker compose -f $(COMPOSE_FILE) ps
 
 # สตาร์ตเฉพาะ PostgreSQL Container
-db-up:
+db-up: ensure-docker
 	@echo "กำลังสตาร์ตคอนเทนเนอร์ PostgreSQL (พอร์ต $(DB_PORT))..."
 	docker compose -f $(COMPOSE_FILE) up -d postgres
 
@@ -194,10 +221,19 @@ db-stop:
 # รอจนกว่า PostgreSQL จะพร้อมรับการเชื่อมต่อ
 db-wait:
 	@echo "กำลังรอให้ PostgreSQL เริ่มต้นพร้อมใช้งาน..."
-	@until docker exec tan-erp-postgres pg_isready -U $(DB_USER) -d $(DB_NAME) >/dev/null 2>&1; do \
+	@ready=0; \
+	for i in $$(seq 1 45); do \
+		if docker exec tan-erp-postgres pg_isready -U $(DB_USER) -d $(DB_NAME) >/dev/null 2>&1; then \
+			echo "PostgreSQL พร้อมใช้งานแล้ว ($$i วินาที)"; \
+			ready=1; \
+			break; \
+		fi; \
 		sleep 1; \
-	done
-	@echo "PostgreSQL พร้อมใช้งานแล้ว"
+	done; \
+	if [ $$ready -ne 1 ]; then \
+		echo "❌ รอการเชื่อมต่อ PostgreSQL เกินกำหนด (45 วินาที)"; \
+		exit 1; \
+	fi
 
 # อัปเดต Schema ฐานข้อมูลด้วย EF Core Migration
 db-migrate:

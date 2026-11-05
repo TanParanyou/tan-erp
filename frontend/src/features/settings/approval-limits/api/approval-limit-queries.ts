@@ -76,3 +76,12 @@ export function useUpdateApprovalLimit(): UseMutationResult<
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: approvalLimitKeys.all(context.membershipId) }),
   });
 }
+
+export function useSeedDefaultApprovalLimits(): UseMutationResult<ApprovalLimitListResponse, Error, void> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async () => apiClient.seedDefaultApprovalLimits(await context.buildOptions()),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: approvalLimitKeys.all(context.membershipId) }),
+  });
+}

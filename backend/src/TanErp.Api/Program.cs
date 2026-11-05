@@ -254,9 +254,27 @@ emailOptions.Validate();
 builder.Services.AddSingleton(emailOptions);
 if (emailOptions.Enabled) builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.IEmailSender, TanErp.Infrastructure.Email.SmtpEmailSender>();
 else builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.IEmailSender, TanErp.Infrastructure.Email.LoggingEmailSender>();
-// Sms:* is reserved for a future provider; until one is implemented the no-op sender keeps the SMS OTP channel reported as unavailable.
-builder.Services.AddSingleton(builder.Configuration.GetSection(TanErp.Infrastructure.Email.SmsOptions.SectionName).Get<TanErp.Infrastructure.Email.SmsOptions>() ?? new TanErp.Infrastructure.Email.SmsOptions());
-builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.ISmsSender, TanErp.Infrastructure.Email.LoggingSmsSender>();
+var smsOptions = builder.Configuration.GetSection(TanErp.Infrastructure.Email.SmsOptions.SectionName).Get<TanErp.Infrastructure.Email.SmsOptions>()
+    ?? new TanErp.Infrastructure.Email.SmsOptions();
+smsOptions.Validate();
+builder.Services.AddSingleton(smsOptions);
+builder.Services.AddHttpClient(TanErp.Infrastructure.Email.HttpSmsSender.HttpClientName);
+if (smsOptions.Enabled)
+{
+    builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.ISmsSender>(sp =>
+    {
+        var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
+        return new TanErp.Infrastructure.Email.HttpSmsSender(
+            sp.GetRequiredService<TanErp.Infrastructure.Email.SmsOptions>(),
+            httpClient: null,
+            logger: sp.GetRequiredService<ILogger<TanErp.Infrastructure.Email.HttpSmsSender>>(),
+            httpClientFactory: () => httpFactory.CreateClient(TanErp.Infrastructure.Email.HttpSmsSender.HttpClientName));
+    });
+}
+else
+{
+    builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.ISmsSender, TanErp.Infrastructure.Email.LoggingSmsSender>();
+}
 builder.Services.AddScoped<TanErp.Application.Commercial.QuotationAcceptanceHandler>();
 builder.Services.AddSingleton<TanErp.Application.Commercial.Documents.IQuotationDocumentRenderer, TanErp.Infrastructure.Documents.QuestPdfQuotationRenderer>();
 builder.Services.AddScoped<TanErp.Application.Commercial.Documents.IQuotationDocumentWriter, TanErp.Infrastructure.Documents.QuotationDocumentWriter>();
@@ -317,8 +335,24 @@ builder.Services.AddScoped<TanErp.Application.QuickEstimates.QuickEstimateHandle
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.IBranchRateOverrideStore, TanErp.Infrastructure.Persistence.QuickEstimates.BranchRateOverrideStore>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.BranchRateOverrideHandler>();
 builder.Services.AddScoped<TanErp.Application.Attachments.AttachmentHandler>();
-// No accounting system is wired yet; this placeholder never reports success. Replace it with a real connector when one is chosen.
-builder.Services.AddScoped<TanErp.Application.Finance.IAccountingConnector, TanErp.Infrastructure.Persistence.Finance.UnconfiguredAccountingConnector>();
+var accountingConnectorOptions = builder.Configuration
+    .GetSection(TanErp.Infrastructure.Persistence.Finance.AccountingConnectorOptions.SectionName)
+    .Get<TanErp.Infrastructure.Persistence.Finance.AccountingConnectorOptions>()
+    ?? new TanErp.Infrastructure.Persistence.Finance.AccountingConnectorOptions();
+builder.Services.AddSingleton(accountingConnectorOptions);
+builder.Services.AddHttpClient(TanErp.Infrastructure.Persistence.Finance.ConfigurableAccountingConnector.HttpClientName, client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(accountingConnectorOptions.TimeoutSeconds, 1, 120));
+});
+builder.Services.AddScoped<TanErp.Application.Finance.IAccountingConnector>(sp =>
+{
+    var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
+    return new TanErp.Infrastructure.Persistence.Finance.ConfigurableAccountingConnector(
+        sp.GetRequiredService<TanErp.Infrastructure.Persistence.Finance.AccountingConnectorOptions>(),
+        httpClient: null,
+        logger: sp.GetRequiredService<ILogger<TanErp.Infrastructure.Persistence.Finance.ConfigurableAccountingConnector>>(),
+        httpClientFactory: () => httpFactory.CreateClient(TanErp.Infrastructure.Persistence.Finance.ConfigurableAccountingConnector.HttpClientName));
+});
 builder.Services.AddScoped<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>();
 builder.Services.AddScoped<TanErp.Application.Inventory.IInventoryStore>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());
 builder.Services.AddScoped<TanErp.Application.Inventory.IProductionStockPort>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());

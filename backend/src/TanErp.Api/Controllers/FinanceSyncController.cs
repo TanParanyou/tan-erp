@@ -102,15 +102,26 @@ public class FinanceSyncController : FinanceControllerBase
         return result.IsFailure ? Problem(result.Error.Code) : Ok(FinanceMapper.To(result.Value!));
     }
 
+    [HttpPost("account-mappings/seed-defaults")]
+    [ProducesResponseType<AccountMappingListResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SeedDefaultAccountMappings(CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.SeedDefaultAccountMappingsAsync(caller, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(new AccountMappingListResponse(result.Value!.Select(FinanceMapper.To).ToList()));
+    }
+
     [HttpPost("outbox/export-journal")]
     [ProducesResponseType<JournalExportResultResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> ExportJournal([FromBody] JournalExportRequest? request, [FromQuery] int? batchSize, CancellationToken ct)
+    public async Task<IActionResult> ExportJournal([FromBody] JournalExportRequest? request, [FromQuery] int? batchSize, [FromQuery] string? format = null, CancellationToken ct = default)
     {
         var caller = ReadAuthenticated(out var failure);
         if (caller is null) return failure!;
         var effectiveBatch = request?.BatchSize ?? batchSize;
-        var result = await _handler.ExportJournalAsync(caller, effectiveBatch, ct);
+        var effectiveFormat = request?.Format ?? format;
+        var result = await _handler.ExportJournalAsync(caller, effectiveBatch, effectiveFormat, ct);
         return result.IsFailure ? Problem(result.Error.Code) : Ok(FinanceMapper.To(result.Value!));
     }
 }

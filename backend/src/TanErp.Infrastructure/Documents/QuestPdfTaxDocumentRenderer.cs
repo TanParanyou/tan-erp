@@ -17,7 +17,11 @@ public sealed record TaxDocumentPdfModel(
     BillingDocument Billing,
     IReadOnlyList<BillingLine> Lines,
     IReadOnlyList<BillingAdjustmentNote> Notes,
-    IReadOnlyList<Payment> Payments);
+    IReadOnlyList<Payment> Payments)
+{
+    public IReadOnlyList<BillingAdjustmentNote> ApprovedNotes =>
+        Notes.Where(n => n.Status == BillingNoteStatus.Approved).ToList();
+}
 
 public static class QuestPdfTaxDocumentRenderer
 {

@@ -13,13 +13,14 @@ import { ListToolbar } from "@/components/ui/ListToolbar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { TableEntityCell } from "@/components/ui/TableEntityCell";
 import { IconPlus } from "@/components/common/Icons";
+import { useToast } from "@/hooks/useToast";
 import { LIST_PAGE_SIZES, useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
 import type { ApprovalLimitResponse } from "@/lib/api/api-client";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can, PERMISSIONS } from "@/lib/permissions/can";
 import { APPROVAL_DOCUMENT_TYPES, isApprovalDocumentType } from "../approval-limit-document-types";
-import { useApprovalLimits } from "../api/approval-limit-queries";
+import { useApprovalLimits, useSeedDefaultApprovalLimits } from "../api/approval-limit-queries";
 
 interface LimitFilters extends ListFilterRecord {
   status?: string;
@@ -35,8 +36,19 @@ export function ApprovalLimitList() {
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
+  const { toast } = useToast();
   const { selectedMembership } = useSelectedMembership();
   const canManage = can(selectedMembership, PERMISSIONS.APPROVAL_LIMITS_MANAGE);
+  const seedMutation = useSeedDefaultApprovalLimits();
+
+  const handleSeedDefaults = async () => {
+    try {
+      await seedMutation.mutateAsync();
+      toast.success(t("list.seedDefaultsSuccess"));
+    } catch {
+      toast.error(t("errors.GENERIC"));
+    }
+  };
 
   const listState = useListState<LimitFilters>({ schema: { single: ["status", "documentType"] }, debounceMs: 350 });
   const { page, limit, filters } = listState.params;
@@ -103,9 +115,20 @@ export function ApprovalLimitList() {
         subtitle={t("list.subtitle")}
         actions={
           canManage ? (
-            <Button variant="primary" size="md" icon={<IconPlus size={16} />} onClick={goCreate}>
-              {t("list.createLimit")}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="md"
+                isLoading={seedMutation.isPending}
+                disabled={seedMutation.isPending}
+                onClick={() => void handleSeedDefaults()}
+              >
+                {t("list.seedDefaults")}
+              </Button>
+              <Button variant="primary" size="md" icon={<IconPlus size={16} />} onClick={goCreate}>
+                {t("list.createLimit")}
+              </Button>
+            </div>
           ) : undefined
         }
       />

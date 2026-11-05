@@ -296,6 +296,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/approval-limits/seed-defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApprovalLimitListResponse"];
+                        "application/json": components["schemas"]["ApprovalLimitListResponse"];
+                        "text/json": components["schemas"]["ApprovalLimitListResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/organization": {
         parameters: {
             query?: never;
@@ -11466,6 +11514,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/finance/account-mappings/seed-defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AccountMappingListResponse"];
+                        "application/json": components["schemas"]["AccountMappingListResponse"];
+                        "text/json": components["schemas"]["AccountMappingListResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/finance/outbox/export-journal": {
         parameters: {
             query?: never;
@@ -11479,6 +11564,7 @@ export interface paths {
             parameters: {
                 query?: {
                     batchSize?: number;
+                    format?: string;
                 };
                 header?: never;
                 path?: never;
@@ -33578,6 +33664,7 @@ export interface components {
         JournalExportRequest: {
             /** Format: int32 */
             batchSize?: number | null;
+            format?: string | null;
         };
         JournalExportResultResponse: {
             batchRef?: string | null;

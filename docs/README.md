@@ -12,7 +12,7 @@
 - ทีมขาย/สำรวจ/พัฒนา CRM: [Flow](01-business/crm-site-survey-flow.md) → [Field Catalog](01-business/crm-site-survey-field-catalog.md) → [Governance](01-business/crm-site-survey-governance.md) → [Responsive Wireframe](01-business/crm-site-survey-responsive-wireframe.md) → [API Contract](03-contracts/crm-site-survey-api-contract.md) → [Data Contract](04-data/crm-site-survey-data-contract.md) → [UAT](05-engineering/crm-site-survey-uat-scenarios.md)
 - ทีมออกแบบ/พัฒนา Quick Estimate: [Mobile Wireframe](01-business/quick-estimate-mobile-wireframe.md) → [API Contract](03-contracts/quick-estimate-api-contract.md) → [Data Contract](04-data/quick-estimate-data-contract.md)
 - นักพัฒนา: [System Context](02-architecture/system-context.md) → [Module Boundaries](02-architecture/module-boundaries.md) → [Contracts](03-contracts/api-conventions.md)
-- ผู้ดูแลระบบ: [Environments](06-operations/environments.md) → [Observability](06-operations/observability.md) → [Backup](06-operations/backup-and-restore.md)
+- ผู้ดูแลระบบ: [Environments](06-operations/environments.md) → [Observability](06-operations/observability.md) → [Backup](06-operations/backup-and-restore.md) → [Survey Narrative Assist](06-operations/survey-narrative-assist.md)
 - ทุกคนที่อยากเห็นภาพ: [Documentation Portal](portal/README.md)
 
 ## แหล่งอ้างอิงหลัก

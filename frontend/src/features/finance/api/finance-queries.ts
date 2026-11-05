@@ -171,15 +171,24 @@ export function useSyncMutations() {
     mutationFn: async (input: { id: string }) => apiClient.requeueAccountingMessage(input.id, await options()),
     onSuccess: refresh,
   });
-  const exportJournal = useMutation<JournalExportResultResponse, Error, { batchSize?: number } | void>({
-    mutationFn: async (input) => apiClient.exportAccountingJournal(await options(), input ? input.batchSize : undefined),
+  const exportJournal = useMutation<JournalExportResultResponse, Error, { batchSize?: number; format?: string } | void>({
+    mutationFn: async (input) =>
+      apiClient.exportAccountingJournal(
+        await options(),
+        input ? input.batchSize : undefined,
+        input ? input.format : undefined
+      ),
+    onSuccess: refresh,
+  });
+  const seedDefaultMappings = useMutation<AccountMappingListResponse, Error, void>({
+    mutationFn: async () => apiClient.seedDefaultAccountMappings(await options()),
     onSuccess: refresh,
   });
   const upsertMapping = useMutation<AccountMappingResponse, Error, AccountMappingRequest>({
     mutationFn: async (payload) => apiClient.upsertAccountMapping(payload, await options()),
     onSuccess: refresh,
   });
-  return { dispatch, requeue, exportJournal, upsertMapping };
+  return { dispatch, requeue, exportJournal, seedDefaultMappings, upsertMapping };
 }
 
 export function useArAgingReport(params?: { asOfDate?: string; customerId?: string }): UseQueryResult<ArAgingReportResponse, Error> {

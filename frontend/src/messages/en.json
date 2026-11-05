@@ -5035,6 +5035,13 @@
       "dispatch": "Send due messages",
       "dispatched": "Processed {processed}: {sent} sent, {failed} failed, {dead} stopped.",
       "exportJournal": "Export Journal CSV",
+      "exportFormatLabel": "Accounting Format",
+      "exportFormats": {
+        "standard": "Standard ERP (Standard CSV)",
+        "peak": "PEAK Account",
+        "flowaccount": "FlowAccount",
+        "express": "Express Accounting"
+      },
       "journalExported": "Exported journal batch {batchRef}: {exported} exported, {dead} missing mappings.",
       "lastExportTitle": "Latest Journal Export Result",
       "lastExportSubtitle": "Batch {batchRef} ({exported} exported, {dead} missing mappings)",
@@ -5068,7 +5075,14 @@
       "kinds": {
         "billing": {
           "issued": "Billing issued",
-          "voided": "Billing voided"
+          "voided": "Billing voided",
+          "retention-released": "Retention released",
+          "credit-note": {
+            "approved": "Credit note approved"
+          },
+          "debit-note": {
+            "approved": "Debit note approved"
+          }
         },
         "payment": {
           "recorded": "Payment recorded",
@@ -5076,11 +5090,17 @@
         },
         "billing-note": {
           "approved": "Credit/debit note approved"
+        },
+        "supplier-invoice": {
+          "posted": "Supplier invoice posted",
+          "voided": "Supplier invoice voided"
         }
       },
       "coa": {
         "title": "Chart of Accounts Mapping",
         "subtitle": "Configure debit and credit account codes for each transaction kind for journal export",
+        "seedDefaults": "Load Standard Thai COA",
+        "seededDefaults": "Standard Thai chart of accounts loaded.",
         "kind": "Transaction Kind",
         "selectKindPlaceholder": "Select transaction kind",
         "debitAccount": "Debit Account (Dr.)",
@@ -6217,6 +6237,8 @@
       "title": "Approval limits",
       "subtitle": "The most each role may approve, per document type and branch",
       "createLimit": "Add limit",
+      "seedDefaults": "Apply Standard Preset",
+      "seedDefaultsSuccess": "Standard approval limits preset applied.",
       "failClosedNotice": "A role with no active limit cannot approve estimates, purchase orders or change orders. Set the limits before relying on approvals.",
       "documentTypeFilter": "Document type",
       "statusFilter": "Status",

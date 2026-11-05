@@ -66,6 +66,8 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasPrincipalKey(x => new { x.Id, x.OrganizationId })
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Navigation(x => x.Addresses).HasField("_addresses").UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.HasIndex(x => new { x.OrganizationId, x.NormalizedTaxIdentifier, x.BranchCode });
     }
 }

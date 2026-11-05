@@ -18,13 +18,16 @@ import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { useAccountMappings, useOutboxList, useReconciliation, useSyncMutations } from "../api/finance-queries";
 import {
+  JOURNAL_EXPORT_FORMATS,
   OUTBOX_KINDS,
   OUTBOX_STATUSES,
   financeErrorCode,
+  isJournalExportFormat,
   isOutboxKind,
   isOutboxStatus,
   isReconciliationIssue,
   outboxStatusVariant,
+  type JournalExportFormatValue,
 } from "../finance-status";
 
 const PAGE_SIZE = 25;
@@ -40,6 +43,7 @@ export function FinanceSyncPage() {
 
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
+  const [exportFormat, setExportFormat] = useState<JournalExportFormatValue>("standard");
   const outbox = useOutboxList({ status: status || undefined, page, pageSize: PAGE_SIZE });
   const reconciliation = useReconciliation();
   const accountMappings = useAccountMappings();
@@ -60,6 +64,7 @@ export function FinanceSyncPage() {
     mutations.dispatch.isPending ||
     mutations.requeue.isPending ||
     mutations.exportJournal.isPending ||
+    mutations.seedDefaultMappings.isPending ||
     mutations.upsertMapping.isPending;
 
   function describe(err: unknown): string {
@@ -87,7 +92,7 @@ export function FinanceSyncPage() {
   async function exportJournal(): Promise<void> {
     setMessage(null);
     try {
-      const result = await mutations.exportJournal.mutateAsync();
+      const result = await mutations.exportJournal.mutateAsync({ format: exportFormat });
       setLastExportResult(result);
       toast.success(
         t("journalExported", {
@@ -96,6 +101,16 @@ export function FinanceSyncPage() {
           dead: result.deadCount ?? 0,
         })
       );
+    } catch (err: unknown) {
+      setMessage(describe(err));
+    }
+  }
+
+  async function handleSeedDefaultMappings(): Promise<void> {
+    setMessage(null);
+    try {
+      await mutations.seedDefaultMappings.mutateAsync();
+      toast.success(t("coa.seededDefaults"));
     } catch (err: unknown) {
       setMessage(describe(err));
     }
@@ -169,6 +184,24 @@ export function FinanceSyncPage() {
         actions={
           canRun ? (
             <div className="flex flex-wrap items-center gap-2">
+              <Select
+                id="journal-export-format"
+                aria-label={t("exportFormatLabel")}
+                className="h-11 min-h-[44px]"
+                wrapperClassName="!mb-0 min-w-[200px]"
+                value={exportFormat}
+                options={JOURNAL_EXPORT_FORMATS.map((fmt) => ({
+                  value: fmt,
+                  label: t(`exportFormats.${fmt}`),
+                }))}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  if (isJournalExportFormat(val)) {
+                    setExportFormat(val);
+                  }
+                }}
+                disabled={busy}
+              />
               <Button
                 type="button"
                 variant="outline"
@@ -261,9 +294,24 @@ export function FinanceSyncPage() {
 
       {/* Chart of Accounts Mapping Card */}
       <div className="erp-card space-y-4 p-5" role="region" aria-label={t("coa.title")}>
-        <div>
-          <h3 className="text-sm font-bold text-erp-navy">{t("coa.title")}</h3>
-          <p className="text-xs text-erp-text-muted">{t("coa.subtitle")}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-erp-navy">{t("coa.title")}</h3>
+            <p className="text-xs text-erp-text-muted">{t("coa.subtitle")}</p>
+          </div>
+          {canRun && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-11"
+              isLoading={mutations.seedDefaultMappings.isPending}
+              disabled={busy}
+              onClick={() => void handleSeedDefaultMappings()}
+            >
+              {t("coa.seedDefaults")}
+            </Button>
+          )}
         </div>
 
         {accountMappings.isLoading ? (

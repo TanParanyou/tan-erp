@@ -561,7 +561,9 @@ public class FinanceStore : IFinanceStore
         var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == b.ProjectId && p.OrganizationId == organizationId, ct);
         if (org is null || branch is null || project is null) return null;
 
-        var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == project.CustomerId && c.OrganizationId == organizationId, ct);
+        var customer = await _db.Customers.AsNoTracking()
+            .Include(c => c.Addresses)
+            .FirstOrDefaultAsync(c => c.Id == project.CustomerId && c.OrganizationId == organizationId, ct);
 
         return new TaxDocumentPdfModel(
             org, branch, project, customer, b,
@@ -653,7 +655,19 @@ public class FinanceStore : IFinanceStore
                 ConnectorResult result;
                 try
                 {
-                    result = await _connector.SendAsync(new AccountingEnvelope(message.Id, message.DedupeKey, message.Kind, message.ResourceNumber, message.Amount, message.PayloadJson, message.Attempts + 1), ct);
+                    result = await _connector.SendAsync(
+                        new AccountingEnvelope(
+                            message.Id,
+                            message.DedupeKey,
+                            message.Kind,
+                            message.ResourceNumber,
+                            message.Amount,
+                            message.PayloadJson,
+                            message.Attempts + 1,
+                            message.OrganizationId,
+                            message.ResourceId,
+                            DateOnly.FromDateTime(message.CreatedAtUtc.UtcDateTime)),
+                        ct);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
@@ -1126,6 +1140,20 @@ public class FinanceStore : IFinanceStore
 
     // ===== Wave D G-17 Journal Export & COA Mapping ===================================================
 
+    public static readonly IReadOnlyList<(string Kind, string DebitCode, string DebitName, string CreditCode, string CreditName)> StandardThaiCoaPresets =
+    [
+        (OutboxKind.BillingIssued, "113100", "ลูกหนี้การค้า - ในประเทศ", "411100", "รายได้ตามสัญญาโครงการ"),
+        (OutboxKind.BillingVoided, "411100", "รายได้ตามสัญญาโครงการ", "113100", "ลูกหนี้การค้า - ในประเทศ"),
+        (OutboxKind.PaymentRecorded, "111200", "เงินฝากธนาคารกระแสรายวัน/ออมทรัพย์", "113100", "ลูกหนี้การค้า - ในประเทศ"),
+        (OutboxKind.PaymentReversed, "113100", "ลูกหนี้การค้า - ในประเทศ", "111200", "เงินฝากธนาคารกระแสรายวัน/ออมทรัพย์"),
+        (OutboxKind.BillingRetentionReleased, "113100", "ลูกหนี้การค้า - เงินประกันผลงาน", "114100", "เงินประกันผลงานค้างรับ"),
+        (OutboxKind.BillingNoteApproved, "411200", "รับคืนและส่วนลดจ่ายตามสัญญา", "113100", "ลูกหนี้การค้า - ในประเทศ"),
+        (OutboxKind.BillingCreditNoteApproved, "411200", "รับคืนและส่วนลดจ่ายตามสัญญา", "113100", "ลูกหนี้การค้า - ในประเทศ"),
+        (OutboxKind.BillingDebitNoteApproved, "113100", "ลูกหนี้การค้า - ในประเทศ", "411100", "รายได้ตามสัญญาโครงการ"),
+        (OutboxKind.SupplierInvoicePosted, "511100", "ต้นทุนวัสดุก่อสร้างและงานจ้างเหมา", "212100", "เจ้าหนี้การค้า - ในประเทศ"),
+        (OutboxKind.SupplierInvoiceVoided, "212100", "เจ้าหนี้การค้า - ในประเทศ", "511100", "ต้นทุนวัสดุก่อสร้างและงานจ้างเหมา")
+    ];
+
     public async Task<IReadOnlyList<AccountMappingProjection>> ListAccountMappingsAsync(Guid organizationId, CancellationToken ct = default)
     {
         var mappings = await _db.AccountMappings.AsNoTracking()
@@ -1144,6 +1172,54 @@ public class FinanceStore : IFinanceStore
             people.TryGetValue(m.UpdatedByUserId, out var p) ? p : new FinancePerson(m.UpdatedByUserId, string.Empty),
             m.UpdatedAtUtc,
             m.RowVersion)).ToList();
+    }
+
+    public async Task<Result<IReadOnlyList<AccountMappingProjection>>> SeedDefaultAccountMappingsAsync(
+        RequestAccessContext access, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var existingKinds = (await _db.AccountMappings.AsNoTracking()
+            .Where(m => m.OrganizationId == orgId)
+            .Select(m => m.Kind)
+            .ToListAsync(ct))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var now = _clock.UtcNow;
+        var seededCount = 0;
+
+        foreach (var preset in StandardThaiCoaPresets)
+        {
+            if (existingKinds.Contains(preset.Kind)) continue;
+
+            var mapping = new AccountMapping(
+                Guid.NewGuid(),
+                orgId,
+                preset.Kind,
+                preset.DebitCode,
+                preset.DebitName,
+                preset.CreditCode,
+                preset.CreditName,
+                access.ActorUserId,
+                now);
+            _db.AccountMappings.Add(mapping);
+            existingKinds.Add(preset.Kind);
+            seededCount++;
+        }
+
+        Audit(access, "finance.account-mappings.seeded-defaults", "AccountMapping", Guid.Empty, traceId,
+            new { seededCount }, null, now);
+
+        if (seededCount > 0)
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        else
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+
+        var list = await ListAccountMappingsAsync(orgId, ct);
+        return Result<IReadOnlyList<AccountMappingProjection>>.Success(list);
     }
 
     public async Task<Result<AccountMappingProjection>> UpsertAccountMappingAsync(
@@ -1215,8 +1291,12 @@ public class FinanceStore : IFinanceStore
         });
     }
 
+    public Task<Result<JournalExportResult>> ExportJournalAsync(
+        RequestAccessContext access, int batchSize, string traceId, CancellationToken ct = default) =>
+        ExportJournalAsync(access, batchSize, traceId, null, ct);
+
     public async Task<Result<JournalExportResult>> ExportJournalAsync(
-        RequestAccessContext access, int batchSize, string traceId, CancellationToken ct = default)
+        RequestAccessContext access, int batchSize, string traceId, string? format, CancellationToken ct = default)
     {
         var orgId = access.OrganizationId;
         var strategy = _db.Database.CreateExecutionStrategy();
@@ -1265,18 +1345,12 @@ public class FinanceStore : IFinanceStore
                 }
             }
 
-            var csvBuilder = new StringBuilder();
-            csvBuilder.AppendLine("BatchRef,DateUtc,DedupeKey,Kind,DocumentNumber,DebitAccountCode,DebitAccountName,CreditAccountCode,CreditAccountName,Amount,Currency");
-            foreach (var l in lines)
-            {
-                csvBuilder.AppendLine(
-                    $"{EscapeCsv(l.BatchRef)},{l.CreatedAtUtc.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)},{EscapeCsv(l.DedupeKey)},{EscapeCsv(l.Kind)},{EscapeCsv(l.ResourceNumber)},{EscapeCsv(l.DebitAccountCode)},{EscapeCsv(l.DebitAccountName)},{EscapeCsv(l.CreditAccountCode)},{EscapeCsv(l.CreditAccountName)},{l.Amount.ToString("F2", CultureInfo.InvariantCulture)},{l.Currency}");
-            }
+            var csvContent = BuildJournalCsv(lines, format);
 
             if (batch.Count > 0)
             {
                 Audit(access, "finance.outbox.journal-exported", "AccountingOutbox", Guid.Empty, traceId,
-                    new { batchRef, exportedCount, deadCount }, null, now);
+                    new { batchRef, exportedCount, deadCount, format = string.IsNullOrWhiteSpace(format) ? "standard" : format.Trim().ToLowerInvariant() }, null, now);
             }
 
             await _db.SaveChangesAsync(ct);
@@ -1287,8 +1361,68 @@ public class FinanceStore : IFinanceStore
                 exportedCount,
                 deadCount,
                 lines,
-                csvBuilder.ToString()));
+                csvContent));
         });
+    }
+
+    public static string BuildJournalCsv(IReadOnlyList<JournalExportLineProjection> lines, string? format = null)
+    {
+        var normalizedFormat = string.IsNullOrWhiteSpace(format) ? "standard" : format.Trim().ToLowerInvariant();
+        var csvBuilder = new StringBuilder();
+
+        switch (normalizedFormat)
+        {
+            case "peak":
+                csvBuilder.AppendLine("Date,DocNo,AccountCode,AccountName,Debit,Credit,Description,Reference");
+                foreach (var l in lines)
+                {
+                    var dateStr = l.CreatedAtUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    var desc = EscapeCsv($"{l.Kind} {l.ResourceNumber}");
+                    var docNo = EscapeCsv(l.BatchRef);
+                    var refNo = EscapeCsv(l.ResourceNumber);
+                    var amt = l.Amount.ToString("F2", CultureInfo.InvariantCulture);
+                    csvBuilder.AppendLine($"{dateStr},{docNo},{EscapeCsv(l.DebitAccountCode)},{EscapeCsv(l.DebitAccountName)},{amt},0.00,{desc},{refNo}");
+                    csvBuilder.AppendLine($"{dateStr},{docNo},{EscapeCsv(l.CreditAccountCode)},{EscapeCsv(l.CreditAccountName)},0.00,{amt},{desc},{refNo}");
+                }
+                break;
+
+            case "flowaccount":
+                csvBuilder.AppendLine("DocumentDate,DocumentNumber,AccountCode,AccountName,DebitAmount,CreditAmount,Remarks");
+                foreach (var l in lines)
+                {
+                    var dateStr = l.CreatedAtUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    var docNo = EscapeCsv(l.ResourceNumber);
+                    var remarks = EscapeCsv($"{l.Kind} ({l.DedupeKey})");
+                    var amt = l.Amount.ToString("F2", CultureInfo.InvariantCulture);
+                    csvBuilder.AppendLine($"{dateStr},{docNo},{EscapeCsv(l.DebitAccountCode)},{EscapeCsv(l.DebitAccountName)},{amt},0.00,{remarks}");
+                    csvBuilder.AppendLine($"{dateStr},{docNo},{EscapeCsv(l.CreditAccountCode)},{EscapeCsv(l.CreditAccountName)},0.00,{amt},{remarks}");
+                }
+                break;
+
+            case "express":
+                csvBuilder.AppendLine("VOUCHER_NO,VOUCHER_DATE,ACCT_CODE,ACCT_NAME,DR_AMT,CR_AMT,REMARK");
+                foreach (var l in lines)
+                {
+                    var dateStr = l.CreatedAtUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    var voucherNo = EscapeCsv(l.BatchRef);
+                    var remark = EscapeCsv($"{l.Kind}:{l.ResourceNumber}");
+                    var amt = l.Amount.ToString("F2", CultureInfo.InvariantCulture);
+                    csvBuilder.AppendLine($"{voucherNo},{dateStr},{EscapeCsv(l.DebitAccountCode)},{EscapeCsv(l.DebitAccountName)},{amt},0.00,{remark}");
+                    csvBuilder.AppendLine($"{voucherNo},{dateStr},{EscapeCsv(l.CreditAccountCode)},{EscapeCsv(l.CreditAccountName)},0.00,{amt},{remark}");
+                }
+                break;
+
+            default:
+                csvBuilder.AppendLine("BatchRef,DateUtc,DedupeKey,Kind,DocumentNumber,DebitAccountCode,DebitAccountName,CreditAccountCode,CreditAccountName,Amount,Currency");
+                foreach (var l in lines)
+                {
+                    csvBuilder.AppendLine(
+                        $"{EscapeCsv(l.BatchRef)},{l.CreatedAtUtc.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)},{EscapeCsv(l.DedupeKey)},{EscapeCsv(l.Kind)},{EscapeCsv(l.ResourceNumber)},{EscapeCsv(l.DebitAccountCode)},{EscapeCsv(l.DebitAccountName)},{EscapeCsv(l.CreditAccountCode)},{EscapeCsv(l.CreditAccountName)},{l.Amount.ToString("F2", CultureInfo.InvariantCulture)},{l.Currency}");
+                }
+                break;
+        }
+
+        return csvBuilder.ToString();
     }
 
     private static string EscapeCsv(string value)

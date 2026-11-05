@@ -169,4 +169,77 @@ public sealed class ApprovalLimitStore : IApprovalLimitStore
             await _db.SaveChangesAsync(ct);
             return await LoadAsync(organizationId, limitId, ct);
         }, ct);
+
+    public static (bool IsUnlimited, decimal? MaxAmount) ResolveDefaultTier(string? roleName)
+    {
+        var normalized = (roleName ?? string.Empty).Trim().ToLowerInvariant();
+        string[] unlimitedKeywords = ["admin", "director", "executive", "ceo", "md", "กรรมการ", "บริหาร", "ผู้ดูแลระบบ"];
+        if (unlimitedKeywords.Any(k => normalized.Contains(k, StringComparison.Ordinal)))
+        {
+            return (true, null);
+        }
+
+        string[] managerKeywords = ["manager", "head", "lead", "supervisor", "ผู้จัดการ", "หัวหน้า"];
+        if (managerKeywords.Any(k => normalized.Contains(k, StringComparison.Ordinal)))
+        {
+            return (false, 1_000_000m);
+        }
+
+        return (false, 100_000m);
+    }
+
+    public async Task<ApprovalLimitPage> SeedDefaultsAsync(
+        Guid organizationId, AdminActor actor, string traceId, CancellationToken ct = default)
+    {
+        var roles = await _db.Roles.AsNoTracking()
+            .Where(r => r.OrganizationId == organizationId && r.IsActive)
+            .OrderBy(r => r.NormalizedName)
+            .ToListAsync(ct);
+
+        var existingOrgWide = await _db.ApprovalLimits.AsNoTracking()
+            .Where(l => l.OrganizationId == organizationId && l.BranchId == null)
+            .Select(l => new { l.RoleId, l.DocumentType })
+            .ToListAsync(ct);
+
+        var existingSet = existingOrgWide
+            .Select(x => $"{x.RoleId:N}:{x.DocumentType}")
+            .ToHashSet(StringComparer.Ordinal);
+
+        var now = _clock.UtcNow;
+        var added = 0;
+
+        foreach (var role in roles)
+        {
+            var (isUnlimited, maxAmount) = ResolveDefaultTier($"{role.Name} {role.NormalizedName}");
+            foreach (var docType in ApprovalDocumentType.Enforced)
+            {
+                var key = $"{role.Id:N}:{docType}";
+                if (existingSet.Contains(key)) continue;
+
+                var limit = ApprovalLimit.Create(
+                    Guid.NewGuid(),
+                    organizationId,
+                    role.Id,
+                    docType,
+                    null,
+                    ApprovalLimitRules.Currency,
+                    isUnlimited,
+                    maxAmount,
+                    now);
+                _db.ApprovalLimits.Add(limit);
+                existingSet.Add(key);
+                added++;
+
+                Audit(organizationId, actor, "approval-limits.seeded-default", limit.Id, traceId,
+                    new { roleId = role.Id, documentType = docType, isUnlimited, maxAmount }, null, limit.RowVersion);
+            }
+        }
+
+        if (added > 0)
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+
+        return await ListAsync(organizationId, new ApprovalLimitListQuery(null, null, null, 1, 100), ct);
+    }
 }

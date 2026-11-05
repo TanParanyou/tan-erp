@@ -166,7 +166,17 @@ public sealed record ReconciliationProjection(
     IReadOnlyList<ReconciliationRow> Rows);
 
 /// <summary>What the accounting connector is given. The payload is the frozen snapshot, never recomputed from current data.</summary>
-public sealed record AccountingEnvelope(Guid MessageId, string DedupeKey, string Kind, string ResourceNumber, decimal Amount, string PayloadJson, int Attempt);
+public sealed record AccountingEnvelope(
+    Guid MessageId,
+    string DedupeKey,
+    string Kind,
+    string ResourceNumber,
+    decimal Amount,
+    string PayloadJson,
+    int Attempt,
+    Guid OrganizationId = default,
+    Guid ResourceId = default,
+    DateOnly OccurredOn = default);
 
 public sealed record ConnectorResult(bool Success, string? ExternalRef, string? Error);
 

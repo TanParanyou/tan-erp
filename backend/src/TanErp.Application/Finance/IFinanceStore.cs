@@ -34,5 +34,7 @@ public interface IFinanceStore
     // Wave D G-17 Journal Export & COA Mapping
     Task<IReadOnlyList<AccountMappingProjection>> ListAccountMappingsAsync(Guid organizationId, CancellationToken ct = default);
     Task<Result<AccountMappingProjection>> UpsertAccountMappingAsync(RequestAccessContext access, AccountMappingInput input, string traceId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<AccountMappingProjection>>> SeedDefaultAccountMappingsAsync(RequestAccessContext access, string traceId, CancellationToken ct = default);
     Task<Result<JournalExportResult>> ExportJournalAsync(RequestAccessContext access, int batchSize, string traceId, CancellationToken ct = default);
+    Task<Result<JournalExportResult>> ExportJournalAsync(RequestAccessContext access, int batchSize, string traceId, string? format, CancellationToken ct = default);
 }

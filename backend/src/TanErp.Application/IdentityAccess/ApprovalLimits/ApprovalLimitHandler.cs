@@ -106,4 +106,14 @@ public sealed class ApprovalLimitHandler
             access.Value!.OrganizationId, limitId, ifMatch, input.IsUnlimited.Value, input.MaxAmount, input.IsActive.Value,
             Actor(access.Value), traceId, ct);
     }
+
+    public async Task<Result<ApprovalLimitPage>> SeedDefaultsAsync(
+        AdminCaller caller, string traceId, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, ct);
+        if (access.IsFailure) return Result<ApprovalLimitPage>.Failure(access.Error);
+
+        var page = await _store.SeedDefaultsAsync(access.Value!.OrganizationId, Actor(access.Value), traceId, ct);
+        return Result<ApprovalLimitPage>.Success(page);
+    }
 }

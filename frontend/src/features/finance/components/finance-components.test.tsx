@@ -258,6 +258,7 @@ function renderArAging(granted: string[] = ALL) {
 const dispatch = vi.fn();
 const requeue = vi.fn();
 const exportJournal = vi.fn();
+const seedDefaultMappings = vi.fn();
 const upsertMapping = vi.fn();
 
 function renderSync(granted: string[] = ALL) {
@@ -303,6 +304,7 @@ function renderSync(granted: string[] = ALL) {
     dispatch: { mutateAsync: dispatch, isPending: false },
     requeue: { mutateAsync: requeue, isPending: false },
     exportJournal: { mutateAsync: exportJournal, isPending: false },
+    seedDefaultMappings: { mutateAsync: seedDefaultMappings, isPending: false },
     upsertMapping: { mutateAsync: upsertMapping, isPending: false },
   } as unknown as ReturnType<typeof financeQueries.useSyncMutations>);
   render(
@@ -698,11 +700,38 @@ describe("FinanceSyncPage", () => {
     // Trigger journal export
     fireEvent.click(screen.getByRole("button", { name: s.exportJournal }));
 
-    await waitFor(() => expect(exportJournal).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(exportJournal).toHaveBeenCalledWith({ format: "standard" }));
 
     // Verify export result card shows batch ref and lines
     expect(screen.getByText(s.lastExportTitle)).toBeDefined();
     expect(screen.getAllByText(/BAT-2026-0001/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("triggers seedDefaultMappings when seedDefaults button is clicked, and selecting export format forwards format to exportJournal", async () => {
+    seedDefaultMappings.mockResolvedValue({ items: [] });
+    exportJournal.mockResolvedValue({
+      batchRef: "BAT-PEAK-001",
+      exportedCount: 2,
+      deadCount: 0,
+      lines: [],
+      csvContent: "Date,Account,Amount",
+    });
+
+    renderSync();
+
+    // Clicking seed defaults
+    const seedButton = screen.getByRole("button", { name: s.coa.seedDefaults });
+    fireEvent.click(seedButton);
+    await waitFor(() => expect(seedDefaultMappings).toHaveBeenCalledTimes(1));
+    expect(toastMocks.success).toHaveBeenCalledWith(s.coa.seededDefaults);
+
+    // Change export format to peak
+    const formatSelect = screen.getByRole("combobox", { name: s.exportFormatLabel });
+    fireEvent.change(formatSelect, { target: { value: "peak" } });
+
+    // Trigger export
+    fireEvent.click(screen.getByRole("button", { name: s.exportJournal }));
+    await waitFor(() => expect(exportJournal).toHaveBeenCalledWith({ format: "peak" }));
   });
 
   it("hides dispatch and requeue from read-only users", () => {
@@ -711,5 +740,6 @@ describe("FinanceSyncPage", () => {
     expect(screen.queryByRole("button", { name: s.exportJournal })).toBeNull();
     expect(screen.queryByRole("button", { name: s.requeue })).toBeNull();
     expect(screen.queryByRole("button", { name: s.coa.saveMapping })).toBeNull();
+    expect(screen.queryByRole("button", { name: s.coa.seedDefaults })).toBeNull();
   });
 });

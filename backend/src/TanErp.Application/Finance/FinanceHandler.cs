@@ -276,11 +276,21 @@ public class FinanceHandler
         return await _store.UpsertAccountMappingAsync(access.Value!, input, caller.TraceId, ct);
     }
 
-    public async Task<Result<JournalExportResult>> ExportJournalAsync(FinanceCaller caller, int? batchSize, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<AccountMappingProjection>>> SeedDefaultAccountMappingsAsync(FinanceCaller caller, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "finance-sync.run", ct);
+        if (access.IsFailure) return Result<IReadOnlyList<AccountMappingProjection>>.Failure(access.Error);
+        return await _store.SeedDefaultAccountMappingsAsync(access.Value!, caller.TraceId, ct);
+    }
+
+    public Task<Result<JournalExportResult>> ExportJournalAsync(FinanceCaller caller, int? batchSize, CancellationToken ct = default) =>
+        ExportJournalAsync(caller, batchSize, null, ct);
+
+    public async Task<Result<JournalExportResult>> ExportJournalAsync(FinanceCaller caller, int? batchSize, string? format, CancellationToken ct = default)
     {
         var access = await AccessAsync(caller, "finance-sync.run", ct);
         if (access.IsFailure) return Result<JournalExportResult>.Failure(access.Error);
         var size = batchSize is null or <= 0 ? 50 : Math.Clamp(batchSize.Value, 1, 100);
-        return await _store.ExportJournalAsync(access.Value!, size, caller.TraceId, ct);
+        return await _store.ExportJournalAsync(access.Value!, size, caller.TraceId, format, ct);
     }
 }

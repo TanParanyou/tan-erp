@@ -436,6 +436,55 @@
         }
       }
     },
+    "/api/v1/admin/approval-limits/seed-defaults": {
+      "post": {
+        "tags": [
+          "AdminApprovalLimits"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalLimitListResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalLimitListResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalLimitListResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/organization": {
       "get": {
         "tags": [
@@ -16933,6 +16982,35 @@
         }
       }
     },
+    "/api/v1/finance/account-mappings/seed-defaults": {
+      "post": {
+        "tags": [
+          "FinanceSync"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMappingListResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMappingListResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMappingListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/finance/outbox/export-journal": {
       "post": {
         "tags": [
@@ -16945,6 +17023,13 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -55368,6 +55453,10 @@
           "batchSize": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          },
+          "format": {
+            "type": "string",
             "nullable": true
           }
         },

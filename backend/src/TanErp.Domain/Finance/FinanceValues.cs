@@ -98,6 +98,9 @@ public static class OutboxKind
     public const string BillingIssued = "billing.issued";
     public const string BillingVoided = "billing.voided";
     public const string BillingNoteApproved = "billing-note.approved";
+    public const string BillingRetentionReleased = "billing.retention-released";
+    public const string BillingCreditNoteApproved = "billing.credit-note.approved";
+    public const string BillingDebitNoteApproved = "billing.debit-note.approved";
     public const string PaymentRecorded = "payment.recorded";
     public const string PaymentReversed = "payment.reversed";
     public const string SupplierInvoicePosted = "supplier-invoice.posted";
@@ -105,6 +108,15 @@ public static class OutboxKind
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
-        BillingIssued, BillingVoided, BillingNoteApproved, PaymentRecorded, PaymentReversed, SupplierInvoicePosted, SupplierInvoiceVoided
+        BillingIssued,
+        BillingVoided,
+        BillingNoteApproved,
+        BillingRetentionReleased,
+        BillingCreditNoteApproved,
+        BillingDebitNoteApproved,
+        PaymentRecorded,
+        PaymentReversed,
+        SupplierInvoicePosted,
+        SupplierInvoiceVoided
     };
 }

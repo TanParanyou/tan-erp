@@ -16,17 +16,20 @@ public class NotificationPublisher : INotificationPublisher
     private readonly INotificationRecipientResolver _recipients;
     private readonly IClock _clock;
     private readonly IPushNotificationSender? _pushSender;
+    private readonly IEmailSender? _emailSender;
 
     public NotificationPublisher(
         AppDbContext db,
         INotificationRecipientResolver recipients,
         IClock clock,
-        IPushNotificationSender? pushSender = null)
+        IPushNotificationSender? pushSender = null,
+        IEmailSender? emailSender = null)
     {
         _db = db;
         _recipients = recipients;
         _clock = clock;
         _pushSender = pushSender;
+        _emailSender = emailSender;
     }
 
     public async Task PublishAsync(NotificationEvent evt, CancellationToken ct = default)
@@ -76,6 +79,33 @@ public class NotificationPublisher : INotificationPublisher
         if (_pushSender is not null && newlyStaged.Count > 0)
         {
             await _pushSender.DispatchAsync(evt.OrganizationId, newlyStaged, ct);
+        }
+
+        if (_emailSender is { IsEnabled: true } && newlyStaged.Count > 0)
+        {
+            var newlyStagedIds = newlyStaged.Select(n => n.RecipientUserId).Distinct().ToArray();
+            var recipientUsers = await _db.Users.AsNoTracking()
+                .Where(u => newlyStagedIds.Contains(u.Id) && u.Email != null && u.Email != "")
+                .Select(u => new { u.Id, u.Email })
+                .ToListAsync(ct);
+
+            foreach (var user in recipientUsers)
+            {
+                if (string.IsNullOrWhiteSpace(user.Email)) continue;
+                try
+                {
+                    await _emailSender.SendAsync(
+                        new EmailMessage(
+                            user.Email,
+                            $"[tan-erp] Notification: {evt.Type}",
+                            $"You have a new notification ({evt.Type}) in tan-erp."),
+                        ct);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    // Best-effort outbound email channel: never fail business transaction on SMTP error.
+                }
+            }
         }
     }
 

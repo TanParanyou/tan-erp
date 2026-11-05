@@ -5035,6 +5035,13 @@
       "dispatch": "ส่งรายการที่ครบกำหนด",
       "dispatched": "ประมวลผล {processed} สำเร็จ {sent} ล้มเหลว {failed} หยุดส่ง {dead}",
       "exportJournal": "ส่งออกสมุดรายวัน CSV",
+      "exportFormatLabel": "รูปแบบไฟล์บัญชี",
+      "exportFormats": {
+        "standard": "มาตรฐาน ERP (Standard CSV)",
+        "peak": "PEAK Account",
+        "flowaccount": "FlowAccount",
+        "express": "Express Accounting"
+      },
       "journalExported": "ส่งออกสมุดรายวันชุด {batchRef} สำเร็จ {exported} รายการ, ขาดผังบัญชี {dead} รายการ",
       "lastExportTitle": "ผลการส่งออกสมุดรายวันล่าสุด",
       "lastExportSubtitle": "ชุด {batchRef} (ส่งออก {exported} รายการ, ขาดผังบัญชี {dead} รายการ)",
@@ -5068,7 +5075,14 @@
       "kinds": {
         "billing": {
           "issued": "ออกใบแจ้งหนี้",
-          "voided": "ยกเลิกใบแจ้งหนี้"
+          "voided": "ยกเลิกใบแจ้งหนี้",
+          "retention-released": "คืนเงินประกันผลงาน",
+          "credit-note": {
+            "approved": "อนุมัติใบลดหนี้"
+          },
+          "debit-note": {
+            "approved": "อนุมัติใบเพิ่มหนี้"
+          }
         },
         "payment": {
           "recorded": "รับชำระ",
@@ -5076,11 +5090,17 @@
         },
         "billing-note": {
           "approved": "อนุมัติใบลดหนี้/ใบเพิ่มหนี้"
+        },
+        "supplier-invoice": {
+          "posted": "ตั้งหนี้ใบแจ้งหนี้ผู้ขาย",
+          "voided": "ยกเลิกใบแจ้งหนี้ผู้ขาย"
         }
       },
       "coa": {
         "title": "การตั้งค่าผังบัญชีเชื่อมโยง (Chart of Accounts Mapping)",
         "subtitle": "กำหนดรหัสบัญชีเดบิตและเครดิตสำหรับแต่ละประเภทธุรกรรมเพื่อใช้ในการส่งออกสมุดรายวัน",
+        "seedDefaults": "โหลดผังบัญชีมาตรฐานไทย",
+        "seededDefaults": "โหลดผังบัญชีมาตรฐานไทยเรียบร้อยแล้ว",
         "kind": "ประเภทธุรกรรม",
         "selectKindPlaceholder": "เลือกประเภทธุรกรรม",
         "debitAccount": "บัญชีเดบิต (Dr.)",
@@ -6217,6 +6237,8 @@
       "title": "วงเงินอนุมัติ",
       "subtitle": "เพดานยอดที่แต่ละบทบาทอนุมัติได้ แยกตามประเภทเอกสารและสาขา",
       "createLimit": "เพิ่มวงเงิน",
+      "seedDefaults": "ตั้งค่าวงเงินมาตรฐาน",
+      "seedDefaultsSuccess": "ตั้งค่าวงเงินอนุมัติมาตรฐานเรียบร้อยแล้ว",
       "failClosedNotice": "บทบาทที่ไม่มีวงเงินที่ใช้งานอยู่จะอนุมัติใบประเมินราคา ใบสั่งซื้อ หรือใบเปลี่ยนแปลงงานไม่ได้ ควรตั้งวงเงินก่อนใช้งานจริง",
       "documentTypeFilter": "ประเภทเอกสาร",
       "statusFilter": "สถานะ",
