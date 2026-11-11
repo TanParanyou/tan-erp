@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TanErp.Application.Commercial.Documents;
 using TanErp.Application.Common.Abstractions;
@@ -8,6 +9,7 @@ using TanErp.Application.Common.Security;
 using TanErp.Application.Files;
 using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
+using TanErp.Domain.DocumentTemplates;
 using TanErp.Domain.Files;
 using TanErp.Infrastructure.Persistence;
 
@@ -29,10 +31,31 @@ public sealed partial class QuotationDocumentWriter(
         var model = await QuotationPdfModelBuilder.BuildAsync(db, quotation, cancellationToken, storage);
         if (model.IsFailure) return Result<QuotationDocumentSummary>.Failure(model.Error);
 
+        DocumentTemplateLayoutConfig? layoutConfig = null;
+        var defaultTemplate = await db.DocumentTemplates.AsNoTracking()
+            .Where(t => t.OrganizationId == organizationId && t.IsActive && t.IsDefault &&
+                (t.DocumentType == "quotation" || t.DocumentType == "quotations") &&
+                (t.BranchId == quotation.BranchId || t.BranchId == null))
+            .OrderBy(t => t.BranchId == quotation.BranchId ? 0 : 1)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (defaultTemplate is not null && !string.IsNullOrWhiteSpace(defaultTemplate.LayoutConfigJson))
+        {
+            try
+            {
+                layoutConfig = JsonSerializer.Deserialize<DocumentTemplateLayoutConfig>(
+                    defaultTemplate.LayoutConfigJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (JsonException)
+            {
+                // Invalid template JSON falls back to the built-in layout so quotation issuance is not blocked.
+            }
+        }
+
         byte[] bytes;
         try
         {
-            bytes = renderer.Render(model.Value!);
+            bytes = renderer.Render(model.Value!, layoutConfig);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

@@ -26,14 +26,25 @@ public class FinanceStore : IFinanceStore
     private readonly IDocumentNumberGenerator _numbers;
     private readonly IAccountingConnector _connector;
     private readonly IApprovalAuthority _approvalAuthority;
+    private readonly TanErp.Application.Files.IFileStorageProvider? _storage;
+    private readonly ETaxSigningOptions? _etaxSigningOptions;
 
-    public FinanceStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, IAccountingConnector connector, IApprovalAuthority approvalAuthority)
+    public FinanceStore(
+        AppDbContext db,
+        IClock clock,
+        IDocumentNumberGenerator numbers,
+        IAccountingConnector connector,
+        IApprovalAuthority approvalAuthority,
+        TanErp.Application.Files.IFileStorageProvider? storage = null,
+        ETaxSigningOptions? etaxSigningOptions = null)
     {
         _db = db;
         _clock = clock;
         _numbers = numbers;
         _connector = connector;
         _approvalAuthority = approvalAuthority;
+        _storage = storage;
+        _etaxSigningOptions = etaxSigningOptions;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -565,11 +576,51 @@ public class FinanceStore : IFinanceStore
             .Include(c => c.Addresses)
             .FirstOrDefaultAsync(c => c.Id == project.CustomerId && c.OrganizationId == organizationId, ct);
 
+        byte[]? logoBytes = null;
+        if (_storage is not null)
+        {
+            var logoFileId = org.BrandLogoFileId;
+            if (logoFileId is null)
+            {
+                var defaultTemplate = await _db.DocumentTemplates.AsNoTracking()
+                    .Where(t => t.OrganizationId == organizationId && t.IsActive && t.IsDefault &&
+                        (t.DocumentType == "tax_invoice" || t.DocumentType == "billing_note" || t.DocumentType == "billing" || t.DocumentType == "billing-documents") &&
+                        (t.BranchId == b.BranchId || t.BranchId == null))
+                    .OrderBy(t => t.BranchId == b.BranchId ? 0 : 1)
+                    .FirstOrDefaultAsync(ct);
+                logoFileId = defaultTemplate?.LogoFileId;
+            }
+
+            if (logoFileId.HasValue)
+            {
+                var logoFile = await _db.UploadedFiles.AsNoTracking()
+                    .FirstOrDefaultAsync(f => f.OrganizationId == organizationId && f.Id == logoFileId.Value, ct);
+                if (logoFile is not null)
+                {
+                    try
+                    {
+                        using var stream = await _storage.OpenReadStreamAsync(logoFile.StoragePath, ct);
+                        if (stream is not null)
+                        {
+                            using var ms = new MemoryStream();
+                            await stream.CopyToAsync(ms, ct);
+                            logoBytes = ms.ToArray();
+                        }
+                    }
+                    catch
+                    {
+                        // File storage read error should not prevent tax document rendering; logo is omitted.
+                    }
+                }
+            }
+        }
+
         return new TaxDocumentPdfModel(
             org, branch, project, customer, b,
             b.Lines.OrderBy(l => l.LineNumber).ToList(),
             b.AdjustmentNotes.OrderBy(n => n.CreatedAtUtc).ToList(),
-            b.Payments.OrderBy(p => p.RecordedAtUtc).ToList());
+            b.Payments.OrderBy(p => p.RecordedAtUtc).ToList(),
+            logoBytes);
     }
 
     public async Task<byte[]?> RenderTaxDocumentPdfAsync(Guid organizationId, Guid billingId, CancellationToken ct = default)
@@ -590,7 +641,7 @@ public class FinanceStore : IFinanceStore
             return Result<string>.Failure(new Error("ETAX_XML_NOT_AVAILABLE", "The billing needs a tax invoice number, lines and a seller tax identifier, and must not be voided."));
         }
 
-        return Result<string>.Success(ETaxInvoiceXmlBuilder.Build(model));
+        return Result<string>.Success(ETaxInvoiceXmlBuilder.Build(model, _etaxSigningOptions));
     }
 
     public async Task<PagedBillings> ListBillingsAsync(Guid organizationId, BillingListQuery query, CancellationToken ct = default)

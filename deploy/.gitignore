@@ -1,0 +1,6 @@
+# Keep environment example files tracked in deploy/
+!.env.example
+!.env.production.example
+
+# Never commit e-Tax signing certificates
+secrets/

@@ -3,7 +3,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using TanErp.Application.Commercial.Documents;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
@@ -11,6 +13,7 @@ using TanErp.Application.Finance;
 using TanErp.Application.IdentityAccess.Administration;
 using TanErp.Application.IdentityAccess.ApprovalLimits;
 using TanErp.Domain.Crm.Customers;
+using TanErp.Domain.DocumentTemplates;
 using TanErp.Domain.Finance;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
@@ -435,6 +438,115 @@ public class RealWorldIntegrationsUnitTests
         Assert.True(result.IsSuccess);
         Assert.Equal(1, store.SeedCallCount);
         Assert.Equal(ApprovalDocumentType.Enforced.Count, result.Value!.Items.Count);
+    }
+
+    // ===== 5. PDF Branding & Template Layout Integration =============================================
+
+    private static readonly byte[] ValidOneByOnePng =
+    [
+        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
+        0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137,
+        0, 0, 0, 10, 73, 68, 65, 84, 120, 156, 99, 0, 1, 0, 0, 5,
+        0, 1, 13, 10, 45, 180, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66,
+        96, 130
+    ];
+
+    [Fact]
+    public void QuestPdfTaxDocumentRenderer_WithBrandColorAndLogo_RendersValidPdf()
+    {
+        var org = new TanErp.Domain.Organization.Organization(OrgId, "บริษัท แทน อีอาร์พี จำกัด", true, Now);
+        org.UpdateProfile("บริษัท แทน อีอาร์พี จำกัด", "Tan ERP Co., Ltd.", "0105546148739", "99 ถนนสาทร กรุงเทพฯ", "99 Sathorn Rd", "021234567");
+        org.UpdateBranding("#1E3A8A", Guid.NewGuid());
+
+        var branch = Branch.Create(BranchId, OrgId, "HQ", "สำนักงานใหญ่", "Head Office", "00000", "99 ถนนสาทร กรุงเทพฯ", null, "021234567", Now);
+        var project = Project.CreateFromHandover(
+            Guid.NewGuid(), OrgId, BranchId, Guid.NewGuid(), null,
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null,
+            "PRJ-2026-0001", "โครงการตกแต่งสำนักงานใหญ่", UserId,
+            new DateOnly(2026, 11, 1), "QT-2026-0001", 500_000m,
+            "hash-q", null, "hash-base", UserId, Now);
+
+        var billingId = Guid.NewGuid();
+        var line = new BillingLine(Guid.NewGuid(), OrgId, billingId, 1, "งานติดตั้งระบบไฟฟ้า", 100_000m, 0.07m);
+        var billing = new BillingDocument(
+            billingId, OrgId, BranchId, project.Id, "BIL-2026-0001",
+            BillingKind.Milestone, "งวดที่ 1", 100_000m, new DateOnly(2026, 12, 5),
+            UserId, Now, 0.07m, 0.05m, "TIV-2026-0001", [line]);
+
+        var model = new TaxDocumentPdfModel(org, branch, project, null, billing, [line], [], [], ValidOneByOnePng);
+
+        var pdf = QuestPdfTaxDocumentRenderer.Render(model);
+
+        Assert.NotNull(pdf);
+        Assert.True(pdf.Length > 1000);
+        Assert.StartsWith("%PDF-", Encoding.ASCII.GetString(pdf, 0, 5));
+    }
+
+    [Fact]
+    public void QuestPdfQuotationRenderer_WithDocumentTemplateLayoutConfig_RendersValidPdf()
+    {
+        var model = new QuotationPdfModel(
+            "QT-2026-TPL",
+            Now,
+            "THB",
+            null,
+            new QuotationPdfIssuer(
+                "บริษัท แทน อีอาร์พี จำกัด", "Tan ERP Co., Ltd.", "สำนักงานใหญ่", "Head Office",
+                "0105546148739", "00000", "99 ถนนสาทร กรุงเทพฯ", "99 Sathorn Rd, Bangkok", "02-123-4567",
+                ValidOneByOnePng),
+            new QuotationPdfCustomer(
+                "บริษัท ลูกค้า จำกัด", "Customer Co., Ltd.", "บริษัท ลูกค้า จำกัด (มหาชน)",
+                "0105536000002", "00000",
+                new QuotationPdfAddress("888 ถนนสุขุมวิท", "คลองเตยเหนือ", "วัฒนา", "กรุงเทพมหานคร", "10110")),
+            [
+                new QuotationPdfSection("S1", "หมวดงานโครงสร้าง", "Structural Work", 100_000m,
+                [
+                    new QuotationPdfWorkItem("W001", "งานติดตั้งโครงเหล็ก", "Steel structure installation", 1m, "งาน", 100_000m, 100_000m)
+                ])
+            ],
+            new QuotationPdfTotals(100_000m, 0m, 100_000m, 7_000m, 107_000m));
+
+        var baseLayout = DocumentTemplateLayoutConfig.DefaultFor("quotations");
+        var layoutConfig = baseLayout with
+        {
+            Header = baseLayout.Header with
+            {
+                DocumentTitle = "ใบเสนอราคาโครงการพิเศษ / SPECIAL QUOTATION",
+                ShowLogo = true,
+                LogoPosition = "right"
+            },
+            Terms = baseLayout.Terms with
+            {
+                ValidityPeriodText = "ยืนราคา 45 วัน",
+                CommercialTermsText = "แบ่งชำระ 3 งวดตามความก้าวหน้าของงาน",
+                ShowBankDetails = true,
+                BankName = "ธนาคารกสิกรไทย",
+                AccountNo = "123-4-56789-0",
+                AccountName = "บจก. แทน อีอาร์พี"
+            },
+            Signatures = baseLayout.Signatures with
+            {
+                SignatureCount = 3,
+                Box1Label = "ผู้เสนอราคา",
+                Box2Label = "ผู้ตรวจสอบ",
+                Box3Label = "ผู้อนุมัติสั่งจ้าง"
+            }
+        };
+
+        var renderer = new QuestPdfQuotationRenderer(new StubConfiguration(), NullLogger<QuestPdfQuotationRenderer>.Instance);
+        var pdf = renderer.Render(model, layoutConfig);
+
+        Assert.NotNull(pdf);
+        Assert.True(pdf.Length > 1000);
+        Assert.StartsWith("%PDF-", Encoding.ASCII.GetString(pdf, 0, 5));
+    }
+
+    private sealed class StubConfiguration : IConfiguration
+    {
+        public string? this[string key] { get => null; set { } }
+        public IEnumerable<IConfigurationSection> GetChildren() => [];
+        public Microsoft.Extensions.Primitives.IChangeToken GetReloadToken() => throw new NotSupportedException();
+        public IConfigurationSection GetSection(string key) => throw new NotSupportedException();
     }
 
     private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler) : HttpMessageHandler

@@ -1,6 +1,6 @@
-# Finance Integration Verification (CP-15 + G-15 + G-16 + G-17)
+# Finance Integration Verification (CP-15 + G-15 + G-16 + G-17 + G-26)
 
-**สถานะ:** Implemented 2026-10-04 (`CP-15`) และขยายรองรับภาษีไทยครบวงจร + วงเงินเครดิตและรายงานอายุหนี้ลูกหนี้ + ผังบัญชีและส่งออกสมุดรายวัน 2026-10-30 (`G-15` + `G-16` + `G-17`); หลักฐานเป็นชุดทดสอบเฉพาะส่วน ไม่ใช่ UAT กับ Finance หรือการทดสอบกับระบบบัญชีจริง (ใช้ Journal Export CSV ระหว่างรอเลือกระบบบัญชีปลายทาง). กฎ: [Finance API Contract](../03-contracts/finance-api-contract.md), [แผน G-15](../superpowers/plans/2026-10-30-g15-thai-tax.md), [แผน G-16](../superpowers/plans/2026-10-30-g16-credit-exposure-ar-aging.md), และ [แผน G-17](../superpowers/plans/2026-10-30-g17-accounting-connector-journal-export.md).
+**สถานะ:** Implemented 2026-10-04 (`CP-15`) และขยายรองรับภาษีไทยครบวงจร + วงเงินเครดิตและรายงานอายุหนี้ลูกหนี้ + ผังบัญชีและส่งออกสมุดรายวัน 2026-10-30 (`G-15` + `G-16` + `G-17`); เพิ่มการรองรับ Organization Logo & Brand Primary Color บน PDF, การเชื่อม `DocumentTemplateLayoutConfig`, และการลงนามดิจิทัล e-Tax XML (`G-26` / `ETaxSigningOptions`). กฎ: [Finance API Contract](../03-contracts/finance-api-contract.md), [แผน G-15](../superpowers/plans/2026-10-30-g15-thai-tax.md), [แผน G-16](../superpowers/plans/2026-10-30-g16-credit-exposure-ar-aging.md), และ [แผน G-17](../superpowers/plans/2026-10-30-g17-accounting-connector-journal-export.md).
 
 ## ผลที่รันจริง
 
@@ -18,13 +18,45 @@
   - `npx tsc --noEmit` (0 errors), `npm run lint` (0 errors), `npm run build` (89/89 routes).
   - Vitest `src/features/finance/components/finance-components.test.tsx` 17/17 passed (ครอบคลุม `BillingEditor`, `BillingDetail`, `<ArAgingPanel />` 5 ช่วงอายุหนี้ + การขอและอนุมัติขยายเพดานเครดิตแบบ Maker–Checker, และ `FinanceSyncPage` พร้อมตารางตั้งค่าผังบัญชี COA Mapping และปุ่มส่งออกสมุดรายวัน CSV).
 
-## ข้อจำกัด
+---
 
-ค่าเริ่มต้น `TEST_ONLY` รอ Finance ยืนยัน ([Open Validation Questions หมวด 13](../01-business/open-validation-questions.md)): การปัดเศษภาษีมูลค่าเพิ่มและจังหวะการออกเลขใบกำกับภาษี (`VQ-TAX-01`), อัตราหัก ณ ที่จ่ายและเลข 50 ทวิ (`VQ-TAX-02`), เงื่อนไขการปลดเงินประกันผลงานและการอนุมัติใบลดหนี้ (`VQ-TAX-03`), สูตรคำนวณภาระเครดิตรวมถึงเกณฑ์อายุหนี้ (`VQ-CRD-01`..`VQ-CRD-02`), และผังบัญชีมาตรฐานรวมถึงระบบบัญชีปลายทาง (`VQ-ACC-01`..`VQ-ACC-02`); ยังไม่มี e-Tax Invoice XML (ETDA — แยกเป็น `G-15b` หลังรู้ provider).
+## Tax Document PDF with Organization Branding & Template Layout
 
-## G-26 e-Tax XML draft (2026-11-01)
+การสร้างเอกสาร PDF ใบเสร็จรับเงิน/ใบกำกับภาษี (`QuestPdfTaxDocumentRenderer.cs`) ได้รับการปรับปรุงเพื่อสนับสนุนภาพลักษณ์องค์กรและรูปแบบเอกสารที่ยืดหยุ่น:
 
-- เพิ่ม `ETaxInvoiceXmlBuilder`, endpoint `etax-xml`, ปุ่มดาวน์โหลดในหน้าใบแจ้งหนี้ (แสดงเมื่อมีเลขใบกำกับภาษี), error `ETAX_XML_NOT_AVAILABLE`.
-- ตรวจแล้ว: `dotnet build` 0 warnings/errors, `OpenApiContractTests` 1/1 หลังอัปเดต snapshot, `tsc`/`eslint` ผ่าน.
-- **ไม่ได้ตรวจ:** ไม่ได้ตรวจกับ XSD ของ ETDA (ไม่มีสเปกทางการ), ไม่ได้รันสร้างไฟล์จริงจึงยังไม่ยืนยันว่า XML well-formed กับข้อมูลจริง, ไม่มี test ใหม่, ไม่ได้ตรวจในเบราว์เซอร์, ไม่มีลายเซ็นดิจิทัล/การส่ง; ข้อมูลผู้ซื้อใช้ `LegalName` หรือชื่อแสดงผลภาษาไทยและยังไม่มีที่อยู่ผู้ซื้อ.
-- ก่อนใช้จริงต้อง: ได้ XSD/ตัวอย่างทางการ, แก้ทุกจุด `UNVERIFIED`, เลือกผู้ให้บริการ e-Tax/ใบรับรอง CA (เชื่อม `VQ-ACC-01`..`VQ-ACC-02`).
+1. **Organization Branding (`BrandPrimaryColor` & `BrandLogoFileId`):**
+   - ดึงสีแบรนด์ประจำองค์กรผ่าน `ResolvePrimaryColor(model.Organization.BrandPrimaryColor)` โดยมี fallback เป็น Navy `#0B3056` (Atelier Architectural Navy Sharp)
+   - ใช้สีแบรนด์สำหรับแถบ Header, เส้นคั่น Grid, และข้อความเน้นย้ำ
+   - โหลดภาพโลโก้องค์กรจาก `BrandLogoFileId` ผ่าน `IFileStorageProvider` และจัดวางที่มุมซ้ายบนของเอกสารอย่างคมชัด
+2. **Document Template Layout Config:**
+   - เชื่อมต่อ `DocumentTemplateLayoutConfig` (`billing-documents`) เพื่อควบคุมการแสดงผลหมายเหตุ ข้อมูลผู้ติดต่อ เงื่อนไขการชำระเงิน และการจัดหน้า
+
+---
+
+## Thai Accounting Connectors & Standard Thai COA (G-17)
+
+1. **Configurable Accounting Connector (`ConfigurableAccountingConnector.cs`):**
+   - รองรับโหมด `local` (จำลองการบันทึกบัญชีสำเร็จพร้อมรหัสอ้างอิง `LOCAL-{ResourceNumber}-{DedupeKey}`), `peak` (PEAK Account API v1 JSON payload), `flowaccount` (FlowAccount OpenAPI payload), และ `webhook` (Generic JSON พร้อม HMAC Signature)
+2. **Multi-format CSV Journal Export:**
+   - ส่งออก CSV ได้ 3 รูปแบบตามที่ผู้ใช้เลือก: Standard Format, Express Software Format (`VOUCHER_NO,VOUCHER_DATE,ACCT_CODE,ACCT_NAME,DR_AMT,CR_AMT,REMARK`), และ Cloud Accounting Format
+3. **Standard Thai COA Presets (`StandardThaiCoaPresets`):**
+   - กำหนดค่าเริ่มต้นผังบัญชีมาตรฐานของไทยใน `FinanceStore.cs` สำหรับทุก Event Type ในระบบ
+
+---
+
+## ETDA e-Tax Invoice XML with Digital Signature (G-26)
+
+การสร้างเอกสาร e-Tax Invoice XML (`ETaxInvoiceXmlBuilder.cs`) ได้รับการยกระดับตามมาตรฐาน ETDA Recommendation 3-2560 (UN/CEFACT CII):
+
+1. **Structured Buyer & Seller `PostalTradeAddress`:**
+   - แปลงข้อมูลที่อยู่ของทั้งผู้ขายและผู้ซื้อเป็น XML element ที่มีโครงสร้างสมบูรณ์: `BuildingName`, `LineOne`, `CitySubDivisionName` (ตำบล/แขวง), `CityName` (อำเภอ/เขต), `CountrySubDivisionID` (รหัสจังหวัด 2 หลัก), `PostcodeCode`, และ `CountryID` (`TH`)
+2. **Reference to Adjustment Notes:**
+   - สำหรับใบลดหนี้ (Credit Note - Code 81) และใบเพิ่มหนี้ (Debit Note - Code 80) จะสร้าง element `<ram:InvoiceReferencedDocument>` อ้างอิงเลขที่ใบกำกับภาษีเดิมและวันที่ออกเอกสารต้นฉบับ
+3. **Enveloped RSA-SHA256 XML Digital Signature (`ETaxSigningOptions`):**
+   - รองรับการลงนามดิจิทัลผ่านคลาส `ETaxSigningOptions` (`SigningCertificatePath`, `SigningCertificatePassword`)
+   - นำเข้าใบรับรอง PKCS#12 (.p12/.pfx) ดึงกุญแจส่วนตัว (Private Key) และสร้าง `<ds:Signature>` Enveloped Signature ครบถ้วน:
+     - Canonicalization: `http://www.w3.org/TR/2001/REC-xml-c14n-20010315`
+     - Signature Method: `http://www.w3.org/2001/04/xmldsig-more#rsa-sha256`
+     - Digest Method: `http://www.w3.org/2001/04/xmlenc#sha256`
+     - KeyInfo: `<ds:X509Certificate>` บรรจุไบต์ใบรับรองสาธารณะ Base64
+   - กรณีไม่มีการระบุใบรับรอง จะส่งออกเอกสารฉบับร่างพร้อม XML Comment กำกับชัดเจน

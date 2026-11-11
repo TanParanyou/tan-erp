@@ -55,13 +55,20 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(OpenApiConfiguration.ConfigureSwaggerGen);
 
+var corsOrigins = new[]
+    {
+        "http://localhost:3000", "http://127.0.0.1:3000",
+        "http://localhost:3005", "http://127.0.0.1:3005"
+    }
+    .Concat((builder.Configuration["CORS_ALLOWED_ORIGINS"] ?? string.Empty)
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+    .Distinct()
+    .ToArray();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:3000", "http://127.0.0.1:3000",
-            "http://localhost:3005", "http://127.0.0.1:3005")
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -315,6 +322,10 @@ if (!builder.Environment.IsEnvironment("Test") && systemMaintenanceOptions.Enabl
 }
 builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infrastructure.Persistence.Service.ServiceStore>();
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
+builder.Services.AddSingleton(
+    builder.Configuration.GetSection(TanErp.Infrastructure.Documents.ETaxSigningOptions.SectionName)
+        .Get<TanErp.Infrastructure.Documents.ETaxSigningOptions>()
+    ?? new TanErp.Infrastructure.Documents.ETaxSigningOptions());
 builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();
 builder.Services.AddScoped<TanErp.Application.Finance.FinanceHandler>();
 var reportingMvOptions = builder.Configuration

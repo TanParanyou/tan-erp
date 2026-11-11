@@ -17,7 +17,8 @@ public sealed record TaxDocumentPdfModel(
     BillingDocument Billing,
     IReadOnlyList<BillingLine> Lines,
     IReadOnlyList<BillingAdjustmentNote> Notes,
-    IReadOnlyList<Payment> Payments)
+    IReadOnlyList<Payment> Payments,
+    byte[]? LogoBytes = null)
 {
     public IReadOnlyList<BillingAdjustmentNote> ApprovedNotes =>
         Notes.Where(n => n.Status == BillingNoteStatus.Approved).ToList();
@@ -30,9 +31,21 @@ public static class QuestPdfTaxDocumentRenderer
 
     private static string Money(decimal value) => value.ToString("#,##0.00", Invariant);
 
+    private static string ResolvePrimaryColor(string? candidate)
+    {
+        if (string.IsNullOrWhiteSpace(candidate)) return Navy;
+        var trimmed = candidate.Trim();
+        if (trimmed.Length == 7 && trimmed[0] == '#' && trimmed.AsSpan(1).ToArray().All(Uri.IsHexDigit))
+        {
+            return trimmed;
+        }
+        return Navy;
+    }
+
     public static byte[] Render(TaxDocumentPdfModel model)
     {
         QuestPdfRuntime.EnsureInitialized("Community");
+        var primaryColor = ResolvePrimaryColor(model.Organization.BrandPrimaryColor);
 
         var docTitle = !string.IsNullOrEmpty(model.Billing.TaxInvoiceNumber)
             ? "ใบแจ้งหนี้ / ใบกำกับภาษี (Invoice / Tax Invoice)"
@@ -48,7 +61,11 @@ public static class QuestPdfTaxDocumentRenderer
             {
                 row.RelativeItem().Column(left =>
                 {
-                    left.Item().Text(model.Organization.Name).Bold().FontSize(12).FontColor(Navy);
+                    if (model.LogoBytes is { Length: > 0 })
+                    {
+                        left.Item().PaddingBottom(4).MaxHeight(44).MaxWidth(140).Image(model.LogoBytes);
+                    }
+                    left.Item().Text(model.Organization.Name).Bold().FontSize(12).FontColor(primaryColor);
                     if (!string.IsNullOrWhiteSpace(model.Organization.NameEn))
                     {
                         left.Item().Text(model.Organization.NameEn).FontSize(9).FontColor(Colors.Grey.Darken2);
@@ -73,11 +90,11 @@ public static class QuestPdfTaxDocumentRenderer
 
                 row.ConstantItem(220).Column(right =>
                 {
-                    right.Item().AlignRight().Text(docTitle).Bold().FontSize(11).FontColor(Navy);
+                    right.Item().AlignRight().Text(docTitle).Bold().FontSize(11).FontColor(primaryColor);
                     right.Item().PaddingTop(4).AlignRight().Text($"เลขที่ใบแจ้งหนี้: {model.Billing.Number}").Bold().FontSize(9.5f);
                     if (!string.IsNullOrWhiteSpace(model.Billing.TaxInvoiceNumber))
                     {
-                        right.Item().AlignRight().Text($"เลขที่ใบกำกับภาษี: {model.Billing.TaxInvoiceNumber}").Bold().FontSize(9.5f).FontColor(Navy);
+                        right.Item().AlignRight().Text($"เลขที่ใบกำกับภาษี: {model.Billing.TaxInvoiceNumber}").Bold().FontSize(9.5f).FontColor(primaryColor);
                     }
                     var issuedDate = model.Billing.IssuedAtUtc.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy", Invariant);
                     right.Item().AlignRight().Text($"วันที่ออก: {issuedDate}").FontSize(8.5f);
@@ -98,7 +115,7 @@ public static class QuestPdfTaxDocumentRenderer
                 {
                     infoRow.RelativeItem().Column(cCol =>
                     {
-                        cCol.Item().Text("ข้อมูลลูกค้า / Customer Details").Bold().FontSize(9).FontColor(Navy);
+                        cCol.Item().Text("ข้อมูลลูกค้า / Customer Details").Bold().FontSize(9).FontColor(primaryColor);
                         var custName = model.Customer?.DisplayNameTh ?? "ลูกค้าทั่วไป";
                         cCol.Item().Text(custName).Bold().FontSize(9.5f);
                         if (!string.IsNullOrWhiteSpace(model.Customer?.TaxIdentifier))
@@ -109,7 +126,7 @@ public static class QuestPdfTaxDocumentRenderer
 
                     infoRow.RelativeItem().Column(pCol =>
                     {
-                        pCol.Item().Text("ข้อมูลโครงการ / Project").Bold().FontSize(9).FontColor(Navy);
+                        pCol.Item().Text("ข้อมูลโครงการ / Project").Bold().FontSize(9).FontColor(primaryColor);
                         pCol.Item().Text($"{model.Project.Code} - {model.Project.Name}").Bold().FontSize(9.5f);
                         pCol.Item().Text($"ประเภทการวางบิล: {model.Billing.Kind}").FontSize(8.5f);
                         pCol.Item().Text($"รายละเอียด: {model.Billing.Description}").FontSize(8.5f);
@@ -131,12 +148,12 @@ public static class QuestPdfTaxDocumentRenderer
 
                     table.Header(header =>
                     {
-                        header.Cell().Background(Navy).Padding(4).AlignCenter().Text("#").Bold().FontColor(Colors.White).FontSize(8.5f);
-                        header.Cell().Background(Navy).Padding(4).Text("รายการ / Description").Bold().FontColor(Colors.White).FontSize(8.5f);
-                        header.Cell().Background(Navy).Padding(4).AlignRight().Text("ฐานภาษี / Tax Base").Bold().FontColor(Colors.White).FontSize(8.5f);
-                        header.Cell().Background(Navy).Padding(4).AlignRight().Text("VAT %").Bold().FontColor(Colors.White).FontSize(8.5f);
-                        header.Cell().Background(Navy).Padding(4).AlignRight().Text("ภาษีมูลค่าเพิ่ม").Bold().FontColor(Colors.White).FontSize(8.5f);
-                        header.Cell().Background(Navy).Padding(4).AlignRight().Text("รวมเงิน / Total").Bold().FontColor(Colors.White).FontSize(8.5f);
+                        header.Cell().Background(primaryColor).Padding(4).AlignCenter().Text("#").Bold().FontColor(Colors.White).FontSize(8.5f);
+                        header.Cell().Background(primaryColor).Padding(4).Text("รายการ / Description").Bold().FontColor(Colors.White).FontSize(8.5f);
+                        header.Cell().Background(primaryColor).Padding(4).AlignRight().Text("ฐานภาษี / Tax Base").Bold().FontColor(Colors.White).FontSize(8.5f);
+                        header.Cell().Background(primaryColor).Padding(4).AlignRight().Text("VAT %").Bold().FontColor(Colors.White).FontSize(8.5f);
+                        header.Cell().Background(primaryColor).Padding(4).AlignRight().Text("ภาษีมูลค่าเพิ่ม").Bold().FontColor(Colors.White).FontSize(8.5f);
+                        header.Cell().Background(primaryColor).Padding(4).AlignRight().Text("รวมเงิน / Total").Bold().FontColor(Colors.White).FontSize(8.5f);
                     });
 
                     if (model.Lines.Count > 0)
@@ -215,8 +232,8 @@ public static class QuestPdfTaxDocumentRenderer
                         }
                         totals.Item().BorderTop(1).BorderColor(Colors.Grey.Darken1).PaddingTop(2).Row(r =>
                         {
-                            r.RelativeItem().Text("ยอดรวมทั้งสิ้น (Gross Total):").Bold().FontSize(9.5f).FontColor(Navy);
-                            r.ConstantItem(80).AlignRight().Text(Money(model.Billing.GrossTotal)).Bold().FontSize(9.5f).FontColor(Navy);
+                            r.RelativeItem().Text("ยอดรวมทั้งสิ้น (Gross Total):").Bold().FontSize(9.5f).FontColor(primaryColor);
+                            r.ConstantItem(80).AlignRight().Text(Money(model.Billing.GrossTotal)).Bold().FontSize(9.5f).FontColor(primaryColor);
                         });
                         if (model.Billing.RetentionStatus == RetentionHoldingStatus.Held)
                         {
@@ -238,8 +255,8 @@ public static class QuestPdfTaxDocumentRenderer
                         });
                         totals.Item().Row(r =>
                         {
-                            r.RelativeItem().Text("ยอดคงเหลือ (Outstanding):").Bold().FontSize(9f).FontColor(Navy);
-                            r.ConstantItem(80).AlignRight().Text(Money(model.Billing.Outstanding)).Bold().FontSize(9f).FontColor(Navy);
+                            r.RelativeItem().Text("ยอดคงเหลือ (Outstanding):").Bold().FontSize(9f).FontColor(primaryColor);
+                            r.ConstantItem(80).AlignRight().Text(Money(model.Billing.Outstanding)).Bold().FontSize(9f).FontColor(primaryColor);
                         });
                     });
                 });
@@ -249,7 +266,7 @@ public static class QuestPdfTaxDocumentRenderer
                 {
                     col.Item().PaddingTop(8).Column(payCol =>
                     {
-                        payCol.Item().Text("ประวัติการรับชำระ / ใบเสร็จรับเงิน (Payment Receipts & WHT 50-Bis)").Bold().FontSize(9).FontColor(Navy);
+                        payCol.Item().Text("ประวัติการรับชำระ / ใบเสร็จรับเงิน (Payment Receipts & WHT 50-Bis)").Bold().FontSize(9).FontColor(primaryColor);
                         payCol.Item().Table(pTable =>
                         {
                             pTable.ColumnsDefinition(cols =>

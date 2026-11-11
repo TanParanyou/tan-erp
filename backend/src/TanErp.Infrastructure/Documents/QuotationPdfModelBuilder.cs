@@ -48,24 +48,39 @@ internal static class QuotationPdfModelBuilder
             supersedesNumber = await db.Quotations.AsNoTracking().Where(q => q.OrganizationId == organizationId && q.Id == supersededId).Select(q => q.Number).FirstOrDefaultAsync(ct);
 
         byte[]? logoBytes = null;
-        if (organization.BrandLogoFileId is { } logoFileId && storage is not null)
+        if (storage is not null)
         {
-            var logoFile = await db.UploadedFiles.AsNoTracking().FirstOrDefaultAsync(f => f.OrganizationId == organizationId && f.Id == logoFileId, ct);
-            if (logoFile is not null)
+            var logoFileId = organization.BrandLogoFileId;
+            if (logoFileId is null)
             {
-                try
+                var defaultTemplate = await db.DocumentTemplates.AsNoTracking()
+                    .Where(t => t.OrganizationId == organizationId && t.IsActive && t.IsDefault &&
+                        (t.DocumentType == "quotation" || t.DocumentType == "quotations") &&
+                        (t.BranchId == quotation.BranchId || t.BranchId == null))
+                    .OrderBy(t => t.BranchId == quotation.BranchId ? 0 : 1)
+                    .FirstOrDefaultAsync(ct);
+                logoFileId = defaultTemplate?.LogoFileId;
+            }
+
+            if (logoFileId is { } resolvedLogoFileId)
+            {
+                var logoFile = await db.UploadedFiles.AsNoTracking().FirstOrDefaultAsync(f => f.OrganizationId == organizationId && f.Id == resolvedLogoFileId, ct);
+                if (logoFile is not null)
                 {
-                    using var stream = await storage.OpenReadStreamAsync(logoFile.StoragePath, ct);
-                    if (stream is not null)
+                    try
                     {
-                        using var ms = new MemoryStream();
-                        await stream.CopyToAsync(ms, ct);
-                        logoBytes = ms.ToArray();
+                        using var stream = await storage.OpenReadStreamAsync(logoFile.StoragePath, ct);
+                        if (stream is not null)
+                        {
+                            using var ms = new MemoryStream();
+                            await stream.CopyToAsync(ms, ct);
+                            logoBytes = ms.ToArray();
+                        }
                     }
-                }
-                catch
-                {
-                    // File storage read error should not prevent quotation rendering; logo is omitted.
+                    catch
+                    {
+                        // File storage read error should not prevent quotation rendering; logo is omitted.
+                    }
                 }
             }
         }

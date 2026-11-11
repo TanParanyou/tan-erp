@@ -1,0 +1,95 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tan-erp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tan_erp}
+      POSTGRES_USER: ${POSTGRES_USER:-tan_erp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - tan_erp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tan_erp_user} -d ${POSTGRES_DB:-tan_erp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/backend.Dockerfile
+    container_name: tan-erp-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-tan_erp};Username=${POSTGRES_USER:-tan_erp_user};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD};"
+      Authentication__JwtSigningKey: "${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY}"
+      Authentication__EncryptionKey: "${ENCRYPTION_KEY:?Set ENCRYPTION_KEY}"
+      Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID:-}"
+      Storage__BasePath: /var/lib/tan-erp/storage
+      Documents__QuestPdf__LicenseConfirmed: "${QUESTPDF_LICENSE_CONFIRMED:-false}"
+      Sms__Enabled: "${SMS_ENABLED:-false}"
+      Sms__Provider: "${SMS_PROVIDER:-thaibulksms}"
+      Sms__ApiKey: "${SMS_API_KEY:-}"
+      Sms__ApiSecret: "${SMS_API_SECRET:-}"
+      Sms__SenderName: "${SMS_SENDER_NAME:-}"
+      Sms__EndpointUrl: "${SMS_ENDPOINT_URL:-}"
+      AccountingConnector__Enabled: "${ACCOUNTING_CONNECTOR_ENABLED:-false}"
+      AccountingConnector__Provider: "${ACCOUNTING_CONNECTOR_PROVIDER:-local}"
+      AccountingConnector__EndpointUrl: "${ACCOUNTING_CONNECTOR_ENDPOINT_URL:-}"
+      AccountingConnector__ApiKey: "${ACCOUNTING_CONNECTOR_API_KEY:-}"
+      ETax__SigningCertificatePath: "${ETAX_CERTIFICATE_PATH:-}"
+      ETax__SigningCertificatePassword: "${ETAX_CERTIFICATE_PASSWORD:-}"
+      CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-https://erp.example.com}"
+    ports:
+      - "${BACKEND_PORT:-5179}:5179"
+    volumes:
+      - tan_erp_storage:/var/lib/tan-erp/storage
+      - "${ETAX_CERTIFICATE_HOST_DIR:-./secrets/etax}:/etc/tan-erp/etax:ro"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5179/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: "${NEXT_PUBLIC_API_BASE_URL:-}"
+        NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+        NEXT_PUBLIC_MEDIA_ALLOWED_ORIGINS: "${NEXT_PUBLIC_MEDIA_ALLOWED_ORIGINS:-}"
+    container_name: tan-erp-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_BASE_URL: "${NEXT_PUBLIC_API_BASE_URL:-}"
+      NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      NEXT_PUBLIC_MEDIA_ALLOWED_ORIGINS: "${NEXT_PUBLIC_MEDIA_ALLOWED_ORIGINS:-}"
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ 2>&1 | grep -q \"<!DOCTYPE html>\" || wget -qO- http://localhost:3000/ 2>&1 > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  tan_erp_pgdata:
+  tan_erp_storage:
